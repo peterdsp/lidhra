@@ -20,11 +20,8 @@
     background-image:radial-gradient(900px 500px at 82% -8%,rgba(47,209,145,.09),transparent 60%)}
   a{color:var(--acc);text-decoration:none}
   .mono{font-family:var(--mono)}
-
   .app{display:grid;grid-template-columns:212px 1fr;height:100vh}
   @media(max-width:640px){.app{grid-template-columns:1fr}.side{display:none}}
-
-  /* sidebar (liquid-glass) */
   .side{border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:4px;
     background:linear-gradient(180deg,rgba(255,255,255,.03),transparent)}
   .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:.02em;font-size:16px;padding:4px 8px 14px}
@@ -35,45 +32,40 @@
   .nav.on{background:rgba(17,165,148,.16);color:var(--acc);font-weight:600}
   .nav .ic{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
   .nav .c{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--mute)}
-  .side .foot{margin-top:auto;border-top:1px solid var(--line);padding-top:12px}
-  .conn{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--soft);padding:4px 8px}
+  .side .foot{margin-top:auto;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:10px}
+  .conn{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--soft);padding:0 8px}
   .conn .dot{width:8px;height:8px;border-radius:50%;background:var(--pause)}
   .conn .dot.on{background:var(--down)}
   .conn a{margin-left:auto;font-size:12px}
-  .pform{display:none;flex-direction:column;gap:8px;padding:10px 8px 4px}
+  .pform{display:none;flex-direction:column;gap:8px;padding:0 8px}
   .pform.show{display:flex}
-  .pform select,.pform input{background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--fg);font:inherit;font-size:12.5px;padding:8px 10px;outline:none}
-  .pform select:focus,.pform input:focus{border-color:var(--acc)}
+  select,input{background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--fg);font:inherit;font-size:12.5px;padding:8px 10px;outline:none}
+  select:focus,input:focus{border-color:var(--acc)}
   .pform button{font:inherit;font-size:12.5px;font-weight:700;border:none;border-radius:8px;padding:8px;background:var(--grad);color:#06251b;cursor:pointer}
   .pform .msg{font-family:var(--mono);font-size:10.5px;color:var(--soft);min-height:12px}
   .pform .msg.err{color:var(--err)}
-
-  /* main */
+  .lang{display:flex;align-items:center;gap:8px;padding:0 8px}
+  .lang select{flex:1;font-size:12px;padding:6px 8px}
   .main{display:flex;flex-direction:column;min-width:0}
-  .bar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);
-    background:rgba(10,21,18,.6);backdrop-filter:blur(10px)}
-  .bar input{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--line);border-radius:100px;color:var(--fg);
-    font-family:var(--mono);font-size:13px;padding:10px 16px;outline:none}
-  .bar input:focus{border-color:var(--acc)}
-  .bar button{font:inherit;font-size:13.5px;font-weight:700;border:none;border-radius:100px;padding:10px 20px;background:var(--grad);color:#06251b;cursor:pointer}
-  .bar .sum{font-family:var(--mono);font-size:11px;color:var(--mute);white-space:nowrap}
-  .msg2{font-family:var(--mono);font-size:11px;color:var(--soft);padding:6px 18px 0;min-height:14px}
-  .msg2.err{color:var(--err)} .msg2.ok{color:var(--acc)}
   .lic{display:none;align-items:center;gap:12px;padding:10px 18px;font-size:13px;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .lic.show{display:flex}
   .lic.trial{background:rgba(47,209,145,.08);color:var(--soft)}
   .lic.expired{background:rgba(231,85,85,.1);color:var(--fg)}
   .lic b{color:var(--acc)}
-  .lic input{flex:1;min-width:200px;max-width:340px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--fg);font-family:var(--mono);font-size:12px;padding:8px 10px;outline:none}
+  .lic input{flex:1;min-width:200px;max-width:340px;font-family:var(--mono);font-size:12px}
   .lic button{font:inherit;font-size:12.5px;font-weight:700;border:none;border-radius:8px;padding:8px 14px;background:var(--grad);color:#06251b;cursor:pointer}
   .lic a{margin-left:auto}
-
+  .bar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:rgba(10,21,18,.6);backdrop-filter:blur(10px)}
+  .bar input{flex:1;min-width:0;border-radius:100px;font-family:var(--mono);font-size:13px;padding:10px 16px}
+  .bar button{font:inherit;font-size:13.5px;font-weight:700;border:none;border-radius:100px;padding:10px 20px;background:var(--grad);color:#06251b;cursor:pointer}
+  .bar .sum{font-family:var(--mono);font-size:11px;color:var(--mute);white-space:nowrap}
+  .msg2{font-family:var(--mono);font-size:11px;color:var(--soft);padding:6px 18px 0;min-height:14px}
+  .msg2.err{color:var(--err)} .msg2.ok{color:var(--acc)}
   .scroll{flex:1;overflow:auto;padding:14px 18px 40px}
   .sec{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:14px 4px 10px}
   .sec:first-child{margin-top:0}
   .list{display:flex;flex-direction:column;gap:8px}
   .empty{color:var(--mute);font-size:13px;padding:14px 4px}
-
   .row{display:flex;align-items:center;gap:13px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
   .row:hover{border-color:var(--line2)}
   .row .st{width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;color:#04120c;font-family:var(--mono);font-size:13px;font-weight:700}
@@ -85,7 +77,7 @@
   .row .right{text-align:right;flex:0 0 auto;min-width:76px}
   .row .pct{font-family:var(--mono);font-size:13px;font-weight:700}
   .row .act{font-family:var(--mono);font-size:11px;display:inline-block;margin-top:4px;cursor:pointer}
-  .pill{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;text-transform:lowercase}
+  .pill{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px}
   .pill.Downloading{background:rgba(34,189,122,.16);color:var(--down)}
   .pill.Seeding,.pill.Ready{background:rgba(17,165,148,.18);color:#3ce0c0}
   .pill.Queued{background:rgba(138,148,168,.18);color:var(--pause)}
@@ -99,19 +91,26 @@
       <svg viewBox="0 0 1024 1024"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#15C3B6"/><stop offset=".56" stop-color="#2FD191"/><stop offset="1" stop-color="#54E06A"/></linearGradient></defs><g fill="none" stroke="url(#g)" stroke-width="112" stroke-linecap="round" stroke-linejoin="round"><path d="M 348 258 C 214 315, 210 510, 326 594 C 414 658, 490 618, 550 558"/><path d="M 676 766 C 810 709, 814 514, 698 430 C 610 366, 534 406, 474 466"/></g></svg>
       Lidhra
     </div>
-    <div class="grp">Library</div>
-    <div class="nav on" data-f="all"><span class="ic" style="background:var(--acc)"></span>Overview<span class="c" id="c-all">0</span></div>
-    <div class="nav" data-f="Downloading"><span class="ic" style="background:var(--down)"></span>Downloading<span class="c" id="c-Downloading">0</span></div>
-    <div class="nav" data-f="Seeding"><span class="ic" style="background:var(--seed)"></span>Seeding<span class="c" id="c-Seeding">0</span></div>
-    <div class="nav" data-f="Queued"><span class="ic" style="background:var(--pause)"></span>Queued<span class="c" id="c-Queued">0</span></div>
+    <div class="grp" data-i18n="library">Library</div>
+    <div class="nav on" data-f="all"><span class="ic" style="background:var(--acc)"></span><span data-i18n="nav_overview">Overview</span><span class="c" id="c-all">0</span></div>
+    <div class="nav" data-f="Downloading"><span class="ic" style="background:var(--down)"></span><span data-i18n="nav_downloading">Downloading</span><span class="c" id="c-Downloading">0</span></div>
+    <div class="nav" data-f="Seeding"><span class="ic" style="background:var(--seed)"></span><span data-i18n="nav_seeding">Seeding</span><span class="c" id="c-Seeding">0</span></div>
+    <div class="nav" data-f="Queued"><span class="ic" style="background:var(--pause)"></span><span data-i18n="nav_queued">Queued</span><span class="c" id="c-Queued">0</span></div>
 
     <div class="foot">
-      <div class="conn"><span class="dot" id="dot"></span><span id="conn">Not connected</span><a href="#" id="toggle">Connect</a></div>
+      <div class="conn"><span class="dot" id="dot"></span><span id="conn" data-i18n="conn_not">Not connected</span><a href="#" id="toggle" data-i18n="conn_connect">Connect</a></div>
       <div class="pform" id="pform">
         <select id="provider"></select>
-        <input id="token" type="password" placeholder="API token" autocomplete="off">
-        <button id="connect">Connect account</button>
+        <input id="token" type="password" data-i18n-ph="ph_token" placeholder="API token" autocomplete="off">
+        <button id="connect" data-i18n="btn_connect_account">Connect account</button>
         <div class="msg" id="cmsg"></div>
+      </div>
+      <div class="lang">
+        <select id="lang" aria-label="Language">
+          <option value="en">English</option>
+          <option value="el">Ελληνικά</option>
+          <option value="sq">Shqip</option>
+        </select>
       </div>
     </div>
   </aside>
@@ -119,23 +118,75 @@
   <main class="main">
     <div class="lic" id="lic"></div>
     <div class="bar">
-      <input id="add-in" class="mono" placeholder="Paste a magnet, info-hash, or a direct https:// link">
-      <button id="add-btn">Add</button>
+      <input id="add-in" class="mono" data-i18n-ph="ph_add" placeholder="Paste a magnet, info-hash, or a direct https:// link">
+      <button id="add-btn" data-i18n="btn_add">Add</button>
       <span class="sum" id="sum"></span>
     </div>
     <div class="msg2" id="amsg"></div>
     <div class="scroll">
-      <div class="sec">Cloud transfers</div>
-      <div class="list" id="tlist"><div class="empty">Connect your debrid account, then add a magnet.</div></div>
-      <div class="sec">Downloads</div>
-      <div class="list" id="dlist"><div class="empty">Nothing downloading yet.</div></div>
+      <div class="sec" data-i18n="sec_cloud">Cloud transfers</div>
+      <div class="list" id="tlist"></div>
+      <div class="sec" data-i18n="sec_downloads">Downloads</div>
+      <div class="list" id="dlist"></div>
     </div>
   </main>
 </div>
 
 <script>
-  // One UI for two backends: the browser talks to the axum server over /api,
-  // a Tauri window calls the Rust commands via invoke.
+  // ---------- i18n: English, Greek, Albanian ----------
+  const I18N = {
+    en: {
+      library:"Library", nav_overview:"Overview", nav_downloading:"Downloading", nav_seeding:"Seeding", nav_queued:"Queued",
+      conn_not:"Not connected", conn_connect:"Connect", conn_change:"Change", ph_token:"API token", btn_connect_account:"Connect account",
+      ph_add:"Paste a magnet, info-hash, or a direct https:// link", btn_add:"Add",
+      sec_cloud:"Cloud transfers", sec_downloads:"Downloads",
+      empty_connect:"Connect your debrid account, then add a magnet.", empty_none:"No transfers here.", empty_dl:"Nothing downloading yet.",
+      st_downloading:"downloading", st_seeding:"seeding", st_ready:"ready", st_done:"done", st_queued:"queued", st_error:"error",
+      trial_left:"{0} day(s) left in your free trial.", get_license:"Get a license",
+      trial_ended:"Your free trial ended. Enter your Ko-fi license key:", activate:"Activate", buy_kofi:"Buy on Ko-fi",
+      m_connecting:"connecting...", m_adding:"adding...", m_starting:"starting download...", m_added:"added",
+      m_need_connect:"connect your debrid account to add magnets", m_enter_token:"enter your API token", m_invalid:"invalid key",
+      link_download:"download", files:"{0} file(s)", transfers:"{0} transfer(s)", queued_n:"{0} queued", premium:"premium",
+    },
+    el: {
+      library:"Βιβλιοθήκη", nav_overview:"Επισκόπηση", nav_downloading:"Λήψη", nav_seeding:"Διαμοιρασμός", nav_queued:"Σε αναμονή",
+      conn_not:"Μη συνδεδεμένο", conn_connect:"Σύνδεση", conn_change:"Αλλαγή", ph_token:"Διακριτικό API", btn_connect_account:"Σύνδεση λογαριασμού",
+      ph_add:"Επικόλλησε magnet, info-hash ή σύνδεσμο https://", btn_add:"Προσθήκη",
+      sec_cloud:"Μεταφορές cloud", sec_downloads:"Λήψεις",
+      empty_connect:"Σύνδεσε τον λογαριασμό debrid, μετά πρόσθεσε ένα magnet.", empty_none:"Καμία μεταφορά εδώ.", empty_dl:"Καμία λήψη ακόμη.",
+      st_downloading:"λήψη", st_seeding:"διαμοιρασμός", st_ready:"έτοιμο", st_done:"ολοκληρώθηκε", st_queued:"σε αναμονή", st_error:"σφάλμα",
+      trial_left:"{0} ημέρα(ες) απομένουν στη δωρεάν δοκιμή σου.", get_license:"Απόκτησε άδεια",
+      trial_ended:"Η δωρεάν δοκιμή έληξε. Εισήγαγε το κλειδί άδειας Ko-fi:", activate:"Ενεργοποίηση", buy_kofi:"Αγορά στο Ko-fi",
+      m_connecting:"σύνδεση...", m_adding:"προσθήκη...", m_starting:"έναρξη λήψης...", m_added:"προστέθηκε",
+      m_need_connect:"σύνδεσε τον λογαριασμό debrid για να προσθέσεις magnet", m_enter_token:"εισήγαγε το διακριτικό API", m_invalid:"μη έγκυρο κλειδί",
+      link_download:"λήψη", files:"{0} αρχείο(α)", transfers:"{0} μεταφορά(ές)", queued_n:"{0} σε αναμονή", premium:"premium",
+    },
+    sq: {
+      library:"Biblioteka", nav_overview:"Përmbledhje", nav_downloading:"Duke shkarkuar", nav_seeding:"Duke shpërndarë", nav_queued:"Në radhë",
+      conn_not:"I palidhur", conn_connect:"Lidhu", conn_change:"Ndrysho", ph_token:"Token API", btn_connect_account:"Lidh llogarinë",
+      ph_add:"Ngjit një magnet, info-hash, ose një lidhje https://", btn_add:"Shto",
+      sec_cloud:"Transferime cloud", sec_downloads:"Shkarkimet",
+      empty_connect:"Lidh llogarinë tënde debrid, pastaj shto një magnet.", empty_none:"Asnjë transferim këtu.", empty_dl:"Asgjë në shkarkim ende.",
+      st_downloading:"duke shkarkuar", st_seeding:"shpërndarje", st_ready:"gati", st_done:"përfunduar", st_queued:"në radhë", st_error:"gabim",
+      trial_left:"{0} ditë të mbetura në provën tënde falas.", get_license:"Merr një licencë",
+      trial_ended:"Prova jote falas mbaroi. Fut çelësin e licencës Ko-fi:", activate:"Aktivizo", buy_kofi:"Blej në Ko-fi",
+      m_connecting:"duke u lidhur...", m_adding:"duke shtuar...", m_starting:"duke nisur shkarkimin...", m_added:"u shtua",
+      m_need_connect:"lidh llogarinë debrid për të shtuar magnet", m_enter_token:"fut token-in API", m_invalid:"çelës i pavlefshëm",
+      link_download:"shkarko", files:"{0} skedar(ë)", transfers:"{0} transferim(e)", queued_n:"{0} në radhë", premium:"premium",
+    },
+  };
+  let lang = localStorage.getItem('lidhra_lang')
+    || (navigator.language||'en').slice(0,2).replace(/^(el|sq)$/, m=>m) ;
+  if(!I18N[lang]) lang = 'en';
+  function t(key, a){ let s=(I18N[lang]&&I18N[lang][key]) || I18N.en[key] || key; return a!==undefined? s.replace('{0}',a):s; }
+  function applyI18n(){
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
+    document.querySelectorAll('[data-i18n-ph]').forEach(el=>el.placeholder=t(el.dataset.i18nPh));
+  }
+  function stLabel(s){ return t({Downloading:'st_downloading',Seeding:'st_seeding',Ready:'st_ready',Queued:'st_queued',Error:'st_error'}[s]||'st_'+s); }
+
+  // ---------- backend (browser -> /api, Tauri -> invoke) ----------
   const TAURI = !!(window.__TAURI__ && window.__TAURI__.core);
   const ROUTES = {
     providers:['GET','/api/providers'], connect:['POST','/api/connect'],
@@ -153,16 +204,13 @@
   const $=s=>document.querySelector(s);
   const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
   let connected=false, filter='all', tpoll=null, lastTx=[];
-
   const COLOR={Downloading:'var(--down)',Seeding:'var(--seed)',Ready:'var(--seed)',Queued:'var(--pause)',Error:'var(--err)'};
   const GLYPH={Downloading:'↓',Seeding:'↑',Ready:'✓',Queued:'‖',Error:'!'};
 
   async function init(){
-    try{
-      const p=await api('providers');
-      $('#provider').innerHTML=p.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');
-    }catch(e){}
-    // sidebar filters
+    $('#lang').value=lang; applyI18n();
+    $('#lang').onchange=()=>{ lang=$('#lang').value; localStorage.setItem('lidhra_lang',lang); applyI18n(); renderTx(lastTx); refreshDownloads(); refreshLicense(); };
+    try{ const p=await api('providers'); $('#provider').innerHTML=p.map(x=>`<option value="${x.id}">${x.label}</option>`).join(''); }catch(e){}
     document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>{
       document.querySelectorAll('.nav').forEach(x=>x.classList.remove('on'));
       n.classList.add('on'); filter=n.dataset.f; renderTx(lastTx);
@@ -171,98 +219,90 @@
     $('#connect').onclick=doConnect;
     $('#add-btn').onclick=doAdd;
     $('#add-in').addEventListener('keydown',e=>{if(e.key==='Enter')doAdd();});
+    renderTx([]);
     refreshDownloads(); setInterval(refreshDownloads,1500);
     refreshLicense(); setInterval(refreshLicense,30000);
   }
 
-  async function refreshLicense(){
-    try{
-      const l=await api('license'); const el=$('#lic');
-      if(l.state==='licensed'){ el.className='lic'; el.innerHTML=''; return; }
-      if(l.state==='trial'){ el.className='lic trial show';
-        el.innerHTML=`<span><b>${l.days_left}</b> day(s) left in your free trial.</span><a href="https://ko-fi.com/peterdsp" target="_blank">Get a license</a>`; return; }
-      el.className='lic expired show';
-      el.innerHTML=`<span>Your free trial ended. Enter your Ko-fi license key:</span>
-        <input id="lkey" placeholder="LIDHRA-..."><button id="lact">Activate</button>
-        <a href="https://ko-fi.com/peterdsp" target="_blank">Buy on Ko-fi</a>`;
-      $('#lact').onclick=async()=>{ const k=$('#lkey').value.trim(); if(!k) return; $('#lact').textContent='...';
-        try{ await api('license_activate',{key:k}); refreshLicense(); }catch(e){ $('#lact').textContent='invalid key'; } };
-    }catch(e){}
-  }
-
   async function doConnect(){
     const provider=$('#provider').value, token=$('#token').value.trim();
-    if(!token){ $('#cmsg').textContent='enter your API token'; $('#cmsg').className='msg err'; return; }
-    $('#cmsg').textContent='connecting...'; $('#cmsg').className='msg';
+    if(!token){ $('#cmsg').textContent=t('m_enter_token'); $('#cmsg').className='msg err'; return; }
+    $('#cmsg').textContent=t('m_connecting'); $('#cmsg').className='msg';
     try{
       const a=await api('connect',{provider,token});
       connected=true; $('#dot').classList.add('on');
-      $('#conn').textContent=a.username||'connected'; $('#toggle').textContent='Change';
+      $('#conn').textContent=a.username||''; $('#toggle').textContent=t('conn_change');
       $('#pform').classList.remove('show'); $('#cmsg').textContent='';
       startTransfers();
     }catch(e){ connected=false; $('#dot').classList.remove('on'); $('#cmsg').textContent=e.message; $('#cmsg').className='msg err'; }
   }
 
   async function doAdd(){
-    const v=$('#add-in').value.trim();
-    if(!v){ return; }
+    const v=$('#add-in').value.trim(); if(!v) return;
     const isUrl=/^https?:\/\//i.test(v);
-    if(!isUrl && !connected){ msg('#amsg','connect your debrid account to add magnets','err'); return; }
-    msg('#amsg', isUrl?'starting download...':'adding...');
+    if(!isUrl && !connected){ msg('#amsg',t('m_need_connect'),'err'); return; }
+    msg('#amsg', isUrl?t('m_starting'):t('m_adding'));
     try{
       if(isUrl){ await api('fetch',{url:v}); refreshDownloads(); }
       else { await api('add',{magnet:v}); refreshTransfers(); }
-      $('#add-in').value=''; msg('#amsg','added','ok');
+      $('#add-in').value=''; msg('#amsg',t('m_added'),'ok');
     }catch(e){ msg('#amsg',e.message,'err'); }
   }
-  function msg(sel,t,cls){ const el=$(sel); el.textContent=t||''; el.className='msg2'+(cls?' '+cls:''); }
+  function msg(sel,text,cls){ const el=$(sel); el.textContent=text||''; el.className='msg2'+(cls?' '+cls:''); }
 
   function startTransfers(){ if(tpoll)clearInterval(tpoll); refreshTransfers(); tpoll=setInterval(refreshTransfers,2500); }
-  async function refreshTransfers(){
-    if(!connected) return;
-    try{ lastTx=await api('transfers'); renderTx(lastTx); updateCounts(lastTx); }catch(e){}
-  }
-  function updateCounts(items){
-    const by=s=>items.filter(t=>t.status===s).length;
-    $('#c-all').textContent=items.length;
-    $('#c-Downloading').textContent=by('Downloading');
-    $('#c-Seeding').textContent=by('Seeding');
-    $('#c-Queued').textContent=by('Queued');
-    $('#sum').textContent=`${items.length} transfer(s)`;
+  async function refreshTransfers(){ if(!connected) return; try{ lastTx=await api('transfers'); renderTx(lastTx); counts(lastTx); }catch(e){} }
+  function counts(items){
+    const by=s=>items.filter(x=>x.status===s).length;
+    $('#c-all').textContent=items.length; $('#c-Downloading').textContent=by('Downloading');
+    $('#c-Seeding').textContent=by('Seeding'); $('#c-Queued').textContent=by('Queued');
+    $('#sum').textContent=t('transfers',items.length);
   }
   function renderTx(items){
     const el=$('#tlist');
-    const list=filter==='all'?items:items.filter(t=>t.status===filter);
-    if(!list.length){ el.innerHTML='<div class="empty">'+(connected?'No transfers here.':'Connect your debrid account, then add a magnet.')+'</div>'; return; }
-    el.innerHTML=list.map(t=>{
-      const pct=Math.round((t.progress||0)*100), col=COLOR[t.status]||'var(--pause)';
-      return `<div class="row"><div class="st" style="background:${col}">${GLYPH[t.status]||''}</div>
-        <div class="body"><div class="nm">${esc(t.name||t.id)}</div>
+    const list=filter==='all'?items:items.filter(x=>x.status===filter);
+    if(!list.length){ el.innerHTML='<div class="empty">'+(connected?t('empty_none'):t('empty_connect'))+'</div>'; return; }
+    el.innerHTML=list.map(x=>{
+      const pct=Math.round((x.progress||0)*100), col=COLOR[x.status]||'var(--pause)';
+      return `<div class="row"><div class="st" style="background:${col}">${GLYPH[x.status]||''}</div>
+        <div class="body"><div class="nm">${esc(x.name||x.id)}</div>
           <div class="hb"><i style="width:${pct}%;background:${col}"></i></div>
-          <div class="meta"><span class="pill ${t.status}">${t.status.toLowerCase()}</span>${t.links?`<span>${t.links} file(s)</span>`:''}</div></div>
-        <div class="right"><div class="pct">${pct}%</div>${t.status==='Ready'?`<a class="act" data-dl="${t.id}">download</a>`:''}</div></div>`;
+          <div class="meta"><span class="pill ${x.status}">${stLabel(x.status)}</span>${x.links?`<span>${t('files',x.links)}</span>`:''}</div></div>
+        <div class="right"><div class="pct">${pct}%</div>${x.status==='Ready'?`<a class="act" data-dl="${x.id}">${t('link_download')}</a>`:''}</div></div>`;
     }).join('');
     el.querySelectorAll('[data-dl]').forEach(a=>a.onclick=async()=>{
-      a.textContent='starting...';
-      try{ const r=await api('download',{id:a.dataset.dl}); a.textContent=`${r.started||0} queued`; refreshDownloads(); }
-      catch(e){ a.textContent='error'; }
+      a.textContent='...';
+      try{ const r=await api('download',{id:a.dataset.dl}); a.textContent=t('queued_n',r.started||0); refreshDownloads(); }
+      catch(e){ a.textContent=t('st_error'); }
     });
   }
-
   async function refreshDownloads(){
     try{
       const items=await api('downloads'); const el=$('#dlist');
-      if(!items.length){ el.innerHTML='<div class="empty">Nothing downloading yet.</div>'; return; }
+      if(!items.length){ el.innerHTML='<div class="empty">'+t('empty_dl')+'</div>'; return; }
       el.innerHTML=items.map(d=>{
         const pct=d.done&&!d.error?100:Math.round((d.progress||0)*100);
         const mb=(d.downloaded/1e6).toFixed(1), tot=d.total?(d.total/1e6).toFixed(1):'?';
         const status=d.error?'Error':(d.done?'Ready':'Downloading'), col=COLOR[status];
+        const label=d.error?t('st_error'):(d.done?t('st_done'):t('st_downloading'));
         return `<div class="row"><div class="st" style="background:${col}">${GLYPH[status]}</div>
           <div class="body"><div class="nm">${esc(d.name)}</div>
             <div class="hb"><i style="width:${pct}%;background:${col}"></i></div>
-            <div class="meta"><span class="pill ${status}">${d.error?'error':(d.done?'done':'downloading')}</span><span>${d.error?esc(d.error):`${mb} / ${tot} MB`}</span></div></div>
+            <div class="meta"><span class="pill ${status}">${label}</span><span>${d.error?esc(d.error):`${mb} / ${tot} MB`}</span></div></div>
           <div class="right"><div class="pct">${pct}%</div></div></div>`;
       }).join('');
+    }catch(e){}
+  }
+  async function refreshLicense(){
+    try{
+      const l=await api('license'); const el=$('#lic');
+      if(l.state==='licensed'){ el.className='lic'; el.innerHTML=''; return; }
+      if(l.state==='trial'){ el.className='lic trial show';
+        el.innerHTML=`<span><b>${l.days_left}</b> ${t('trial_left',l.days_left).replace(/^\S+\s/,'')}</span><a href="https://ko-fi.com/peterdsp" target="_blank">${t('get_license')}</a>`; return; }
+      el.className='lic expired show';
+      el.innerHTML=`<span>${t('trial_ended')}</span><input id="lkey" placeholder="LIDHRA-..."><button id="lact">${t('activate')}</button><a href="https://ko-fi.com/peterdsp" target="_blank">${t('buy_kofi')}</a>`;
+      $('#lact').onclick=async()=>{ const k=$('#lkey').value.trim(); if(!k) return; $('#lact').textContent='...';
+        try{ await api('license_activate',{key:k}); refreshLicense(); }catch(e){ $('#lact').textContent=t('m_invalid'); } };
     }catch(e){}
   }
   init();

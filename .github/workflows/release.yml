@@ -48,6 +48,6 @@ jobs:
           projectPath: app
           tagName: ${{ github.ref_name }}
           releaseName: "Lidhra ${{ github.ref_name }}"
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
