@@ -93,9 +93,41 @@ pub fn load_license(dir: &Path) -> Option<String> {
 /// Validate and persist a license key to `<dir>/license.key`. Returns the owner.
 pub fn activate(dir: &Path, key: &str, pubkey_hex: &str) -> Result<String, String> {
     let owner = verify_license(key, pubkey_hex).ok_or("invalid license key")?;
+    if !is_valid_for(&owner, &machine_id(dir)) {
+        return Err("this license is locked to a different computer".into());
+    }
     std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     std::fs::write(dir.join("license.key"), key.trim()).map_err(|e| e.to_string())?;
     Ok(owner)
+}
+
+/// A stable per-install id, used to node-lock a license to one machine.
+/// Persisted in `<dir>/machine`. (For stronger binding, replace with a hardware
+/// id; this is copyable if a user clones the whole config dir.)
+pub fn machine_id(dir: &Path) -> String {
+    use rand::RngCore;
+    let path = dir.join("machine");
+    if let Ok(s) = std::fs::read_to_string(&path) {
+        let t = s.trim();
+        if t.len() == 32 {
+            return t.to_string();
+        }
+    }
+    let mut b = [0u8; 16];
+    rand::rngs::OsRng.fill_bytes(&mut b);
+    let id: String = b.iter().map(|x| format!("{x:02x}")).collect();
+    std::fs::create_dir_all(dir).ok();
+    std::fs::write(&path, &id).ok();
+    id
+}
+
+/// A key whose signed subject is `MACHINE:<id>` only works on that machine.
+/// Any other subject (e.g. an email) is unbound and works anywhere.
+pub fn is_valid_for(subject: &str, machine_id: &str) -> bool {
+    match subject.strip_prefix("MACHINE:") {
+        Some(bound) => bound == machine_id,
+        None => true,
+    }
 }
 
 #[cfg(test)]
@@ -124,6 +156,21 @@ mod tests {
         assert_eq!(verify_license(&key, &other), None);
         // garbage rejects
         assert_eq!(verify_license("LIDHRA-nope.nope", &pk), None);
+    }
+
+    #[test]
+    fn machine_id_is_stable_and_node_lock_works() {
+        let dir = std::env::temp_dir().join(format!("lidhra-mtest-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let a = machine_id(&dir);
+        let b = machine_id(&dir);
+        assert_eq!(a, b);
+        assert_eq!(a.len(), 32);
+        // unbound subject works anywhere; a MACHINE: subject only on its machine
+        assert!(is_valid_for("alice@example.com", &a));
+        assert!(is_valid_for(&format!("MACHINE:{a}"), &a));
+        assert!(!is_valid_for("MACHINE:someoneelse", &a));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

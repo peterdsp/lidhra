@@ -58,12 +58,47 @@ themselves. Nothing else to host.
 - Sign, notarize, and submit through Xcode / Transporter with your Apple Developer account.
 - Set the price tier to $2.99. Apple handles updates.
 
-## Honest notes
+## Auto-update: silent, no passwords
 
-- The trial is stored on disk and the license key is not machine-bound, so both are bypassable by a
-  determined user. This is a "keep honest people honest" model, normal for indie apps. Add a licensing
-  server later if you need hard enforcement.
-- Auto-update, code signing, notarization, App Store submission, and Ko-fi all require **your** accounts
-  and keys (Apple Developer is ~$99/yr). The pipeline above is wired; it activates once those secrets exist.
-- Pricing above is exactly as requested ($2.99 App Store, $4.99 Ko-fi). Note most apps price the store
-  higher to absorb the 15-30% cut; adjust if you like.
+The in-app updater downloads and installs in the background and asks the user for nothing. On Windows the
+installer is per-user (no admin / UAC). The only thing that makes an OS security prompt appear is an
+**unsigned** app, so a truly prompt-free update needs:
+
+- macOS: a Developer ID certificate + notarization (your Apple account). Then Gatekeeper stays silent and
+  the updater swaps the app in place with no password.
+- Windows: an Authenticode signing certificate (removes SmartScreen warnings).
+
+Unsigned, it still updates, but the OS may warn on first launch. Signing is the fix, not code.
+
+## Anti-piracy (the honest version)
+
+No downloadable native app can be made 100% unpirateable; a determined person can patch the binary.
+Ranked by how hard they are to defeat:
+
+1. **App Store build (strongest).** Apple's receipt + DRM makes it effectively unpirateable for normal
+   users, and it is the $2.99 tier. Push mainstream users here.
+2. **Online activation (recommended for the direct build).** Sell through a platform with a license API,
+   such as **Lemon Squeezy**, Gumroad, or Keygen.sh, which auto-delivers keys, limits activations per key,
+   and binds them to a machine server-side. Much harder to share than offline keys. Ko-fi has no license
+   API, so for real enforcement prefer Lemon Squeezy for the paid build and keep Ko-fi for donations.
+   The client hook is ready: `lidhra_license::machine_id()` gives a stable per-machine id to send on
+   activation. Point the app at the platform's validate endpoint and I will wire it.
+3. **Node-locked offline keys (no server).** The app shows the user their machine id; you mint a key bound
+   to it:
+   ```sh
+   cargo run -p lidhra-license --bin lidhra-keygen -- sign <ISSUER_PRIVATE_HEX> "MACHINE:<id>"
+   ```
+   That key only works on that machine (`is_valid_for` enforces it). Stronger than plain keys, but the
+   user must send you their id first.
+4. **Plain offline keys (weakest, easiest).** What ships today: any signed key works anywhere. Honor
+   system, fine for a cheap indie app, trivial to share.
+
+My recommendation for "easy for the user AND hard to pirate": **App Store for mainstream + Lemon Squeezy
+online activation for the direct build.** Tell me which and I will wire the activation.
+
+## Notes
+
+- Everything above needs **your** accounts/keys: Apple Developer (~$99/yr), a Windows cert, and a license
+  platform. The pipeline is wired; it activates once those exist.
+- Pricing is exactly as you asked ($2.99 App Store, $4.99 direct). Most apps price the store higher to
+  absorb Apple's 15-30% cut; adjust if you like.
