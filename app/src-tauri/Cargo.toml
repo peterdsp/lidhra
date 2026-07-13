@@ -22,9 +22,19 @@ strip = true
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
+[features]
+# Ko-fi / direct build: 7-day trial + license + auto-update.
+default = ["kofi"]
+kofi = ["dep:tauri-plugin-updater"]
+# App Store build: paid upfront, no trial and no self-update (store handles both).
+appstore = []
+
 [dependencies]
 tauri = { version = "2", features = [] }
+tauri-plugin-updater = { version = "2", optional = true }
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 tokio = { version = "1", features = ["rt-multi-thread"] }
 lidhra-debrid = { path = "../../crates/lidhra-debrid" }
 lidhra-transfer = { path = "../../crates/lidhra-transfer" }
+lidhra-license = { path = "../../crates/lidhra-license" }

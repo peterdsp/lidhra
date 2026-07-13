@@ -11,7 +11,12 @@ use std::path::{Path, PathBuf};
 use std::result::Result; // shadow the prelude's `Result` alias back to std's
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
+
+fn now_unix() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+}
 
 /// One local file download, shared with its background task via atomics.
 struct Dl {
@@ -29,6 +34,7 @@ struct Inner {
     out_dir: Option<PathBuf>,
     downloads: Vec<Arc<Dl>>,
     next_id: u64,
+    config_dir: PathBuf,
 }
 struct AppState(Mutex<Inner>);
 
@@ -200,13 +206,83 @@ async fn downloads(state: tauri::State<'_, AppState>) -> Result<Vec<DlDto>, Stri
     Ok(g.downloads.iter().map(|d| to_dl(d)).collect())
 }
 
+#[derive(Serialize)]
+struct Lic {
+    state: String,
+    days_left: u32,
+    owner: Option<String>,
+}
+
+#[cfg(not(feature = "appstore"))]
+fn lic_dto(dir: &Path) -> Lic {
+    let install = lidhra_license::load_or_init_install(dir, now_unix());
+    let lic = lidhra_license::load_license(dir);
+    match lidhra_license::status(now_unix(), install, lic.as_deref(), lidhra_license::ISSUER_PUBKEY_HEX) {
+        lidhra_license::Status::Licensed { owner } => Lic { state: "licensed".into(), days_left: 0, owner: Some(owner) },
+        lidhra_license::Status::Trial { days_left } => Lic { state: "trial".into(), days_left, owner: None },
+        lidhra_license::Status::Expired => Lic { state: "expired".into(), days_left: 0, owner: None },
+    }
+}
+
+// Ko-fi / direct build: real trial + license.
+#[cfg(not(feature = "appstore"))]
+#[tauri::command]
+async fn license(state: tauri::State<'_, AppState>) -> Result<Lic, String> {
+    let dir = state.0.lock().await.config_dir.clone();
+    Ok(lic_dto(&dir))
+}
+#[cfg(not(feature = "appstore"))]
+#[tauri::command]
+async fn license_activate(state: tauri::State<'_, AppState>, key: String) -> Result<Lic, String> {
+    let dir = state.0.lock().await.config_dir.clone();
+    lidhra_license::activate(&dir, &key, lidhra_license::ISSUER_PUBKEY_HEX)?;
+    Ok(lic_dto(&dir))
+}
+
+// App Store build: paid upfront, always licensed, no trial.
+#[cfg(feature = "appstore")]
+#[tauri::command]
+async fn license(_s: tauri::State<'_, AppState>) -> Result<Lic, String> {
+    Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()) })
+}
+#[cfg(feature = "appstore")]
+#[tauri::command]
+async fn license_activate(_s: tauri::State<'_, AppState>, _key: String) -> Result<Lic, String> {
+    Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()) })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let out_dir = std::env::var("HOME").ok().map(|h| PathBuf::from(h).join("Downloads"));
-    tauri::Builder::default()
-        .manage(AppState(Mutex::new(Inner { out_dir, ..Default::default() })))
+    let config_dir = std::env::var("HOME")
+        .ok()
+        .map(|h| PathBuf::from(h).join(".config").join("lidhra"))
+        .unwrap_or_else(|| PathBuf::from(".lidhra"));
+
+    #[allow(unused_mut)]
+    let mut builder = tauri::Builder::default()
+        .manage(AppState(Mutex::new(Inner { out_dir, config_dir, ..Default::default() })));
+
+    // Auto-update only in the Ko-fi / direct build; the App Store handles updates itself.
+    #[cfg(not(feature = "appstore"))]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build()).setup(|app| {
+            use tauri_plugin_updater::UpdaterExt;
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                if let Ok(updater) = handle.updater() {
+                    if let Ok(Some(update)) = updater.check().await {
+                        let _ = update.download_and_install(|_, _| {}, || {}).await;
+                    }
+                }
+            });
+            Ok(())
+        });
+    }
+
+    builder
         .invoke_handler(tauri::generate_handler![
-            providers, connect, add, fetch, transfers, download, downloads
+            providers, connect, add, fetch, transfers, download, downloads, license, license_activate
         ])
         .run(tauri::generate_context!())
         .expect("error while running Lidhra");
