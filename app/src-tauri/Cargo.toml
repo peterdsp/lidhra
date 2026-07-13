@@ -1,0 +1,24 @@
+[package]
+name = "lidhra-desktop"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Lidhra desktop app — a Tauri shell wrapping the shared web UI and the debrid + transfer engine."
+
+# Not part of the crates/ workspace: Tauri needs a system webview
+# (WebKit / WebView2 / WebKitGTK) that the headless CI doesn't have.
+[workspace]
+
+[lib]
+name = "lidhra_desktop_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread"] }
+lidhra-debrid = { path = "../../crates/lidhra-debrid" }
+lidhra-transfer = { path = "../../crates/lidhra-transfer" }

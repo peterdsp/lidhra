@@ -9,3 +9,6 @@
 .idea/
 .vscode/
 *.swp
+
+# Tauri generated
+app/src-tauri/gen/
