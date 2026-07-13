@@ -13,6 +13,12 @@ description = "Lidhra desktop app - a Tauri shell wrapping the shared web UI and
 name = "lidhra_desktop_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
