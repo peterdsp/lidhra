@@ -1,4 +1,4 @@
-//! Premiumize adapter — API at <https://www.premiumize.me/api>.
+//! Premiumize adapter - API at <https://www.premiumize.me/api>.
 //! Auth is an API key passed as a query param. Envelope: `{ "status": "success", ... }`.
 //!
 //! Premiumize model: `transfer/create` starts a cloud task; when finished it

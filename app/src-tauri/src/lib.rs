@@ -1,4 +1,4 @@
-//! Lidhra desktop (Tauri) — native shell over the shared web UI (`ui/`).
+//! Lidhra desktop (Tauri) - native shell over the shared web UI (`ui/`).
 //!
 //! The same `ui/index.html` the server serves runs here too; when it detects a
 //! Tauri window it calls these `#[tauri::command]`s via `invoke` instead of HTTP.

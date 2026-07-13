@@ -40,10 +40,10 @@ async fn main() -> Result<()> {
         return Ok(());
     }
 
-    println!("ready — {} direct link(s):", t.links.len());
+    println!("ready - {} direct link(s):", t.links.len());
     for link in &t.links {
         let direct = rd.unrestrict(link).await?;
-        // `direct.url` is a plain TLS HTTPS URL — hand it to Lidhra's download engine.
+        // `direct.url` is a plain TLS HTTPS URL - hand it to Lidhra's download engine.
         println!("  {}  ({} bytes)  {}", direct.filename, direct.size, direct.url);
     }
     Ok(())

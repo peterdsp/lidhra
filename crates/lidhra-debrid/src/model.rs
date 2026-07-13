@@ -31,7 +31,7 @@ impl ProviderId {
     }
 }
 
-/// What a provider can do — used by the policy engine and UI.
+/// What a provider can do - used by the policy engine and UI.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Capabilities {
     pub magnet: bool,

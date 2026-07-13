@@ -1,4 +1,4 @@
-//! `lidhra` — the whole pipeline in one command.
+//! `lidhra` - the whole pipeline in one command.
 //!
 //!   magnet  ->  debrid cloud (no P2P on device)  ->  direct HTTPS  ->  segmented download  ->  file
 //!
@@ -12,7 +12,7 @@
 //!   --token <token>      debrid API token (default: $DEBRID_TOKEN / $RD_TOKEN)
 //!   --connections <n>    parallel download connections (default: 4)
 //!
-//! Any provider works the same way — the CLI builds it via `build_provider`.
+//! Any provider works the same way - the CLI builds it via `build_provider`.
 
 use lidhra_debrid::prelude::*;
 use lidhra_transfer::{download, DownloadConfig};
@@ -70,7 +70,7 @@ fn parse_args() -> Args {
         }
     }
     if token.is_empty() {
-        eprintln!("lidhra: no token — set DEBRID_TOKEN / RD_TOKEN or pass --token");
+        eprintln!("lidhra: no token - set DEBRID_TOKEN / RD_TOKEN or pass --token");
         std::process::exit(2);
     }
     Args { magnet, out, token, connections, provider }
@@ -111,7 +111,7 @@ async fn run() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let dest = args.out.join(sanitize(&direct.filename));
         println!("· downloading {} ({:.1} MB)", direct.filename, direct.size as f64 / 1e6);
         let out = download(&direct.url, &dest, &cfg, progress_printer()).await?;
-        println!("\r  ✓ {} — {} bytes via {} connection(s)        ", dest.display(), out.bytes, out.connections);
+        println!("\r  ✓ {} - {} bytes via {} connection(s)        ", dest.display(), out.bytes, out.connections);
     }
     println!("· done.");
     Ok(())

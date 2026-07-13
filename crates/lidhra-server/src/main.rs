@@ -1,4 +1,4 @@
-//! Lidhra server — the headless / Web-UI mode.
+//! Lidhra server - the headless / Web-UI mode.
 //!
 //! Serves the shared web UI (`ui/index.html`) and exposes the debrid + transfer
 //! engine over a small JSON API. This is "Lidhra like qbittorrent-nox": run it,

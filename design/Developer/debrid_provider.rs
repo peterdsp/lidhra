@@ -1,4 +1,4 @@
-//! lidhra-debrid — unified interface over every debrid / multi-hoster provider.
+//! lidhra-debrid - unified interface over every debrid / multi-hoster provider.
 //!
 //! Design goal: adding a provider (Real-Debrid, AllDebrid, TorBox, Premiumize,
 //! Debrid-Link, Offcloud, Mega-Debrid, Deepbrid, High-Way, …) means writing ONE

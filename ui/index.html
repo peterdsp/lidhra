@@ -125,7 +125,7 @@
       const acct = await api('connect', {provider, token});
       connected=true; $('#add').disabled=false;
       $('#dot').classList.add('on'); $('#conn').textContent = acct.username||'connected';
-      setStatus('#connStatus', `connected — ${acct.username||''}${acct.premium?' · premium':''}`, 'ok');
+      setStatus('#connStatus', `connected - ${acct.username||''}${acct.premium?' · premium':''}`, 'ok');
       startPolling();
     }catch(e){ connected=false; $('#dot').classList.remove('on'); $('#conn').textContent='not connected';
       setStatus('#connStatus', e.message, 'err'); }

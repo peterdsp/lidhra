@@ -1,4 +1,4 @@
-//! Build a provider from an id + credential — what the settings UI / CLI use to
+//! Build a provider from an id + credential - what the settings UI / CLI use to
 //! turn "the user picked Real-Debrid and pasted this key" into a live adapter.
 
 use crate::error::{DebridError, Result};
@@ -29,7 +29,7 @@ impl ProviderId {
     }
 }
 
-/// Instantiate a provider adapter (does not authenticate — call
+/// Instantiate a provider adapter (does not authenticate - call
 /// [`DebridProvider::authenticate`] next). Errors for ids without an adapter yet.
 pub fn build_provider(id: ProviderId, cred: Credential) -> Result<Box<dyn DebridProvider>> {
     let key = match cred {

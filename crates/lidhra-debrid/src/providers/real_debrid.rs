@@ -1,4 +1,4 @@
-//! Real-Debrid adapter — hits the public REST API v1.0.
+//! Real-Debrid adapter - hits the public REST API v1.0.
 //! Docs: <https://api.real-debrid.com/> · base `https://api.real-debrid.com/rest/1.0`.
 //!
 //! Auth is a Bearer token: either a personal API token (my.real-debrid.com/apitoken)

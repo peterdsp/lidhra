@@ -3,7 +3,7 @@ name = "lidhra-server"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Local HTTP server exposing Lidhra's debrid + transfer engine and web UI — the headless / Web-UI mode (also what the PWA and smart-TV clients talk to)."
+description = "Local HTTP server exposing Lidhra's debrid + transfer engine and web UI - the headless / Web-UI mode (also what the PWA and smart-TV clients talk to)."
 
 [[bin]]
 name = "lidhra-server"

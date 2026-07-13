@@ -2,7 +2,7 @@
 //!
 //! A segmented, **resumable** HTTPS download engine. Feed it a direct link (e.g.
 //! the `DirectLink.url` from `lidhra-debrid`) and it downloads to a file over TLS,
-//! splitting across parallel HTTP Range connections when the server allows it —
+//! splitting across parallel HTTP Range connections when the server allows it -
 //! the last step of the Lidhra pipeline.
 //!
 //! Downloads land in a `<dest>.part` file and are atomically renamed to `<dest>`
@@ -119,7 +119,7 @@ where
     let (total, ranges_ok) = probe(&client, url).await;
     let existing = tokio::fs::metadata(&part).await.map(|m| m.len()).unwrap_or(0);
 
-    // Already fully present in .part — just finalize.
+    // Already fully present in .part - just finalize.
     if let Some(t) = total {
         if existing == t && t > 0 {
             tokio::fs::rename(&part, dest).await?;
@@ -135,7 +135,7 @@ where
         let b = single_stream(&client, url, &part, total, existing, on_progress).await?;
         (b, 1, true)
     } else {
-        // Fresh download — discard any stale partial.
+        // Fresh download - discard any stale partial.
         let _ = tokio::fs::remove_file(&part).await;
         let segmented = ranges_ok
             && cfg.connections > 1
@@ -154,7 +154,7 @@ where
     Ok(Outcome { path: dest.to_path_buf(), bytes, connections, resumed })
 }
 
-/// Probe with a 1-byte ranged GET — more reliable than HEAD across servers/CDNs.
+/// Probe with a 1-byte ranged GET - more reliable than HEAD across servers/CDNs.
 /// A `206 Partial Content` proves range support and its `Content-Range` header
 /// carries the true total size (`bytes 0-0/<total>`).
 async fn probe(client: &reqwest::Client, url: &str) -> (Option<u64>, bool) {

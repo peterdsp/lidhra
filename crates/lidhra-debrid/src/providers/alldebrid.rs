@@ -1,4 +1,4 @@
-//! AllDebrid adapter — API v4. Docs: <https://docs.alldebrid.com/>.
+//! AllDebrid adapter - API v4. Docs: <https://docs.alldebrid.com/>.
 //! Auth is an API key passed as a query param, alongside a required `agent` name.
 //! Envelope: `{ "status": "success", "data": {...} }` or `{ "status": "error", "error": {...} }`.
 //!

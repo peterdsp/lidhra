@@ -1,4 +1,4 @@
-//! TorBox adapter — API v1. Docs: <https://api-docs.torbox.app/>.
+//! TorBox adapter - API v1. Docs: <https://api-docs.torbox.app/>.
 //! Auth is a Bearer API key. Envelope: `{ "success": true, "data": ... }`.
 //!
 //! TorBox addresses files as (torrent_id, file_id) and hands out a download URL

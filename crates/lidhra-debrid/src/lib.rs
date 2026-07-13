@@ -10,7 +10,7 @@
 //! ```text
 //! magnet / hash / .torrent
 //!        │  check_cache()  (which providers already have it?)
-//!        ▼  add_magnet()   (provider torrents it in the cloud — no P2P on device)
+//!        ▼  add_magnet()   (provider torrents it in the cloud - no P2P on device)
 //!        ▼  unrestrict()   (restricted link → direct HTTPS URL, TLS)
 //!        ▼  hand the DirectLink to Lidhra's HTTPS download engine
 //! ```

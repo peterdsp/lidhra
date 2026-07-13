@@ -4,7 +4,7 @@ use async_trait::async_trait;
 
 /// The one trait every debrid provider implements.
 ///
-/// The rest of Lidhra depends only on this — swap or add providers freely.
+/// The rest of Lidhra depends only on this - swap or add providers freely.
 #[async_trait]
 pub trait DebridProvider: Send + Sync {
     fn id(&self) -> ProviderId;
@@ -19,7 +19,7 @@ pub trait DebridProvider: Send + Sync {
     /// Which of these info-hashes are already cached (instant)?
     ///
     /// Providers without a cache endpoint (or that deprecated it) may return
-    /// `cached: false` for all — callers then fall back to add + poll.
+    /// `cached: false` for all - callers then fall back to add + poll.
     async fn check_cache(&self, hashes: &[InfoHash]) -> Result<Vec<CacheStatus>>;
 
     /// Submit a magnet; the provider torrents it in the cloud.
