@@ -1,0 +1,15 @@
+[package]
+name = "lidhra-license"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Trial timer + offline Ed25519 license-key verification for Lidhra (Ko-fi / direct builds)."
+
+[[bin]]
+name = "lidhra-keygen"
+path = "src/bin/keygen.rs"
+
+[dependencies]
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+base64 = "0.22"
+rand = "0.8"

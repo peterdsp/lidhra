@@ -22,7 +22,12 @@ use std::path::{Path, PathBuf};
 use std::result::Result; // shadow the prelude's `Result` alias back to std's
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
+
+fn now_unix() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+}
 
 const INDEX: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../ui/index.html"));
 
@@ -41,6 +46,8 @@ struct AppState {
     out_dir: PathBuf,
     downloads: Vec<Arc<Dl>>,
     next_id: u64,
+    config_dir: PathBuf,
+    pubkey: String,
 }
 type Shared = Arc<Mutex<AppState>>;
 
@@ -49,11 +56,16 @@ async fn main() {
     let out_dir = std::env::var("LIDHRA_OUT")
         .map(PathBuf::from)
         .unwrap_or_else(|_| std::env::current_dir().unwrap_or_default().join("downloads"));
+    let config_dir = std::env::var("LIDHRA_CONFIG").map(PathBuf::from).unwrap_or_else(|_| out_dir.clone());
+    let pubkey = std::env::var("LIDHRA_PUBKEY").unwrap_or_else(|_| lidhra_license::ISSUER_PUBKEY_HEX.to_string());
+    lidhra_license::load_or_init_install(&config_dir, now_unix());
     let state: Shared = Arc::new(Mutex::new(AppState {
         provider: None,
         out_dir: out_dir.clone(),
         downloads: Vec::new(),
         next_id: 0,
+        config_dir,
+        pubkey,
     }));
 
     let app = Router::new()
@@ -65,6 +77,7 @@ async fn main() {
         .route("/api/transfers", get(transfers))
         .route("/api/download", post(download_transfer))
         .route("/api/downloads", get(downloads))
+        .route("/api/license", get(license).post(activate))
         .with_state(state);
 
     let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(8787);
@@ -271,4 +284,33 @@ async fn download_transfer(State(s): State<Shared>, Json(req): Json<DlReq>) -> R
 async fn downloads(State(s): State<Shared>) -> Json<Vec<DlDto>> {
     let st = s.lock().await;
     Json(st.downloads.iter().map(|d| to_dl(d)).collect())
+}
+
+#[derive(Serialize)]
+struct Lic {
+    state: String,
+    days_left: u32,
+    owner: Option<String>,
+}
+fn lic_dto(st: &AppState) -> Lic {
+    let install = lidhra_license::load_or_init_install(&st.config_dir, now_unix());
+    let license = lidhra_license::load_license(&st.config_dir);
+    match lidhra_license::status(now_unix(), install, license.as_deref(), &st.pubkey) {
+        lidhra_license::Status::Licensed { owner } => Lic { state: "licensed".into(), days_left: 0, owner: Some(owner) },
+        lidhra_license::Status::Trial { days_left } => Lic { state: "trial".into(), days_left, owner: None },
+        lidhra_license::Status::Expired => Lic { state: "expired".into(), days_left: 0, owner: None },
+    }
+}
+async fn license(State(s): State<Shared>) -> Json<Lic> {
+    Json(lic_dto(&*s.lock().await))
+}
+
+#[derive(Deserialize)]
+struct ActReq {
+    key: String,
+}
+async fn activate(State(s): State<Shared>, Json(req): Json<ActReq>) -> Result<Json<Lic>, ApiErr> {
+    let st = s.lock().await;
+    lidhra_license::activate(&st.config_dir, &req.key, &st.pubkey).map_err(|e| err(StatusCode::BAD_REQUEST, e))?;
+    Ok(Json(lic_dto(&st)))
 }
