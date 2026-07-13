@@ -317,7 +317,7 @@ mod tests {
         let sum = |r: &[(u64, u64)]| r.iter().map(|(s, e)| e - s + 1).sum::<u64>();
         assert_eq!(sum(&split_ranges(10, 3)), 10);
         let tiny = split_ranges(1, 8);
-        assert!(tiny.len() >= 1 && tiny.len() <= 8);
+        assert!(!tiny.is_empty() && tiny.len() <= 8);
         assert_eq!(sum(&tiny), 1);
         assert_eq!(split_ranges(0, 4), vec![(0, 0)]);
     }
