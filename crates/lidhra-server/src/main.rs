@@ -1,12 +1,12 @@
-//! Lidhra server - the headless / Web-UI mode.
+//! Lidhra server: the headless / Web-UI mode.
 //!
 //! Serves the shared web UI (`ui/index.html`) and exposes the debrid + transfer
 //! engine over a small JSON API. This is "Lidhra like qbittorrent-nox": run it,
-//! open the page, drive it from any browser. The Tauri desktop app and the smart-TV
-//! clients wrap the *same* UI; on desktop they call the crates directly instead of HTTP.
+//! open the page, drive it from any browser. The Tauri desktop app wraps the same
+//! UI and calls the crates directly instead of HTTP.
 //!
 //! Run:  cargo run -p lidhra-server   (then open http://127.0.0.1:8787)
-//! Env:  PORT (default 8787) · LIDHRA_OUT (download dir, default ./downloads)
+//! Env:  PORT (default 8787), LIDHRA_OUT (download dir, default ./downloads)
 
 use axum::{
     extract::State,
@@ -16,18 +16,31 @@ use axum::{
     Json, Router,
 };
 use lidhra_debrid::prelude::*;
-use lidhra_transfer::{download, DownloadConfig};
-use std::result::Result; // shadow the prelude's `Result` alias back to std's
+use lidhra_transfer::{download, DownloadConfig, Progress};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
+use std::result::Result; // shadow the prelude's `Result` alias back to std's
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
 const INDEX: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../ui/index.html"));
 
+/// One local file download, shared with its background task via atomics.
+struct Dl {
+    id: String,
+    name: String,
+    downloaded: AtomicU64,
+    total: AtomicU64, // 0 = unknown
+    done: AtomicBool,
+    error: std::sync::Mutex<Option<String>>,
+}
+
 struct AppState {
     provider: Option<Box<dyn DebridProvider>>,
     out_dir: PathBuf,
+    downloads: Vec<Arc<Dl>>,
+    next_id: u64,
 }
 type Shared = Arc<Mutex<AppState>>;
 
@@ -36,20 +49,27 @@ async fn main() {
     let out_dir = std::env::var("LIDHRA_OUT")
         .map(PathBuf::from)
         .unwrap_or_else(|_| std::env::current_dir().unwrap_or_default().join("downloads"));
-    let state: Shared = Arc::new(Mutex::new(AppState { provider: None, out_dir: out_dir.clone() }));
+    let state: Shared = Arc::new(Mutex::new(AppState {
+        provider: None,
+        out_dir: out_dir.clone(),
+        downloads: Vec::new(),
+        next_id: 0,
+    }));
 
     let app = Router::new()
         .route("/", get(|| async { Html(INDEX) }))
         .route("/api/providers", get(providers))
         .route("/api/connect", post(connect))
         .route("/api/add", post(add))
+        .route("/api/fetch", post(fetch_url))
         .route("/api/transfers", get(transfers))
-        .route("/api/download", post(download_h))
+        .route("/api/download", post(download_transfer))
+        .route("/api/downloads", get(downloads))
         .with_state(state);
 
     let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(8787);
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
-    println!("Lidhra server → http://{addr}   (downloads: {})", out_dir.display());
+    println!("Lidhra server on http://{addr}   (downloads: {})", out_dir.display());
     let listener = tokio::net::TcpListener::bind(addr).await.expect("bind");
     axum::serve(listener, app).await.expect("serve");
 }
@@ -63,7 +83,47 @@ fn err(code: StatusCode, msg: impl ToString) -> ApiErr {
 
 fn sanitize(name: &str) -> String {
     let n = Path::new(name).file_name().and_then(|x| x.to_str()).unwrap_or(name);
-    n.chars().map(|c| if matches!(c, '/' | '\\' | ':' | '\0') { '_' } else { c }).collect()
+    let n: String = n.chars().map(|c| if matches!(c, '/' | '\\' | ':' | '\0') { '_' } else { c }).collect();
+    if n.is_empty() { "download".into() } else { n }
+}
+
+fn name_from_url(url: &str) -> String {
+    let tail = url.rsplit('/').next().unwrap_or("download");
+    sanitize(tail.split('?').next().unwrap_or("download"))
+}
+
+/// Register a download and spawn its background task. Caller holds the AppState lock.
+fn start_download(st: &mut AppState, url: String, name: String) -> Arc<Dl> {
+    let dl = Arc::new(Dl {
+        id: format!("d{}", st.next_id),
+        name,
+        downloaded: AtomicU64::new(0),
+        total: AtomicU64::new(0),
+        done: AtomicBool::new(false),
+        error: std::sync::Mutex::new(None),
+    });
+    st.next_id += 1;
+    st.downloads.push(dl.clone());
+
+    let out = st.out_dir.clone();
+    let handle = dl.clone();
+    tokio::spawn(async move {
+        let dest = out.join(&handle.name);
+        std::fs::create_dir_all(&out).ok();
+        let cb = handle.clone();
+        let on_progress = move |p: Progress| {
+            cb.downloaded.store(p.downloaded, Ordering::Relaxed);
+            if let Some(t) = p.total {
+                cb.total.store(t, Ordering::Relaxed);
+            }
+        };
+        match download(&url, &dest, &DownloadConfig::default(), on_progress).await {
+            Ok(o) => handle.total.store(o.bytes, Ordering::Relaxed),
+            Err(e) => *handle.error.lock().unwrap() = Some(e.to_string()),
+        }
+        handle.done.store(true, Ordering::Relaxed);
+    });
+    dl
 }
 
 // ---------- DTOs ----------
@@ -73,13 +133,11 @@ struct Prov {
     id: String,
     label: String,
 }
-
 #[derive(Serialize)]
 struct Acct {
     username: String,
     premium: bool,
 }
-
 #[derive(Serialize)]
 struct Tx {
     id: String,
@@ -95,6 +153,29 @@ fn to_tx(t: &RemoteTransfer) -> Tx {
         status: format!("{:?}", t.status),
         progress: t.progress,
         links: t.links.len(),
+    }
+}
+#[derive(Serialize)]
+struct DlDto {
+    id: String,
+    name: String,
+    downloaded: u64,
+    total: u64,
+    progress: f32,
+    done: bool,
+    error: Option<String>,
+}
+fn to_dl(d: &Dl) -> DlDto {
+    let total = d.total.load(Ordering::Relaxed);
+    let downloaded = d.downloaded.load(Ordering::Relaxed);
+    DlDto {
+        id: d.id.clone(),
+        name: d.name.clone(),
+        downloaded,
+        total,
+        progress: if total > 0 { (downloaded as f32 / total as f32).clamp(0.0, 1.0) } else { 0.0 },
+        done: d.done.load(Ordering::Relaxed),
+        error: d.error.lock().unwrap().clone(),
     }
 }
 
@@ -115,13 +196,9 @@ struct ConnectReq {
     token: String,
 }
 async fn connect(State(s): State<Shared>, Json(req): Json<ConnectReq>) -> Result<Json<Acct>, ApiErr> {
-    let id = ProviderId::from_key(&req.provider)
-        .ok_or_else(|| err(StatusCode::BAD_REQUEST, "unknown provider"))?;
-    let p = build_provider(id, Credential::ApiKey(req.token.clone()))
-        .map_err(|e| err(StatusCode::BAD_REQUEST, e))?;
-    p.authenticate(Credential::ApiKey(req.token))
-        .await
-        .map_err(|e| err(StatusCode::UNAUTHORIZED, e))?;
+    let id = ProviderId::from_key(&req.provider).ok_or_else(|| err(StatusCode::BAD_REQUEST, "unknown provider"))?;
+    let p = build_provider(id, Credential::ApiKey(req.token.clone())).map_err(|e| err(StatusCode::BAD_REQUEST, e))?;
+    p.authenticate(Credential::ApiKey(req.token)).await.map_err(|e| err(StatusCode::UNAUTHORIZED, e))?;
     let a = p.account().await.map_err(|e| err(StatusCode::BAD_GATEWAY, e))?;
     s.lock().await.provider = Some(p);
     Ok(Json(Acct { username: a.username, premium: a.premium }))
@@ -139,6 +216,21 @@ async fn add(State(s): State<Shared>, Json(req): Json<AddReq>) -> Result<Json<Tx
     Ok(Json(to_tx(&t)))
 }
 
+#[derive(Deserialize)]
+struct FetchReq {
+    url: String,
+}
+/// Download any direct http(s) link (no provider needed) - like qBittorrent's "add URL".
+async fn fetch_url(State(s): State<Shared>, Json(req): Json<FetchReq>) -> Result<Json<DlDto>, ApiErr> {
+    if !(req.url.starts_with("http://") || req.url.starts_with("https://")) {
+        return Err(err(StatusCode::BAD_REQUEST, "not an http(s) URL"));
+    }
+    let name = name_from_url(&req.url);
+    let mut st = s.lock().await;
+    let dl = start_download(&mut st, req.url, name);
+    Ok(Json(to_dl(&dl)))
+}
+
 async fn transfers(State(s): State<Shared>) -> Result<Json<Vec<Tx>>, ApiErr> {
     let st = s.lock().await;
     let p = st.provider.as_ref().ok_or_else(|| err(StatusCode::BAD_REQUEST, "connect a provider first"))?;
@@ -154,11 +246,10 @@ struct DlReq {
 struct DlResp {
     started: usize,
 }
-async fn download_h(State(s): State<Shared>, Json(req): Json<DlReq>) -> Result<Json<DlResp>, ApiErr> {
-    // Resolve the transfer's links to direct URLs (needs the provider), then
-    // download each in the background.
-    let (links, out) = {
-        let st = s.lock().await;
+/// Resolve a debrid transfer's files to direct links and start downloading them.
+async fn download_transfer(State(s): State<Shared>, Json(req): Json<DlReq>) -> Result<Json<DlResp>, ApiErr> {
+    let mut st = s.lock().await;
+    let links = {
         let p = st.provider.as_ref().ok_or_else(|| err(StatusCode::BAD_REQUEST, "connect a provider first"))?;
         let t = p.transfer(&TransferId(req.id.clone())).await.map_err(|e| err(StatusCode::BAD_GATEWAY, e))?;
         let mut direct = Vec::new();
@@ -167,16 +258,17 @@ async fn download_h(State(s): State<Shared>, Json(req): Json<DlReq>) -> Result<J
                 direct.push(d);
             }
         }
-        (direct, st.out_dir.clone())
+        direct
     };
     let n = links.len();
-    tokio::fs::create_dir_all(&out).await.ok();
     for d in links {
-        let out = out.clone();
-        tokio::spawn(async move {
-            let dest = out.join(sanitize(&d.filename));
-            let _ = download(&d.url, &dest, &DownloadConfig::default(), |_p| {}).await;
-        });
+        let name = sanitize(&d.filename);
+        start_download(&mut st, d.url, name);
     }
     Ok(Json(DlResp { started: n }))
+}
+
+async fn downloads(State(s): State<Shared>) -> Json<Vec<DlDto>> {
+    let st = s.lock().await;
+    Json(st.downloads.iter().map(|d| to_dl(d)).collect())
 }

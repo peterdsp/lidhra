@@ -1,20 +1,34 @@
-//! Lidhra desktop (Tauri) - native shell over the shared web UI (`ui/`).
+//! Lidhra desktop (Tauri): native shell over the shared web UI (`ui/`).
 //!
 //! The same `ui/index.html` the server serves runs here too; when it detects a
 //! Tauri window it calls these `#[tauri::command]`s via `invoke` instead of HTTP.
 //! Commands drive the `lidhra-debrid` + `lidhra-transfer` crates directly.
 
 use lidhra_debrid::prelude::*;
-use lidhra_transfer::{download as fetch_file, DownloadConfig};
+use lidhra_transfer::{download as fetch_file, DownloadConfig, Progress};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::result::Result; // shadow the prelude's `Result` alias back to std's
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::Arc;
 use tokio::sync::Mutex;
+
+/// One local file download, shared with its background task via atomics.
+struct Dl {
+    id: String,
+    name: String,
+    downloaded: AtomicU64,
+    total: AtomicU64,
+    done: AtomicBool,
+    error: std::sync::Mutex<Option<String>>,
+}
 
 #[derive(Default)]
 struct Inner {
     provider: Option<Box<dyn DebridProvider>>,
     out_dir: Option<PathBuf>,
+    downloads: Vec<Arc<Dl>>,
+    next_id: u64,
 }
 struct AppState(Mutex<Inner>);
 
@@ -45,9 +59,71 @@ fn to_tx(t: &RemoteTransfer) -> Tx {
         links: t.links.len(),
     }
 }
+#[derive(Serialize)]
+struct DlDto {
+    id: String,
+    name: String,
+    downloaded: u64,
+    total: u64,
+    progress: f32,
+    done: bool,
+    error: Option<String>,
+}
+fn to_dl(d: &Dl) -> DlDto {
+    let total = d.total.load(Ordering::Relaxed);
+    let downloaded = d.downloaded.load(Ordering::Relaxed);
+    DlDto {
+        id: d.id.clone(),
+        name: d.name.clone(),
+        downloaded,
+        total,
+        progress: if total > 0 { (downloaded as f32 / total as f32).clamp(0.0, 1.0) } else { 0.0 },
+        done: d.done.load(Ordering::Relaxed),
+        error: d.error.lock().unwrap().clone(),
+    }
+}
+
 fn sanitize(name: &str) -> String {
     let n = Path::new(name).file_name().and_then(|x| x.to_str()).unwrap_or(name);
-    n.chars().map(|c| if matches!(c, '/' | '\\' | ':' | '\0') { '_' } else { c }).collect()
+    let n: String = n.chars().map(|c| if matches!(c, '/' | '\\' | ':' | '\0') { '_' } else { c }).collect();
+    if n.is_empty() { "download".into() } else { n }
+}
+fn name_from_url(url: &str) -> String {
+    let tail = url.rsplit('/').next().unwrap_or("download");
+    sanitize(tail.split('?').next().unwrap_or("download"))
+}
+
+/// Register a download and spawn its background task. Caller holds the state lock.
+fn start_download(inner: &mut Inner, url: String, name: String) -> Arc<Dl> {
+    let dl = Arc::new(Dl {
+        id: format!("d{}", inner.next_id),
+        name,
+        downloaded: AtomicU64::new(0),
+        total: AtomicU64::new(0),
+        done: AtomicBool::new(false),
+        error: std::sync::Mutex::new(None),
+    });
+    inner.next_id += 1;
+    inner.downloads.push(dl.clone());
+    let out = inner.out_dir.clone().unwrap_or_else(|| PathBuf::from("."));
+    let handle = dl.clone();
+    tauri::async_runtime::spawn(async move {
+        let dest = out.join(&handle.name);
+        std::fs::create_dir_all(&out).ok();
+        let cb = handle.clone();
+        let on_progress = move |p: Progress| {
+            cb.downloaded.store(p.downloaded, Ordering::Relaxed);
+            if let Some(t) = p.total {
+                cb.total.store(t, Ordering::Relaxed);
+            }
+        };
+        match fetch_file(&url, &dest, &DownloadConfig::default(), on_progress).await {
+            Ok(o) => handle.total.store(o.bytes, Ordering::Relaxed),
+            Err(e) => *handle.error.lock().unwrap() = Some(e.to_string()),
+        }
+        handle.done.store(true, Ordering::Relaxed);
+    });
+    dl
 }
 
 #[tauri::command]
@@ -78,6 +154,17 @@ async fn add(state: tauri::State<'_, AppState>, magnet: String) -> Result<Tx, St
 }
 
 #[tauri::command]
+async fn fetch(state: tauri::State<'_, AppState>, url: String) -> Result<DlDto, String> {
+    if !(url.starts_with("http://") || url.starts_with("https://")) {
+        return Err("not an http(s) URL".into());
+    }
+    let name = name_from_url(&url);
+    let mut g = state.0.lock().await;
+    let dl = start_download(&mut g, url, name);
+    Ok(to_dl(&dl))
+}
+
+#[tauri::command]
 async fn transfers(state: tauri::State<'_, AppState>) -> Result<Vec<Tx>, String> {
     let g = state.0.lock().await;
     let p = g.provider.as_ref().ok_or("connect a provider first")?;
@@ -87,8 +174,8 @@ async fn transfers(state: tauri::State<'_, AppState>) -> Result<Vec<Tx>, String>
 
 #[tauri::command]
 async fn download(state: tauri::State<'_, AppState>, id: String) -> Result<usize, String> {
-    let (links, out) = {
-        let g = state.0.lock().await;
+    let mut g = state.0.lock().await;
+    let links = {
         let p = g.provider.as_ref().ok_or("connect a provider first")?;
         let t = p.transfer(&TransferId(id)).await.map_err(|e| e.to_string())?;
         let mut direct = Vec::new();
@@ -97,26 +184,30 @@ async fn download(state: tauri::State<'_, AppState>, id: String) -> Result<usize
                 direct.push(d);
             }
         }
-        (direct, g.out_dir.clone().unwrap_or_else(|| PathBuf::from(".")))
+        direct
     };
     let n = links.len();
-    std::fs::create_dir_all(&out).ok();
     for d in links {
-        let out = out.clone();
-        tauri::async_runtime::spawn(async move {
-            let dest = out.join(sanitize(&d.filename));
-            let _ = fetch_file(&d.url, &dest, &DownloadConfig::default(), |_p| {}).await;
-        });
+        let name = sanitize(&d.filename);
+        start_download(&mut g, d.url, name);
     }
     Ok(n)
+}
+
+#[tauri::command]
+async fn downloads(state: tauri::State<'_, AppState>) -> Result<Vec<DlDto>, String> {
+    let g = state.0.lock().await;
+    Ok(g.downloads.iter().map(|d| to_dl(d)).collect())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let out_dir = std::env::var("HOME").ok().map(|h| PathBuf::from(h).join("Downloads"));
     tauri::Builder::default()
-        .manage(AppState(Mutex::new(Inner { provider: None, out_dir })))
-        .invoke_handler(tauri::generate_handler![providers, connect, add, transfers, download])
+        .manage(AppState(Mutex::new(Inner { out_dir, ..Default::default() })))
+        .invoke_handler(tauri::generate_handler![
+            providers, connect, add, fetch, transfers, download, downloads
+        ])
         .run(tauri::generate_context!())
         .expect("error while running Lidhra");
 }

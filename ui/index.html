@@ -76,7 +76,7 @@
   <div class="panel">
     <h2>Add transfer</h2>
     <div class="row">
-      <input class="grow mono" id="magnet" placeholder="magnet:?xt=urn:btih:… (a Linux ISO, CC film, your own file)">
+      <input class="grow mono" id="magnet" placeholder="magnet:?xt=urn:btih:…  or a direct https:// link">
       <button class="p" id="add" disabled>Add</button>
     </div>
     <div class="status" id="addStatus"></div>
@@ -86,6 +86,11 @@
     <h2>Transfers</h2>
     <div class="list" id="list"><div class="empty">Connect a provider, then add a magnet.</div></div>
   </div>
+
+  <div class="panel">
+    <h2>Downloads</h2>
+    <div class="list" id="dlist"><div class="empty">Nothing downloading yet.</div></div>
+  </div>
 </div>
 
 <script>
@@ -94,7 +99,8 @@
   const TAURI = !!(window.__TAURI__ && window.__TAURI__.core);
   const ROUTES = {
     providers:['GET','/api/providers'], connect:['POST','/api/connect'],
-    add:['POST','/api/add'], transfers:['GET','/api/transfers'], download:['POST','/api/download'],
+    add:['POST','/api/add'], fetch:['POST','/api/fetch'],
+    transfers:['GET','/api/transfers'], download:['POST','/api/download'], downloads:['GET','/api/downloads'],
   };
   async function api(name, args){
     if(TAURI) return window.__TAURI__.core.invoke(name, args||{});
@@ -110,10 +116,13 @@
   let connected=false, poll=null;
 
   async function init(){
+    $('#add').disabled=false; // direct links work without a provider
     try{
       const provs = await api('providers');
       $('#provider').innerHTML = provs.map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
     }catch(e){ setStatus('#connStatus', 'could not load providers: '+e.message, 'err'); }
+    refreshDownloads();
+    setInterval(refreshDownloads, 1500);
   }
   function setStatus(sel,msg,cls){ const el=$(sel); el.textContent=msg||''; el.className='status'+(cls?' '+cls:''); }
 
@@ -132,11 +141,16 @@
   };
 
   $('#add').onclick = async ()=>{
-    const magnet=$('#magnet').value.trim();
-    if(!magnet){ setStatus('#addStatus','paste a magnet or info-hash','err'); return; }
-    setStatus('#addStatus','adding…');
-    try{ await api('add', {magnet}); $('#magnet').value=''; setStatus('#addStatus','added ✓','ok'); refresh(); }
-    catch(e){ setStatus('#addStatus', e.message, 'err'); }
+    const v=$('#magnet').value.trim();
+    if(!v){ setStatus('#addStatus','paste a magnet, info-hash, or direct link','err'); return; }
+    const isUrl=/^https?:\/\//i.test(v);
+    if(!isUrl && !connected){ setStatus('#addStatus','connect a provider to add magnets','err'); return; }
+    setStatus('#addStatus', isUrl?'starting download…':'adding…');
+    try{
+      if(isUrl){ await api('fetch',{url:v}); refreshDownloads(); }
+      else { await api('add',{magnet:v}); refresh(); }
+      $('#magnet').value=''; setStatus('#addStatus','added','ok');
+    }catch(e){ setStatus('#addStatus', e.message, 'err'); }
   };
 
   function startPolling(){ if(poll) clearInterval(poll); refresh(); poll=setInterval(refresh, 2500); }
@@ -160,6 +174,22 @@
         try{ const r=await api('download',{id:a.dataset.dl}); a.textContent=`downloading ${r.started||''} file(s)`; }
         catch(e){ a.textContent='error: '+e.message; }
       });
+    }catch(e){ /* transient */ }
+  }
+  async function refreshDownloads(){
+    try{
+      const items = await api('downloads');
+      const dl=$('#dlist');
+      if(!items.length){ dl.innerHTML='<div class="empty">Nothing downloading yet.</div>'; return; }
+      dl.innerHTML = items.map(d=>{
+        const pct = d.done && !d.error ? 100 : Math.round((d.progress||0)*100);
+        const mb=(d.downloaded/1e6).toFixed(1), tot=d.total?(d.total/1e6).toFixed(1):'?';
+        const st = d.error ? 'Error' : (d.done ? 'Ready' : 'Downloading');
+        return `<div class="t"><div class="top"><span class="nm">${esc(d.name)}</span>
+          <span class="pill ${st}">${d.error?'error':(d.done?'done':'downloading')}</span></div>
+          <div class="bar"><i style="width:${pct}%"></i></div>
+          <div class="meta"><span>${d.error?esc(d.error):`${mb} / ${tot} MB`}</span><span>${pct}%</span></div></div>`;
+      }).join('');
     }catch(e){ /* transient */ }
   }
   function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
