@@ -7,192 +7,238 @@
 <style>
   :root{
     --grad:linear-gradient(135deg,#15C3B6,#2FD191 56%,#54E06A);
-    --bg:#060f0c; --bg2:#0a1512; --panel:#0e1d17; --line:rgba(120,220,180,.14); --line2:rgba(120,220,180,.24);
+    --bg:#070f0c; --bg2:#0a1512; --panel:#0e1d17; --panel2:#12271f;
+    --line:rgba(120,220,180,.13); --line2:rgba(120,220,180,.22);
     --fg:#eafff6; --soft:#a9c7bd; --mute:#6f8a7f; --acc:#63e6b0;
     --down:#22bd7a; --seed:#11a594; --pause:#8a94a8; --err:#e75555;
     --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
     --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
-    background-image:radial-gradient(800px 460px at 88% -6%,rgba(47,209,145,.1),transparent 60%);min-height:100vh}
-  .wrap{max-width:900px;margin:0 auto;padding:22px 20px 60px}
-  a{color:var(--acc)}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;
+    background-image:radial-gradient(900px 500px at 82% -8%,rgba(47,209,145,.09),transparent 60%)}
+  a{color:var(--acc);text-decoration:none}
   .mono{font-family:var(--mono)}
-  header{display:flex;align-items:center;gap:11px;padding:6px 0 20px}
-  header svg{width:30px;height:30px}
-  header b{font-weight:800;letter-spacing:.02em;font-size:19px}
-  header .sp{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--mute)}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px}
-  .panel h2{margin:0 0 12px;font-size:13px;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  input,select{background:var(--bg2);border:1px solid var(--line);border-radius:10px;color:var(--fg);
-    font:inherit;font-size:14px;padding:10px 12px;outline:none}
-  input:focus,select:focus{border-color:var(--acc)}
-  input.grow{flex:1;min-width:200px}
-  button{font:inherit;font-size:14px;font-weight:700;border-radius:100px;padding:10px 18px;border:1px solid transparent;cursor:pointer}
-  button.p{background:var(--grad);color:#06251b}
-  button.p:hover{filter:brightness(1.05)}
-  button.s{background:transparent;border-color:var(--line2);color:var(--fg)}
-  button:disabled{opacity:.5;cursor:default}
-  .status{font-family:var(--mono);font-size:12px;color:var(--soft);margin-top:10px;min-height:16px}
-  .status.err{color:var(--err)}
-  .status.ok{color:var(--acc)}
-  .list{display:flex;flex-direction:column;gap:10px}
-  .t{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-  .t .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
-  .t .nm{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pill{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;white-space:nowrap}
-  .pill.Ready{background:rgba(17,165,148,.18);color:#3ce0c0}
+
+  .app{display:grid;grid-template-columns:212px 1fr;height:100vh}
+  @media(max-width:640px){.app{grid-template-columns:1fr}.side{display:none}}
+
+  /* sidebar (liquid-glass) */
+  .side{border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:4px;
+    background:linear-gradient(180deg,rgba(255,255,255,.03),transparent)}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:.02em;font-size:16px;padding:4px 8px 14px}
+  .brand svg{width:24px;height:24px}
+  .grp{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);padding:14px 10px 6px}
+  .nav{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;color:var(--soft);cursor:pointer;font-size:13.5px}
+  .nav:hover{background:rgba(120,220,180,.06)}
+  .nav.on{background:rgba(17,165,148,.16);color:var(--acc);font-weight:600}
+  .nav .ic{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .nav .c{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--mute)}
+  .side .foot{margin-top:auto;border-top:1px solid var(--line);padding-top:12px}
+  .conn{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--soft);padding:4px 8px}
+  .conn .dot{width:8px;height:8px;border-radius:50%;background:var(--pause)}
+  .conn .dot.on{background:var(--down)}
+  .conn a{margin-left:auto;font-size:12px}
+  .pform{display:none;flex-direction:column;gap:8px;padding:10px 8px 4px}
+  .pform.show{display:flex}
+  .pform select,.pform input{background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--fg);font:inherit;font-size:12.5px;padding:8px 10px;outline:none}
+  .pform select:focus,.pform input:focus{border-color:var(--acc)}
+  .pform button{font:inherit;font-size:12.5px;font-weight:700;border:none;border-radius:8px;padding:8px;background:var(--grad);color:#06251b;cursor:pointer}
+  .pform .msg{font-family:var(--mono);font-size:10.5px;color:var(--soft);min-height:12px}
+  .pform .msg.err{color:var(--err)}
+
+  /* main */
+  .main{display:flex;flex-direction:column;min-width:0}
+  .bar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);
+    background:rgba(10,21,18,.6);backdrop-filter:blur(10px)}
+  .bar input{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--line);border-radius:100px;color:var(--fg);
+    font-family:var(--mono);font-size:13px;padding:10px 16px;outline:none}
+  .bar input:focus{border-color:var(--acc)}
+  .bar button{font:inherit;font-size:13.5px;font-weight:700;border:none;border-radius:100px;padding:10px 20px;background:var(--grad);color:#06251b;cursor:pointer}
+  .bar .sum{font-family:var(--mono);font-size:11px;color:var(--mute);white-space:nowrap}
+  .msg2{font-family:var(--mono);font-size:11px;color:var(--soft);padding:6px 18px 0;min-height:14px}
+  .msg2.err{color:var(--err)} .msg2.ok{color:var(--acc)}
+
+  .scroll{flex:1;overflow:auto;padding:14px 18px 40px}
+  .sec{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:14px 4px 10px}
+  .sec:first-child{margin-top:0}
+  .list{display:flex;flex-direction:column;gap:8px}
+  .empty{color:var(--mute);font-size:13px;padding:14px 4px}
+
+  .row{display:flex;align-items:center;gap:13px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .row:hover{border-color:var(--line2)}
+  .row .st{width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;color:#04120c;font-family:var(--mono);font-size:13px;font-weight:700}
+  .row .body{flex:1;min-width:0}
+  .row .nm{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .hb{height:5px;border-radius:100px;background:rgba(120,150,140,.22);overflow:hidden;margin:8px 0 6px}
+  .row .hb>i{display:block;height:100%;border-radius:100px}
+  .row .meta{font-family:var(--mono);font-size:10.5px;color:var(--mute);display:flex;gap:10px}
+  .row .right{text-align:right;flex:0 0 auto;min-width:76px}
+  .row .pct{font-family:var(--mono);font-size:13px;font-weight:700}
+  .row .act{font-family:var(--mono);font-size:11px;display:inline-block;margin-top:4px;cursor:pointer}
+  .pill{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;text-transform:lowercase}
   .pill.Downloading{background:rgba(34,189,122,.16);color:var(--down)}
+  .pill.Seeding,.pill.Ready{background:rgba(17,165,148,.18);color:#3ce0c0}
   .pill.Queued{background:rgba(138,148,168,.18);color:var(--pause)}
   .pill.Error{background:rgba(231,85,85,.16);color:var(--err)}
-  .bar{height:6px;border-radius:100px;background:rgba(120,150,140,.25);overflow:hidden;margin-top:9px}
-  .bar>i{display:block;height:100%;border-radius:100px;background:var(--grad);transition:width .3s}
-  .t .meta{font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:7px;display:flex;justify-content:space-between;gap:10px}
-  .empty{color:var(--mute);font-size:13px;text-align:center;padding:22px}
-  .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--pause);display:inline-block;margin-right:6px}
-  .conn-dot.on{background:var(--down)}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <svg viewBox="0 0 1024 1024"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#15C3B6"/><stop offset=".56" stop-color="#2FD191"/><stop offset="1" stop-color="#54E06A"/></linearGradient></defs><g fill="none" stroke="url(#g)" stroke-width="112" stroke-linecap="round" stroke-linejoin="round"><path d="M 348 258 C 214 315, 210 510, 326 594 C 414 658, 490 618, 550 558"/><path d="M 676 766 C 810 709, 814 514, 698 430 C 610 366, 534 406, 474 466"/></g></svg>
-    <b>Lidhra</b>
-    <span class="sp"><span class="conn-dot" id="dot"></span><span id="conn">not connected</span></span>
-  </header>
-
-  <div class="panel">
-    <h2>Provider</h2>
-    <div class="row">
-      <select id="provider"></select>
-      <input class="grow" id="token" type="password" placeholder="API token (from your debrid account)" autocomplete="off">
-      <button class="p" id="connect">Connect</button>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <svg viewBox="0 0 1024 1024"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#15C3B6"/><stop offset=".56" stop-color="#2FD191"/><stop offset="1" stop-color="#54E06A"/></linearGradient></defs><g fill="none" stroke="url(#g)" stroke-width="112" stroke-linecap="round" stroke-linejoin="round"><path d="M 348 258 C 214 315, 210 510, 326 594 C 414 658, 490 618, 550 558"/><path d="M 676 766 C 810 709, 814 514, 698 430 C 610 366, 534 406, 474 466"/></g></svg>
+      Lidhra
     </div>
-    <div class="status" id="connStatus"></div>
-  </div>
+    <div class="grp">Library</div>
+    <div class="nav on" data-f="all"><span class="ic" style="background:var(--acc)"></span>Overview<span class="c" id="c-all">0</span></div>
+    <div class="nav" data-f="Downloading"><span class="ic" style="background:var(--down)"></span>Downloading<span class="c" id="c-Downloading">0</span></div>
+    <div class="nav" data-f="Seeding"><span class="ic" style="background:var(--seed)"></span>Seeding<span class="c" id="c-Seeding">0</span></div>
+    <div class="nav" data-f="Queued"><span class="ic" style="background:var(--pause)"></span>Queued<span class="c" id="c-Queued">0</span></div>
 
-  <div class="panel">
-    <h2>Add transfer</h2>
-    <div class="row">
-      <input class="grow mono" id="magnet" placeholder="magnet:?xt=urn:btih:…  or a direct https:// link">
-      <button class="p" id="add" disabled>Add</button>
+    <div class="foot">
+      <div class="conn"><span class="dot" id="dot"></span><span id="conn">Not connected</span><a href="#" id="toggle">Connect</a></div>
+      <div class="pform" id="pform">
+        <select id="provider"></select>
+        <input id="token" type="password" placeholder="API token" autocomplete="off">
+        <button id="connect">Connect account</button>
+        <div class="msg" id="cmsg"></div>
+      </div>
     </div>
-    <div class="status" id="addStatus"></div>
-  </div>
+  </aside>
 
-  <div class="panel">
-    <h2>Transfers</h2>
-    <div class="list" id="list"><div class="empty">Connect a provider, then add a magnet.</div></div>
-  </div>
-
-  <div class="panel">
-    <h2>Downloads</h2>
-    <div class="list" id="dlist"><div class="empty">Nothing downloading yet.</div></div>
-  </div>
+  <main class="main">
+    <div class="bar">
+      <input id="add-in" class="mono" placeholder="Paste a magnet, info-hash, or a direct https:// link">
+      <button id="add-btn">Add</button>
+      <span class="sum" id="sum"></span>
+    </div>
+    <div class="msg2" id="amsg"></div>
+    <div class="scroll">
+      <div class="sec">Cloud transfers</div>
+      <div class="list" id="tlist"><div class="empty">Connect your debrid account, then add a magnet.</div></div>
+      <div class="sec">Downloads</div>
+      <div class="list" id="dlist"><div class="empty">Nothing downloading yet.</div></div>
+    </div>
+  </main>
 </div>
 
 <script>
-  // Works both in the browser (talks to the axum server over /api) and inside a
-  // Tauri window (calls Rust commands via invoke). One UI, two backends.
+  // One UI for two backends: the browser talks to the axum server over /api,
+  // a Tauri window calls the Rust commands via invoke.
   const TAURI = !!(window.__TAURI__ && window.__TAURI__.core);
   const ROUTES = {
     providers:['GET','/api/providers'], connect:['POST','/api/connect'],
     add:['POST','/api/add'], fetch:['POST','/api/fetch'],
     transfers:['GET','/api/transfers'], download:['POST','/api/download'], downloads:['GET','/api/downloads'],
   };
-  async function api(name, args){
-    if(TAURI) return window.__TAURI__.core.invoke(name, args||{});
+  async function api(name,args){
+    if(TAURI) return window.__TAURI__.core.invoke(name,args||{});
     const [m,u]=ROUTES[name];
-    const opt = m==='GET' ? {} : {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(args||{})};
-    const r = await fetch(u, opt);
-    const data = await r.json().catch(()=>({error:r.statusText}));
-    if(!r.ok) throw new Error(data.error||r.statusText);
-    return data;
+    const opt = m==='GET'?{}:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(args||{})};
+    const r=await fetch(u,opt); const d=await r.json().catch(()=>({error:r.statusText}));
+    if(!r.ok) throw new Error(d.error||r.statusText); return d;
   }
-
   const $=s=>document.querySelector(s);
-  let connected=false, poll=null;
+  const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let connected=false, filter='all', tpoll=null, lastTx=[];
+
+  const COLOR={Downloading:'var(--down)',Seeding:'var(--seed)',Ready:'var(--seed)',Queued:'var(--pause)',Error:'var(--err)'};
+  const GLYPH={Downloading:'↓',Seeding:'↑',Ready:'✓',Queued:'‖',Error:'!'};
 
   async function init(){
-    $('#add').disabled=false; // direct links work without a provider
     try{
-      const provs = await api('providers');
-      $('#provider').innerHTML = provs.map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
-    }catch(e){ setStatus('#connStatus', 'could not load providers: '+e.message, 'err'); }
-    refreshDownloads();
-    setInterval(refreshDownloads, 1500);
+      const p=await api('providers');
+      $('#provider').innerHTML=p.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');
+    }catch(e){}
+    // sidebar filters
+    document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>{
+      document.querySelectorAll('.nav').forEach(x=>x.classList.remove('on'));
+      n.classList.add('on'); filter=n.dataset.f; renderTx(lastTx);
+    });
+    $('#toggle').onclick=e=>{e.preventDefault(); $('#pform').classList.toggle('show');};
+    $('#connect').onclick=doConnect;
+    $('#add-btn').onclick=doAdd;
+    $('#add-in').addEventListener('keydown',e=>{if(e.key==='Enter')doAdd();});
+    refreshDownloads(); setInterval(refreshDownloads,1500);
   }
-  function setStatus(sel,msg,cls){ const el=$(sel); el.textContent=msg||''; el.className='status'+(cls?' '+cls:''); }
 
-  $('#connect').onclick = async ()=>{
+  async function doConnect(){
     const provider=$('#provider').value, token=$('#token').value.trim();
-    if(!token){ setStatus('#connStatus','enter your API token','err'); return; }
-    setStatus('#connStatus','connecting…');
+    if(!token){ $('#cmsg').textContent='enter your API token'; $('#cmsg').className='msg err'; return; }
+    $('#cmsg').textContent='connecting...'; $('#cmsg').className='msg';
     try{
-      const acct = await api('connect', {provider, token});
-      connected=true; $('#add').disabled=false;
-      $('#dot').classList.add('on'); $('#conn').textContent = acct.username||'connected';
-      setStatus('#connStatus', `connected - ${acct.username||''}${acct.premium?' · premium':''}`, 'ok');
-      startPolling();
-    }catch(e){ connected=false; $('#dot').classList.remove('on'); $('#conn').textContent='not connected';
-      setStatus('#connStatus', e.message, 'err'); }
-  };
+      const a=await api('connect',{provider,token});
+      connected=true; $('#dot').classList.add('on');
+      $('#conn').textContent=a.username||'connected'; $('#toggle').textContent='Change';
+      $('#pform').classList.remove('show'); $('#cmsg').textContent='';
+      startTransfers();
+    }catch(e){ connected=false; $('#dot').classList.remove('on'); $('#cmsg').textContent=e.message; $('#cmsg').className='msg err'; }
+  }
 
-  $('#add').onclick = async ()=>{
-    const v=$('#magnet').value.trim();
-    if(!v){ setStatus('#addStatus','paste a magnet, info-hash, or direct link','err'); return; }
+  async function doAdd(){
+    const v=$('#add-in').value.trim();
+    if(!v){ return; }
     const isUrl=/^https?:\/\//i.test(v);
-    if(!isUrl && !connected){ setStatus('#addStatus','connect a provider to add magnets','err'); return; }
-    setStatus('#addStatus', isUrl?'starting download…':'adding…');
+    if(!isUrl && !connected){ msg('#amsg','connect your debrid account to add magnets','err'); return; }
+    msg('#amsg', isUrl?'starting download...':'adding...');
     try{
       if(isUrl){ await api('fetch',{url:v}); refreshDownloads(); }
-      else { await api('add',{magnet:v}); refresh(); }
-      $('#magnet').value=''; setStatus('#addStatus','added','ok');
-    }catch(e){ setStatus('#addStatus', e.message, 'err'); }
-  };
-
-  function startPolling(){ if(poll) clearInterval(poll); refresh(); poll=setInterval(refresh, 2500); }
-  async function refresh(){
-    if(!connected) return;
-    try{
-      const items = await api('transfers');
-      const list=$('#list');
-      if(!items.length){ list.innerHTML='<div class="empty">No transfers yet.</div>'; return; }
-      list.innerHTML = items.map(t=>{
-        const pct=Math.round((t.progress||0)*100);
-        const ready = t.status==='Ready';
-        return `<div class="t"><div class="top"><span class="nm">${esc(t.name||t.id)}</span>
-          <span class="pill ${t.status}">${t.status}</span></div>
-          <div class="bar"><i style="width:${pct}%"></i></div>
-          <div class="meta"><span>${pct}%${t.links?` · ${t.links} file(s)`:''}</span>
-          ${ready?`<a href="#" data-dl="${t.id}">download →</a>`:''}</div></div>`;
-      }).join('');
-      list.querySelectorAll('[data-dl]').forEach(a=>a.onclick=async ev=>{
-        ev.preventDefault(); a.textContent='starting…';
-        try{ const r=await api('download',{id:a.dataset.dl}); a.textContent=`downloading ${r.started||''} file(s)`; }
-        catch(e){ a.textContent='error: '+e.message; }
-      });
-    }catch(e){ /* transient */ }
+      else { await api('add',{magnet:v}); refreshTransfers(); }
+      $('#add-in').value=''; msg('#amsg','added','ok');
+    }catch(e){ msg('#amsg',e.message,'err'); }
   }
+  function msg(sel,t,cls){ const el=$(sel); el.textContent=t||''; el.className='msg2'+(cls?' '+cls:''); }
+
+  function startTransfers(){ if(tpoll)clearInterval(tpoll); refreshTransfers(); tpoll=setInterval(refreshTransfers,2500); }
+  async function refreshTransfers(){
+    if(!connected) return;
+    try{ lastTx=await api('transfers'); renderTx(lastTx); updateCounts(lastTx); }catch(e){}
+  }
+  function updateCounts(items){
+    const by=s=>items.filter(t=>t.status===s).length;
+    $('#c-all').textContent=items.length;
+    $('#c-Downloading').textContent=by('Downloading');
+    $('#c-Seeding').textContent=by('Seeding');
+    $('#c-Queued').textContent=by('Queued');
+    $('#sum').textContent=`${items.length} transfer(s)`;
+  }
+  function renderTx(items){
+    const el=$('#tlist');
+    const list=filter==='all'?items:items.filter(t=>t.status===filter);
+    if(!list.length){ el.innerHTML='<div class="empty">'+(connected?'No transfers here.':'Connect your debrid account, then add a magnet.')+'</div>'; return; }
+    el.innerHTML=list.map(t=>{
+      const pct=Math.round((t.progress||0)*100), col=COLOR[t.status]||'var(--pause)';
+      return `<div class="row"><div class="st" style="background:${col}">${GLYPH[t.status]||''}</div>
+        <div class="body"><div class="nm">${esc(t.name||t.id)}</div>
+          <div class="hb"><i style="width:${pct}%;background:${col}"></i></div>
+          <div class="meta"><span class="pill ${t.status}">${t.status.toLowerCase()}</span>${t.links?`<span>${t.links} file(s)</span>`:''}</div></div>
+        <div class="right"><div class="pct">${pct}%</div>${t.status==='Ready'?`<a class="act" data-dl="${t.id}">download</a>`:''}</div></div>`;
+    }).join('');
+    el.querySelectorAll('[data-dl]').forEach(a=>a.onclick=async()=>{
+      a.textContent='starting...';
+      try{ const r=await api('download',{id:a.dataset.dl}); a.textContent=`${r.started||0} queued`; refreshDownloads(); }
+      catch(e){ a.textContent='error'; }
+    });
+  }
+
   async function refreshDownloads(){
     try{
-      const items = await api('downloads');
-      const dl=$('#dlist');
-      if(!items.length){ dl.innerHTML='<div class="empty">Nothing downloading yet.</div>'; return; }
-      dl.innerHTML = items.map(d=>{
-        const pct = d.done && !d.error ? 100 : Math.round((d.progress||0)*100);
+      const items=await api('downloads'); const el=$('#dlist');
+      if(!items.length){ el.innerHTML='<div class="empty">Nothing downloading yet.</div>'; return; }
+      el.innerHTML=items.map(d=>{
+        const pct=d.done&&!d.error?100:Math.round((d.progress||0)*100);
         const mb=(d.downloaded/1e6).toFixed(1), tot=d.total?(d.total/1e6).toFixed(1):'?';
-        const st = d.error ? 'Error' : (d.done ? 'Ready' : 'Downloading');
-        return `<div class="t"><div class="top"><span class="nm">${esc(d.name)}</span>
-          <span class="pill ${st}">${d.error?'error':(d.done?'done':'downloading')}</span></div>
-          <div class="bar"><i style="width:${pct}%"></i></div>
-          <div class="meta"><span>${d.error?esc(d.error):`${mb} / ${tot} MB`}</span><span>${pct}%</span></div></div>`;
+        const status=d.error?'Error':(d.done?'Ready':'Downloading'), col=COLOR[status];
+        return `<div class="row"><div class="st" style="background:${col}">${GLYPH[status]}</div>
+          <div class="body"><div class="nm">${esc(d.name)}</div>
+            <div class="hb"><i style="width:${pct}%;background:${col}"></i></div>
+            <div class="meta"><span class="pill ${status}">${d.error?'error':(d.done?'done':'downloading')}</span><span>${d.error?esc(d.error):`${mb} / ${tot} MB`}</span></div></div>
+          <div class="right"><div class="pct">${pct}%</div></div></div>`;
       }).join('');
-    }catch(e){ /* transient */ }
+    }catch(e){}
   }
-  function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
   init();
 </script>
 </body>
