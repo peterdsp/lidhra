@@ -1,0 +1,18 @@
+[package]
+name = "lidhra-server"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Local HTTP server exposing Lidhra's debrid + transfer engine and web UI — the headless / Web-UI mode (also what the PWA and smart-TV clients talk to)."
+
+[[bin]]
+name = "lidhra-server"
+path = "src/main.rs"
+
+[dependencies]
+axum = { version = "0.7", features = ["json"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "fs"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+lidhra-debrid = { path = "../lidhra-debrid" }
+lidhra-transfer = { path = "../lidhra-transfer" }

@@ -5,4 +5,5 @@ members = [
     "lidhra-debrid",   # unified debrid / multi-hoster interface + adapters
     "lidhra-transfer", # segmented, resumable HTTPS download engine
     "lidhra-cli",      # `lidhra` binary: magnet -> debrid -> download
+    "lidhra-server",   # local HTTP server + web UI (headless / Web-UI mode)
 ]

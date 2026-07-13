@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lidhra</title>
+<style>
+  :root{
+    --grad:linear-gradient(135deg,#15C3B6,#2FD191 56%,#54E06A);
+    --bg:#060f0c; --bg2:#0a1512; --panel:#0e1d17; --line:rgba(120,220,180,.14); --line2:rgba(120,220,180,.24);
+    --fg:#eafff6; --soft:#a9c7bd; --mute:#6f8a7f; --acc:#63e6b0;
+    --down:#22bd7a; --seed:#11a594; --pause:#8a94a8; --err:#e75555;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
+    background-image:radial-gradient(800px 460px at 88% -6%,rgba(47,209,145,.1),transparent 60%);min-height:100vh}
+  .wrap{max-width:900px;margin:0 auto;padding:22px 20px 60px}
+  a{color:var(--acc)}
+  .mono{font-family:var(--mono)}
+  header{display:flex;align-items:center;gap:11px;padding:6px 0 20px}
+  header svg{width:30px;height:30px}
+  header b{font-weight:800;letter-spacing:.02em;font-size:19px}
+  header .sp{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--mute)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px}
+  .panel h2{margin:0 0 12px;font-size:13px;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input,select{background:var(--bg2);border:1px solid var(--line);border-radius:10px;color:var(--fg);
+    font:inherit;font-size:14px;padding:10px 12px;outline:none}
+  input:focus,select:focus{border-color:var(--acc)}
+  input.grow{flex:1;min-width:200px}
+  button{font:inherit;font-size:14px;font-weight:700;border-radius:100px;padding:10px 18px;border:1px solid transparent;cursor:pointer}
+  button.p{background:var(--grad);color:#06251b}
+  button.p:hover{filter:brightness(1.05)}
+  button.s{background:transparent;border-color:var(--line2);color:var(--fg)}
+  button:disabled{opacity:.5;cursor:default}
+  .status{font-family:var(--mono);font-size:12px;color:var(--soft);margin-top:10px;min-height:16px}
+  .status.err{color:var(--err)}
+  .status.ok{color:var(--acc)}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .t{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .t .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .t .nm{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;white-space:nowrap}
+  .pill.Ready{background:rgba(17,165,148,.18);color:#3ce0c0}
+  .pill.Downloading{background:rgba(34,189,122,.16);color:var(--down)}
+  .pill.Queued{background:rgba(138,148,168,.18);color:var(--pause)}
+  .pill.Error{background:rgba(231,85,85,.16);color:var(--err)}
+  .bar{height:6px;border-radius:100px;background:rgba(120,150,140,.25);overflow:hidden;margin-top:9px}
+  .bar>i{display:block;height:100%;border-radius:100px;background:var(--grad);transition:width .3s}
+  .t .meta{font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:7px;display:flex;justify-content:space-between;gap:10px}
+  .empty{color:var(--mute);font-size:13px;text-align:center;padding:22px}
+  .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--pause);display:inline-block;margin-right:6px}
+  .conn-dot.on{background:var(--down)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg viewBox="0 0 1024 1024"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#15C3B6"/><stop offset=".56" stop-color="#2FD191"/><stop offset="1" stop-color="#54E06A"/></linearGradient></defs><g fill="none" stroke="url(#g)" stroke-width="112" stroke-linecap="round" stroke-linejoin="round"><path d="M 348 258 C 214 315, 210 510, 326 594 C 414 658, 490 618, 550 558"/><path d="M 676 766 C 810 709, 814 514, 698 430 C 610 366, 534 406, 474 466"/></g></svg>
+    <b>Lidhra</b>
+    <span class="sp"><span class="conn-dot" id="dot"></span><span id="conn">not connected</span></span>
+  </header>
+
+  <div class="panel">
+    <h2>Provider</h2>
+    <div class="row">
+      <select id="provider"></select>
+      <input class="grow" id="token" type="password" placeholder="API token (from your debrid account)" autocomplete="off">
+      <button class="p" id="connect">Connect</button>
+    </div>
+    <div class="status" id="connStatus"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Add transfer</h2>
+    <div class="row">
+      <input class="grow mono" id="magnet" placeholder="magnet:?xt=urn:btih:… (a Linux ISO, CC film, your own file)">
+      <button class="p" id="add" disabled>Add</button>
+    </div>
+    <div class="status" id="addStatus"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Transfers</h2>
+    <div class="list" id="list"><div class="empty">Connect a provider, then add a magnet.</div></div>
+  </div>
+</div>
+
+<script>
+  // Works both in the browser (talks to the axum server over /api) and inside a
+  // Tauri window (calls Rust commands via invoke). One UI, two backends.
+  const TAURI = !!(window.__TAURI__ && window.__TAURI__.core);
+  const ROUTES = {
+    providers:['GET','/api/providers'], connect:['POST','/api/connect'],
+    add:['POST','/api/add'], transfers:['GET','/api/transfers'], download:['POST','/api/download'],
+  };
+  async function api(name, args){
+    if(TAURI) return window.__TAURI__.core.invoke(name, args||{});
+    const [m,u]=ROUTES[name];
+    const opt = m==='GET' ? {} : {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(args||{})};
+    const r = await fetch(u, opt);
+    const data = await r.json().catch(()=>({error:r.statusText}));
+    if(!r.ok) throw new Error(data.error||r.statusText);
+    return data;
+  }
+
+  const $=s=>document.querySelector(s);
+  let connected=false, poll=null;
+
+  async function init(){
+    try{
+      const provs = await api('providers');
+      $('#provider').innerHTML = provs.map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+    }catch(e){ setStatus('#connStatus', 'could not load providers: '+e.message, 'err'); }
+  }
+  function setStatus(sel,msg,cls){ const el=$(sel); el.textContent=msg||''; el.className='status'+(cls?' '+cls:''); }
+
+  $('#connect').onclick = async ()=>{
+    const provider=$('#provider').value, token=$('#token').value.trim();
+    if(!token){ setStatus('#connStatus','enter your API token','err'); return; }
+    setStatus('#connStatus','connecting…');
+    try{
+      const acct = await api('connect', {provider, token});
+      connected=true; $('#add').disabled=false;
+      $('#dot').classList.add('on'); $('#conn').textContent = acct.username||'connected';
+      setStatus('#connStatus', `connected — ${acct.username||''}${acct.premium?' · premium':''}`, 'ok');
+      startPolling();
+    }catch(e){ connected=false; $('#dot').classList.remove('on'); $('#conn').textContent='not connected';
+      setStatus('#connStatus', e.message, 'err'); }
+  };
+
+  $('#add').onclick = async ()=>{
+    const magnet=$('#magnet').value.trim();
+    if(!magnet){ setStatus('#addStatus','paste a magnet or info-hash','err'); return; }
+    setStatus('#addStatus','adding…');
+    try{ await api('add', {magnet}); $('#magnet').value=''; setStatus('#addStatus','added ✓','ok'); refresh(); }
+    catch(e){ setStatus('#addStatus', e.message, 'err'); }
+  };
+
+  function startPolling(){ if(poll) clearInterval(poll); refresh(); poll=setInterval(refresh, 2500); }
+  async function refresh(){
+    if(!connected) return;
+    try{
+      const items = await api('transfers');
+      const list=$('#list');
+      if(!items.length){ list.innerHTML='<div class="empty">No transfers yet.</div>'; return; }
+      list.innerHTML = items.map(t=>{
+        const pct=Math.round((t.progress||0)*100);
+        const ready = t.status==='Ready';
+        return `<div class="t"><div class="top"><span class="nm">${esc(t.name||t.id)}</span>
+          <span class="pill ${t.status}">${t.status}</span></div>
+          <div class="bar"><i style="width:${pct}%"></i></div>
+          <div class="meta"><span>${pct}%${t.links?` · ${t.links} file(s)`:''}</span>
+          ${ready?`<a href="#" data-dl="${t.id}">download →</a>`:''}</div></div>`;
+      }).join('');
+      list.querySelectorAll('[data-dl]').forEach(a=>a.onclick=async ev=>{
+        ev.preventDefault(); a.textContent='starting…';
+        try{ const r=await api('download',{id:a.dataset.dl}); a.textContent=`downloading ${r.started||''} file(s)`; }
+        catch(e){ a.textContent='error: '+e.message; }
+      });
+    }catch(e){ /* transient */ }
+  }
+  function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+  init();
+</script>
+</body>
+</html>
