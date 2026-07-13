@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="560" viewBox="0 0 1600 560"><defs>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#15C3B6"/><stop offset="0.56" stop-color="#2FD191"/><stop offset="1" stop-color="#54E06A"/>
+    </linearGradient>
+    <linearGradient id="brandReverse" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#15C3B6"/><stop offset="0.56" stop-color="#2FD191"/><stop offset="1" stop-color="#54E06A"/>
+    </linearGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#06100E" flood-opacity="0.22"/>
+    </filter></defs><g transform="translate(50 50) scale(.32)"><g fill="none" stroke="url(#brand)" stroke-width="112" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M 348 258 C 214 315, 210 510, 326 594 C 414 658, 490 618, 550 558"/>
+      <path d="M 676 766 C 810 709, 814 514, 698 430 C 610 366, 534 406, 474 466"/>
+    </g></g><text x="410" y="350" font-family="Arial, Helvetica, sans-serif" font-size="170" font-weight="700" letter-spacing="30" fill="#07110F">LIDHRA</text><text x="416" y="445" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="600" letter-spacing="16" fill="#2FD191">LINK WHAT MATTERS</text></svg>

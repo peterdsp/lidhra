@@ -1,0 +1,20 @@
+:root {
+  --lidhra-lidhra-teal: #15C3B6;
+  --lidhra-lidhra-green: #2FD191;
+  --lidhra-lidhra-lime: #54E06A;
+  --lidhra-ink-950: #07110F;
+  --lidhra-ink-900: #0A1512;
+  --lidhra-ink-800: #0C1A16;
+  --lidhra-ink-700: #183027;
+  --lidhra-mist-50: #F7FBF9;
+  --lidhra-mist-100: #F2F8F5;
+  --lidhra-mist-200: #E6EFE9;
+  --lidhra-mist-300: #D8E4DD;
+  --lidhra-text-secondary: #62736B;
+  --lidhra-download: #22BD7A;
+  --lidhra-seeding: #11A594;
+  --lidhra-paused: #8A94A8;
+  --lidhra-danger: #E75555;
+  --lidhra-warning: #F2B84B;
+  --lidhra-gradient: linear-gradient(135deg, #15C3B6 0%, #2FD191 56%, #54E06A 100%);
+}

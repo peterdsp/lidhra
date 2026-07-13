@@ -1,0 +1,8 @@
+# Cargo workspace for Lidhra's Rust crates.
+[workspace]
+resolver = "2"
+members = [
+    "lidhra-debrid",   # unified debrid / multi-hoster interface + adapters
+    "lidhra-transfer", # segmented, resumable HTTPS download engine
+    "lidhra-cli",      # `lidhra` binary: magnet -> debrid -> download
+]

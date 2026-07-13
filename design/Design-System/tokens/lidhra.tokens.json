@@ -1,0 +1,123 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "color": {
+    "lidhra-teal": {
+      "$type": "color",
+      "$value": "#15C3B6"
+    },
+    "lidhra-green": {
+      "$type": "color",
+      "$value": "#2FD191"
+    },
+    "lidhra-lime": {
+      "$type": "color",
+      "$value": "#54E06A"
+    },
+    "ink-950": {
+      "$type": "color",
+      "$value": "#07110F"
+    },
+    "ink-900": {
+      "$type": "color",
+      "$value": "#0A1512"
+    },
+    "ink-800": {
+      "$type": "color",
+      "$value": "#0C1A16"
+    },
+    "ink-700": {
+      "$type": "color",
+      "$value": "#183027"
+    },
+    "mist-50": {
+      "$type": "color",
+      "$value": "#F7FBF9"
+    },
+    "mist-100": {
+      "$type": "color",
+      "$value": "#F2F8F5"
+    },
+    "mist-200": {
+      "$type": "color",
+      "$value": "#E6EFE9"
+    },
+    "mist-300": {
+      "$type": "color",
+      "$value": "#D8E4DD"
+    },
+    "text-secondary": {
+      "$type": "color",
+      "$value": "#62736B"
+    },
+    "download": {
+      "$type": "color",
+      "$value": "#22BD7A"
+    },
+    "seeding": {
+      "$type": "color",
+      "$value": "#11A594"
+    },
+    "paused": {
+      "$type": "color",
+      "$value": "#8A94A8"
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "#E75555"
+    },
+    "warning": {
+      "$type": "color",
+      "$value": "#F2B84B"
+    }
+  },
+  "gradient": {
+    "brand": {
+      "$type": "gradient",
+      "$value": [
+        {
+          "color": "#15C3B6",
+          "position": 0
+        },
+        {
+          "color": "#2FD191",
+          "position": 0.56
+        },
+        {
+          "color": "#54E06A",
+          "position": 1
+        }
+      ]
+    }
+  },
+  "radius": {
+    "small": 8,
+    "medium": 12,
+    "large": 18,
+    "xlarge": 28,
+    "appIcon": 220
+  },
+  "spacing": {
+    "2xs": 4,
+    "xs": 8,
+    "sm": 12,
+    "md": 16,
+    "lg": 24,
+    "xl": 32,
+    "2xl": 48,
+    "3xl": 64
+  },
+  "type": {
+    "display": {
+      "family": "System UI",
+      "weight": 700
+    },
+    "body": {
+      "family": "System UI",
+      "weight": 400
+    },
+    "mono": {
+      "family": "System Mono",
+      "weight": 500
+    }
+  }
+}

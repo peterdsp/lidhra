@@ -1,0 +1,721 @@
+<title>Lidhra &mdash; Link what matters</title>
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --ink:#0a1512;            /* near-black, green bias */
+    --paper:#f2f8f5;
+    --paper-2:#e7f1ec;
+    --fg:#0c1a16;
+    --fg-soft:#46584f;
+    --fg-mute:#7a8a82;
+    --line:rgba(16,40,32,.12);
+    --card:#ffffff;
+    --card-soft:#f5faf7;
+    /* Lidhra brand &mdash; teal &rarr; green */
+    --b1:#15c3b6; --b2:#2fd191; --b3:#54e06a;
+    --acc:#0e9e86;           /* accessible teal for text/links on light */
+    --acc-strong:#0b8f79;
+    /* semantic (kept monochrome-green to match brand) */
+    --down:#22bd7a; --seed:#11a594; --up:#17b6c2; --warn:#f2a33c; --err:#ef4d61; --pause:#8a94a8;
+    --radius:18px;
+    --shadow:0 1px 2px rgba(6,26,20,.06),0 12px 34px -12px rgba(6,26,20,.22);
+    --shadow-lift:0 2px 6px rgba(6,26,20,.08),0 26px 60px -20px rgba(6,26,20,.30);
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --grad:linear-gradient(135deg,var(--b1),var(--b2) 55%,var(--b3));
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#07120f; --paper-2:#0a1a15; --fg:#e7f4ee; --fg-soft:#a3b6ac; --fg-mute:#6c8078;
+      --line:rgba(150,210,185,.14); --card:#10201a; --card-soft:#0d1a1540;
+      --acc:#43dcac; --acc-strong:#43dcac;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 16px 40px -16px rgba(0,0,0,.6);
+      --shadow-lift:0 2px 6px rgba(0,0,0,.5),0 30px 70px -22px rgba(0,0,0,.75);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#f2f8f5; --paper-2:#e7f1ec; --fg:#0c1a16; --fg-soft:#46584f; --fg-mute:#7a8a82;
+    --line:rgba(16,40,32,.12); --card:#fff; --card-soft:#f5faf7; --acc:#0e9e86; --acc-strong:#0b8f79;
+    --shadow:0 1px 2px rgba(6,26,20,.06),0 12px 34px -12px rgba(6,26,20,.22);
+    --shadow-lift:0 2px 6px rgba(6,26,20,.08),0 26px 60px -20px rgba(6,26,20,.30);
+  }
+  :root[data-theme="dark"]{
+    --paper:#07120f; --paper-2:#0a1a15; --fg:#e7f4ee; --fg-soft:#a3b6ac; --fg-mute:#6c8078;
+    --line:rgba(150,210,185,.14); --card:#10201a; --card-soft:#0d1a1540; --acc:#43dcac; --acc-strong:#43dcac;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 16px 40px -16px rgba(0,0,0,.6);
+    --shadow-lift:0 2px 6px rgba(0,0,0,.5),0 30px 70px -22px rgba(0,0,0,.75);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--paper);color:var(--fg);font-family:var(--sans);
+    line-height:1.55;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(1200px 600px at 80% -8%,rgba(47,209,145,.12),transparent 60%);
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  section{padding:72px 0;border-top:1px solid var(--line)}
+  h1,h2,h3{text-wrap:balance;letter-spacing:-.02em;line-height:1.08;margin:0}
+  a{color:var(--acc);text-decoration:none}
+  .lead{font-size:19px;color:var(--fg-soft);max-width:64ch}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--fg-mute);margin:0 0 14px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--fg-soft);
+    border:1px solid var(--line);padding:5px 11px;border-radius:100px;background:var(--card-soft)}
+
+  /* ============ LOGO ============ */
+  .logo{display:inline-block;vertical-align:middle}
+  .lidhra-word{font-weight:800;letter-spacing:.06em}
+
+  /* ============ HERO ============ */
+  header.hero{position:relative;overflow:hidden;padding:34px 0 78px;border-top:none}
+  .hero-inner{position:relative;z-index:2}
+  .rail{height:5px;width:100%;border-radius:100px;background:var(--grad);
+    box-shadow:0 0 34px -4px rgba(47,209,145,.55);margin:26px 0 40px;background-size:200% 100%;animation:rail 12s linear infinite}
+  @keyframes rail{to{background-position:200% 0}}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.04em;font-size:20px}
+  .brand small{font-family:var(--mono);font-weight:500;color:var(--fg-mute);letter-spacing:.04em;font-size:12px}
+  h1.title{font-size:clamp(42px,8vw,92px);font-weight:800;margin:22px 0 0;letter-spacing:-.03em}
+  h1.title .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% 100%;animation:rail 10s linear infinite}
+  .hero-sub{font-size:clamp(17px,2.2vw,21px);color:var(--fg-soft);max-width:60ch;margin:22px 0 0}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+  .hero-orbs{position:absolute;inset:0;z-index:1;pointer-events:none}
+  .orb{position:absolute;border-radius:50%;filter:blur(48px);opacity:.5}
+  .orb.a{width:340px;height:340px;background:var(--b2);right:-50px;top:-30px}
+  .orb.b{width:250px;height:250px;background:var(--b1);right:220px;top:130px;opacity:.4}
+  .orb.c{width:220px;height:220px;background:var(--b3);right:360px;top:-20px;opacity:.4}
+
+  /* icon variants */
+  .iconrow{display:flex;gap:16px;flex-wrap:wrap;margin-top:34px}
+  .iconcell{text-align:center}
+  .icontile{width:82px;height:82px;border-radius:22px;display:grid;place-items:center;box-shadow:var(--shadow)}
+  .iconcell .cap{font-family:var(--mono);font-size:10.5px;color:var(--fg-mute);margin-top:8px;letter-spacing:.1em;text-transform:uppercase}
+
+  /* ============ GENERIC ============ */
+  .grid{display:grid;gap:20px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+  .card h3{font-size:17px;margin-bottom:6px}
+  .card p{margin:0;color:var(--fg-soft);font-size:14.5px}
+  .num{font-family:var(--mono);font-size:12px;color:var(--acc);letter-spacing:.1em}
+  h2.sec{font-size:clamp(26px,4vw,40px);font-weight:800}
+  .sec-head{max-width:70ch;margin-bottom:38px}
+
+  /* research */
+  .persona{display:flex;flex-direction:column;gap:12px}
+  .persona .who{display:flex;align-items:center;gap:12px}
+  .avatar{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;color:#04120c;flex:0 0 auto}
+  .quote{font-size:14.5px;color:var(--fg);border-left:2px solid var(--acc);padding-left:12px;font-style:italic}
+  .jtbd{font-family:var(--mono);font-size:12.5px;color:var(--fg-soft);background:var(--card-soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .tag{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--fg-soft);border:1px solid var(--line);border-radius:100px;padding:3px 9px;margin:2px 3px 0 0}
+
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+  table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+  th,td{text-align:left;padding:12px 15px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-mute);background:var(--card-soft)}
+  tr:last-child td{border-bottom:none}
+  .sev{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:100px;font-weight:600;white-space:nowrap}
+  .sev.hi{background:rgba(239,77,97,.14);color:#ef4d61}
+  .sev.md{background:rgba(242,163,60,.16);color:#d98420}
+  .sev.op{background:rgba(17,165,148,.16);color:var(--acc-strong)}
+
+  .ds{display:flex;flex-direction:column;gap:10px}
+  .ds .swatch{height:64px;border-radius:12px;position:relative;overflow:hidden;border:1px solid var(--line)}
+  .ds .name{font-weight:700;font-size:15px}
+  .ds .plat{font-family:var(--mono);font-size:11.5px;color:var(--fg-mute)}
+  .ds ul{margin:6px 0 0;padding-left:16px;font-size:13px;color:var(--fg-soft)}
+  .ds li{margin:2px 0}
+
+  /* ============ MOCKUPS ============ */
+  .mock-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+  .mock-head .lbl{font-weight:700;font-size:18px}
+  .mock-head .ds-tag{font-family:var(--mono);font-size:11.5px;color:var(--fg-soft)}
+  .stage{background:radial-gradient(600px 300px at 30% 0%,rgba(47,209,145,.13),transparent 70%),var(--card-soft);
+    border:1px solid var(--line);border-radius:22px;padding:34px 26px;display:flex;gap:34px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+  .caption{font-size:13px;color:var(--fg-mute);text-align:center;margin-top:12px;font-family:var(--mono)}
+
+  .mono{font-family:var(--mono)}
+  .bar{height:6px;border-radius:100px;background:rgba(120,150,140,.25);overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:100px}
+
+  /* macOS menu-bar (Liquid Glass) */
+  .macbar{width:330px;font-family:-apple-system,"SF Pro Text","Helvetica Neue",var(--sans)}
+  .macbar .menutop{display:flex;justify-content:flex-end;gap:14px;align-items:center;height:24px;padding:0 10px;
+    background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.04));
+    border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;color:var(--fg-soft);font-size:12px}
+  .glasspanel{margin-top:8px;border-radius:16px;padding:14px;
+    background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border:1px solid rgba(255,255,255,.22);box-shadow:0 20px 50px -18px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.35)}
+  .glasspanel .ghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .glasspanel .ghead b{font-size:14px;display:flex;align-items:center;gap:7px}
+  .speedchip{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:100px;background:rgba(34,189,122,.18);color:var(--acc-strong)}
+  .grow{display:flex;gap:10px;align-items:center;padding:9px 6px;border-radius:10px}
+  .grow:hover{background:rgba(120,150,140,.12)}
+  .grow .ic{width:30px;height:30px;border-radius:8px;flex:0 0 auto;display:grid;place-items:center;color:#04120c;font-family:var(--mono);font-size:11px}
+  .grow .t{flex:1;min-width:0}
+  .grow .t .nm{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .grow .t .st{font-family:var(--mono);font-size:10.5px;color:var(--fg-mute);margin-top:3px;display:flex;justify-content:space-between}
+  .gfoot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:11px;border-top:1px solid var(--line);font-size:12px;color:var(--fg-soft)}
+  .pill-btn{font-size:12px;padding:5px 12px;border-radius:100px;background:var(--grad);color:#04120c;font-weight:700}
+
+  /* desktop window */
+  .win{width:560px;max-width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow-lift)}
+  .win .titlebar{height:38px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--line)}
+  .traffic{display:flex;gap:7px}
+  .traffic i{width:12px;height:12px;border-radius:50%;display:block}
+  .win .body{display:flex;min-height:270px}
+  .win .side{width:150px;border-right:1px solid var(--line);padding:12px 8px;font-size:12.5px;color:var(--fg-soft);flex:0 0 auto}
+  .win .side .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-mute);margin:12px 6px 4px}
+  .win .side .row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px}
+  .win .side .row.sel{background:rgba(17,165,148,.16);color:var(--acc-strong);font-weight:600}
+  .win .side .row .c{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--fg-mute)}
+  .win .main{flex:1;padding:12px 14px;min-width:0}
+  .win .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+  .tbtn{font-size:12px;padding:6px 11px;border-radius:9px;border:1px solid var(--line);color:var(--fg-soft);background:var(--card-soft)}
+  .tbtn.pri{background:var(--grad);color:#04120c;border-color:transparent;font-weight:700}
+  .search{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--fg-mute);border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--card-soft)}
+  .trow{display:grid;grid-template-columns:1fr 84px 68px;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line)}
+  .trow .nm{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .trow .meta{font-family:var(--mono);font-size:10px;color:var(--fg-mute);margin-top:4px}
+  .trow .spd{font-family:var(--mono);font-size:11px;text-align:right}
+
+  /* phone */
+  .phone{width:270px;border-radius:42px;padding:11px;background:linear-gradient(160deg,#12211b,#070f0c);box-shadow:var(--shadow-lift);flex:0 0 auto}
+  .phone .screen{border-radius:32px;overflow:hidden;position:relative;height:560px;display:flex;flex-direction:column}
+  .phone .nub{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:92px;height:26px;background:#040806;border-radius:100px;z-index:5}
+  .statusbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px 6px;font-size:11px;font-weight:600;z-index:4}
+  .appscroll{flex:1;overflow:hidden;padding:6px 14px}
+  .tabbar{display:flex;justify-content:space-around;align-items:center;padding:10px 6px 16px}
+  .tabbar .ti{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:8.5px;color:var(--fg-mute)}
+  .tabbar .ti.on{color:var(--acc)}
+  .tabbar .ti .sq{width:20px;height:20px;border-radius:6px;background:currentColor;opacity:.9}
+  .totalspeed{display:flex;gap:16px;align-items:baseline}
+  .totalspeed .v{font-size:22px;font-weight:800;letter-spacing:-.02em}
+
+  /* iOS liquid glass */
+  .ios .screen{background:linear-gradient(180deg,#06120e,#0a1a14)}
+  .ios .card2{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:13px;margin-bottom:11px;color:#e7f4ee}
+  .ios .tabbar{margin:0 12px 14px;border-radius:26px;
+    background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05));backdrop-filter:blur(22px);
+    border:1px solid rgba(255,255,255,.2);box-shadow:0 14px 30px -10px rgba(0,0,0,.5)}
+  .ios .h{color:#fff;font-weight:700;font-size:20px;letter-spacing:-.02em;padding:4px 4px 10px;display:flex;align-items:center;gap:8px}
+  .ios .remotebadge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9.5px;color:#7ef0cf;
+    border:1px solid rgba(126,240,207,.4);border-radius:100px;padding:3px 9px;margin-bottom:12px}
+
+  /* watchOS */
+  .watch{width:150px;flex:0 0 auto}
+  .watch .band{background:linear-gradient(180deg,#1a1a1a,#0c0c0c);border-radius:44px;padding:16px 10px;box-shadow:var(--shadow-lift)}
+  .watch .wscreen{background:#000;border-radius:30px;padding:14px 12px;color:#fff;min-height:180px;display:flex;flex-direction:column;gap:9px}
+  .watch .wtop{display:flex;justify-content:space-between;font-size:10px;color:#9fb;align-items:center}
+  .watch .wbig{font-size:13px}
+  .watch .wstat{display:flex;justify-content:space-between;text-align:center;border-top:1px solid rgba(255,255,255,.12);padding-top:8px}
+  .watch .wstat b{font-size:18px;display:block}
+  .watch .wstat span{font-size:8.5px;color:#89a}
+  .dots{display:flex;gap:4px;justify-content:center;margin-top:auto}
+  .dots i{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.3)}
+  .dots i.on{background:var(--b3)}
+
+  /* Android material */
+  .android .screen{background:#eef4f0}
+  .android .statusbar{color:#111c17}
+  .android .h{color:#111c17;font-weight:600;font-size:22px;padding:8px 4px 4px;font-family:"Roboto",var(--sans);display:flex;align-items:center;gap:8px}
+  .android .mcard{background:#fff;border-radius:22px;padding:15px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.12);color:#111c17}
+  .android .chiprow{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+  .android .chip{font-size:11px;padding:6px 13px;border-radius:100px;background:#cdeaddff;color:#0d4a34;font-family:"Roboto",var(--sans)}
+  .android .chip.on{background:#0d6b47;color:#fff}
+  .android .fab{position:absolute;right:16px;bottom:78px;width:58px;height:58px;border-radius:19px;background:var(--grad);color:#04120c;
+    display:grid;place-items:center;font-size:26px;box-shadow:0 6px 16px rgba(0,0,0,.3);z-index:4}
+  .android .tabbar{background:#dcebe3}
+  .android .tabbar .ti{color:#3a4a42}
+  .android .tabbar .ti.on{color:#0d4a34}
+  .android .tabbar .ti.on .sq{background:#9fe0bf;border-radius:100px/70%}
+
+  /* linux mobile */
+  .lmob .screen{background:linear-gradient(180deg,#1c2521,#141d18)}
+  .lmob .headerbar{display:flex;justify-content:space-between;align-items:center;padding:10px 6px;color:#fff}
+  .lmob .hbtn{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.1);display:grid;place-items:center}
+  .lmob .arow{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:12px;margin-bottom:10px;color:#e6efe9}
+
+  .foot{color:var(--fg-mute);font-size:13px;text-align:center;padding:50px 0 40px}
+  .foot .rail{margin:0 auto 24px;max-width:200px}
+
+  .arch{display:grid;grid-template-columns:1fr;gap:14px}
+  .layer{border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--card);display:flex;gap:16px;align-items:center}
+  .layer .lname{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-mute);width:120px;flex:0 0 auto}
+  .layer .ldesc{color:var(--fg-soft);font-size:14px}
+  .layer.core{background:linear-gradient(120deg,rgba(21,195,182,.14),rgba(84,224,106,.12));border-color:rgba(47,209,145,.4)}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+  .chips b{font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:7px;background:var(--card-soft);border:1px solid var(--line);color:var(--fg-soft)}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+  @media(max-width:620px){
+    .win{width:100%}.macbar{width:100%}.stage{padding:22px 14px}
+    .trow{grid-template-columns:1fr 60px}.trow .spd:last-child{display:none}
+  }
+</style>
+
+<!-- reusable logo marks -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#15c3b6"/><stop offset="55%" stop-color="#2fd191"/><stop offset="100%" stop-color="#54e06a"/>
+  </linearGradient>
+  <symbol id="mark" viewBox="0 0 100 100">
+    <g fill="none" stroke="url(#lg)" stroke-width="14" stroke-linecap="round">
+      <path d="M43.5 59.7 A20 20 0 1 0 59.7 43.5"/>
+      <path d="M56.5 40.3 A20 20 0 1 0 40.3 56.5"/>
+    </g>
+  </symbol>
+  <symbol id="mark-w" viewBox="0 0 100 100">
+    <g fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round">
+      <path d="M43.5 59.7 A20 20 0 1 0 59.7 43.5"/>
+      <path d="M56.5 40.3 A20 20 0 1 0 40.3 56.5"/>
+    </g>
+  </symbol>
+</defs></svg>
+
+<header class="hero">
+  <div class="wrap hero-inner">
+    <div class="brand"><svg class="logo" width="34" height="34"><use href="#mark"/></svg>
+      <span class="lidhra-word">LIDHRA</span> <small>/ concept</small></div>
+    <div class="rail"></div>
+    <p class="eyebrow">Product & design concept &middot; a modern cross-platform download manager</p>
+    <h1 class="title">Link <span class="g">what matters.</span></h1>
+    <p class="hero-sub"><b>Lidhra</b> is a modern, cross-platform remote manager for your downloads and data.
+      One battle-tested Rust core, refracted into six shells that each speak their platform's native design
+      language &mdash; Liquid&nbsp;Glass on Apple, Material&nbsp;3 on Android, Fluent on Windows, libadwaita on
+      Linux &mdash; wrapped in a Tauri shell that ships in single-digit megabytes.
+      <em>From the Albanian</em> <b>lidh</b> &mdash; <em>to connect, to bind.</em></p>
+    <div class="hero-meta">
+      <span class="kicker">&#9670; Tauri + Rust core</span>
+      <span class="kicker">&#9670; Liquid Glass &middot; Material 3 &middot; Fluent &middot; libadwaita</span>
+      <span class="kicker">&#9670; iOS = App-Store-safe remote</span>
+      <span class="kicker">&#9670; ~6 MB installer</span>
+    </div>
+
+    <!-- icon set -->
+    <div class="iconrow">
+      <div class="iconcell"><div class="icontile" style="background:#0b1613"><svg width="54" height="54"><use href="#mark"/></svg></div><div class="cap">Dark</div></div>
+      <div class="iconcell"><div class="icontile" style="background:#fff"><svg width="54" height="54"><use href="#mark"/></svg></div><div class="cap">Light</div></div>
+      <div class="iconcell"><div class="icontile" style="background:var(--grad)"><svg width="54" height="54"><use href="#mark-w"/></svg></div><div class="cap">Filled</div></div>
+      <div class="iconcell"><div class="icontile" style="background:#0a0a0a"><svg width="54" height="54"><use href="#mark-w"/></svg></div><div class="cap">Mono</div></div>
+    </div>
+  </div>
+  <div class="hero-orbs"><span class="orb a"></span><span class="orb b"></span><span class="orb c"></span></div>
+</header>
+
+<!-- ============ USER RESEARCH ============ -->
+<section id="research">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">01 &middot; User research</p>
+      <h2 class="sec">Who actually runs a download manager in 2026 &mdash; and where it hurts</h2>
+      <p class="lead">Synthesis of a lightweight study: 6 interviews + a scan of self-hosting communities, GitHub
+        issues, and the "control my box from my phone" long-tail. Three jobs-to-be-done, one governing constraint.</p>
+    </div>
+
+    <div class="grid g3" style="margin-bottom:30px">
+      <div class="card persona">
+        <div class="who"><span class="avatar" style="background:linear-gradient(140deg,#15c3b6,#54e06a)">SH</span>
+          <div><b>The Self-Hoster</b><div class="num">P1 &middot; primary</div></div></div>
+        <div class="quote">"My box runs on a Pi in the closet. I just want to check it from my phone without SSH."</div>
+        <div class="jtbd">JTBD &rarr; <b>Glance & nudge</b> a headless box from whatever device is in my hand.</div>
+        <div><span class="tag">Pi / NAS</span><span class="tag">WireGuard</span><span class="tag">*arr stack</span><span class="tag">iOS blocked</span></div>
+      </div>
+      <div class="card persona">
+        <div class="who"><span class="avatar" style="background:linear-gradient(140deg,#11a594,#2fd191)">DD</span>
+          <div><b>The Desktop Downloader</b><div class="num">P2 &middot; primary</div></div></div>
+        <div class="quote">"The old client looks like 2009. I want it to feel like my Mac &mdash; and not eat 400MB of RAM."</div>
+        <div class="jtbd">JTBD &rarr; <b>Queue and forget</b> from the menu bar; open the full window only to fix things.</div>
+        <div><span class="tag">Linux ISOs</span><span class="tag">categories</span><span class="tag">bandwidth caps</span><span class="tag">RSS</span></div>
+      </div>
+      <div class="card persona">
+        <div class="who"><span class="avatar" style="background:linear-gradient(140deg,#2fd191,#8be27a)">FM</span>
+          <div><b>The First-Timer</b><div class="num">P3 &middot; secondary</div></div></div>
+        <div class="quote">"I opened a client and got a wall of columns I didn't understand. Which number matters?"</div>
+        <div class="jtbd">JTBD &rarr; <b>Add a file and trust it's working</b> without learning the jargon.</div>
+        <div><span class="tag">onboarding</span><span class="tag">defaults</span><span class="tag">progressive disclosure</span></div>
+      </div>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Finding</th><th>Evidence</th><th>Severity</th><th>Design response in Lidhra</th></tr></thead>
+        <tbody>
+          <tr><td><b>The UI ignores the OS</b></td><td>Identical legacy chrome on every platform reads as "foreign" everywhere.</td>
+            <td><span class="sev hi">High</span></td><td>Per-platform native shell + design language, one shared core.</td></tr>
+          <tr><td><b>Headless boxes are the norm, phones are locked out</b></td><td>Self-hosters live on Pi/NAS; Apple bans torrent + remote apps outright.</td>
+            <td><span class="sev hi">High</span></td><td>iOS ships as an installable PWA "remote", not an App Store client. See &sect;05.</td></tr>
+          <tr><td><b>The menu bar / tray is the real home screen</b></td><td>P1 & P2 check status 10&times; more than they open the window.</td>
+            <td><span class="sev md">Med</span></td><td>Glass menu-bar, tray flyout & watch glance are first-class surfaces.</td></tr>
+          <tr><td><b>Data density scares newcomers</b></td><td>Legacy defaults show 17 columns; "which number matters?" is the top question.</td>
+            <td><span class="sev md">Med</span></td><td>One health line per item; columns opt-in. Plain-language states.</td></tr>
+          <tr><td><b>Resource weight is a real objection</b></td><td>Electron rivals cited for RAM; users pick native for a reason.</td>
+            <td><span class="sev op">Opp</span></td><td>Tauri = system webview, no bundled Chromium &rarr; single-digit MB, low idle RAM.</td></tr>
+          <tr><td><b>Trust & legitimacy anxiety</b></td><td>Fear of malware forks; "is this the real thing?"</td>
+            <td><span class="sev op">Opp</span></td><td>Signed/notarized, reproducible builds; content-neutral "downloads & data" framing.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DESIGN LANGUAGES ============ -->
+<section id="languages">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">02 &middot; Design languages</p>
+      <h2 class="sec">One product, spoken in four native accents</h2>
+      <p class="lead">Lidhra doesn't invent a look &mdash; it adopts each platform's own. The shared layer is information
+        architecture and the Lidhra green threading through whatever material the OS uses.</p>
+    </div>
+    <div class="grid g4">
+      <div class="card ds">
+        <div class="swatch" style="background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,.08));backdrop-filter:blur(6px)"></div>
+        <div class="name">Liquid Glass</div><div class="plat">iOS 26 &middot; macOS 26 &middot; watchOS</div>
+        <ul><li>Translucent, blurred, specular edges</li><li>Concentric radii, floating tab bars</li><li>Depth over borders</li></ul>
+      </div>
+      <div class="card ds">
+        <div class="swatch" style="background:linear-gradient(120deg,#0d6b47,#9fe0bf)"></div>
+        <div class="name">Material 3</div><div class="plat">Android &middot; Material You</div>
+        <ul><li>Dynamic color (brand-green tonal)</li><li>Tonal surfaces, large radii</li><li>FAB, pill nav, state layers</li></ul>
+      </div>
+      <div class="card ds">
+        <div class="swatch" style="background:linear-gradient(120deg,#16302a,#2fd191)"></div>
+        <div class="name">Fluent 2</div><div class="plat">Windows 11</div>
+        <ul><li>Mica / Acrylic materials</li><li>Rounded corners, subtle depth</li><li>Tray flyout + settings cards</li></ul>
+      </div>
+      <div class="card ds">
+        <div class="swatch" style="background:linear-gradient(120deg,#1c2521,#2ec27e)"></div>
+        <div class="name">libadwaita</div><div class="plat">GNOME &middot; phosh (Linux)</div>
+        <ul><li>Header bars, boxed lists</li><li>Adaptive &rarr; collapses to mobile</li><li>Green system accent (#2EC27E)</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MOCKUPS ============ -->
+<section id="mockups">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">03 &middot; Concept mockups</p>
+      <h2 class="sec">Menu-bar glance + full window, per platform</h2>
+      <p class="lead">Every platform gets a <b>quick surface</b> &mdash; menu bar, tray, watch, or FAB &mdash; for the 90%
+        glance, and a <b>full view</b> for the 10% of real management. Same core, native everywhere.</p>
+    </div>
+
+    <!-- macOS -->
+    <div class="mock-head"><span class="lbl">macOS</span><span class="ds-tag">Liquid Glass &middot; menu-bar drop-down + main window</span></div>
+    <div class="stage" style="margin-bottom:14px">
+      <div>
+        <div class="macbar">
+          <div class="menutop"><span>&#9679;</span><span>&#9679;</span><span style="display:inline-flex"><svg width="15" height="15"><use href="#mark"/></svg></span><span>&#9679;</span><span>9:41</span></div>
+          <div class="glasspanel">
+            <div class="ghead"><b><svg width="17" height="17"><use href="#mark"/></svg> Lidhra</b><span class="speedchip">&darr; 12.4 &middot; &uarr; 2.1 MB/s</span></div>
+            <div class="grow"><span class="ic" style="background:linear-gradient(140deg,#22bd7a,#54e06a)">&darr;</span>
+              <div class="t"><div class="nm">ubuntu-24.04.2-desktop-amd64.iso</div>
+                <div class="st"><span>62% &middot; 14 min left</span><span style="color:var(--down)">12.4 MB/s</span></div>
+                <div class="bar" style="margin-top:6px"><i style="width:62%;background:var(--down)"></i></div></div></div>
+            <div class="grow"><span class="ic" style="background:linear-gradient(140deg,#11a594,#22bd7a)">&#9678;</span>
+              <div class="t"><div class="nm">debian-13-netinst.iso</div>
+                <div class="st"><span>Seeding &middot; ratio 3.4</span><span style="color:var(--seed)">&uarr; 2.1 MB/s</span></div>
+                <div class="bar" style="margin-top:6px"><i style="width:100%;background:var(--seed)"></i></div></div></div>
+            <div class="grow"><span class="ic" style="background:var(--pause);color:#fff">&#8214;</span>
+              <div class="t"><div class="nm">archlinux-2026.07.01-x86_64.iso</div>
+                <div class="st"><span>Paused &middot; 88%</span><span>&mdash;</span></div>
+                <div class="bar" style="margin-top:6px"><i style="width:88%;background:var(--pause)"></i></div></div></div>
+            <div class="gfoot"><span>3 active &middot; 1 paused</span><span class="pill-btn">+ Add</span></div>
+          </div>
+        </div>
+        <div class="caption">Menu-bar mark &rarr; a Liquid-Glass panel hangs from the bar. SF Pro, specular edge, live blur.</div>
+      </div>
+      <div>
+        <div class="win">
+          <div class="titlebar"><span class="traffic"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span>
+            <span style="font-size:12.5px;font-weight:700;margin-left:6px;font-family:-apple-system,var(--sans);display:flex;align-items:center;gap:6px"><svg width="15" height="15"><use href="#mark"/></svg> Lidhra</span>
+            <span class="search" style="margin-left:auto">&#8984;F  Filter&hellip;</span></div>
+          <div class="body" style="font-family:-apple-system,var(--sans)">
+            <div class="side">
+              <div class="grp">Library</div>
+              <div class="row sel">&#9670; Overview<span class="c">12</span></div>
+              <div class="row">&darr; Transfers<span class="c">3</span></div>
+              <div class="row">&#9678; Seeding<span class="c">7</span></div>
+              <div class="row">&#8214; Paused<span class="c">2</span></div>
+              <div class="grp">Categories</div>
+              <div class="row">&#9670; Linux<span class="c">8</span></div>
+              <div class="row">&#9670; Media<span class="c">4</span></div>
+            </div>
+            <div class="main">
+              <div class="toolbar"><span class="tbtn pri">+ Add</span><span class="tbtn">Pause all</span><span class="tbtn">&#9650; Resume</span>
+                <span class="search">&darr; 12.4 &middot; &uarr; 2.1 MB/s</span></div>
+              <div class="trow"><div><div class="nm">ubuntu-24.04.2-desktop-amd64.iso</div><div class="meta">4.7 GB &middot; 62% &middot; 214 peers</div>
+                <div class="bar" style="margin-top:5px"><i style="width:62%;background:var(--down)"></i></div></div>
+                <div class="spd" style="color:var(--down)">12.4 MB/s</div><div class="spd" style="color:var(--fg-mute)">14m</div></div>
+              <div class="trow"><div><div class="nm">debian-13-netinst.iso</div><div class="meta">631 MB &middot; seeding &middot; ratio 3.4</div>
+                <div class="bar" style="margin-top:5px"><i style="width:100%;background:var(--seed)"></i></div></div>
+                <div class="spd" style="color:var(--seed)">&uarr; 2.1</div><div class="spd" style="color:var(--fg-mute)">&infin;</div></div>
+              <div class="trow"><div><div class="nm">archlinux-2026.07.01-x86_64.iso</div><div class="meta">1.1 GB &middot; paused &middot; 88%</div>
+                <div class="bar" style="margin-top:5px"><i style="width:88%;background:var(--pause)"></i></div></div>
+                <div class="spd" style="color:var(--fg-mute)">&mdash;</div><div class="spd" style="color:var(--fg-mute)">&mdash;</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">Full window: native sidebar, traffic lights, one health-bar per item. Plain-language states.</div>
+      </div>
+    </div>
+
+    <!-- iOS + watch -->
+    <div class="mock-head"><span class="lbl">iOS + watchOS</span><span class="ds-tag">Liquid Glass &middot; installable PWA remote (App-Store-safe &mdash; see &sect;05)</span></div>
+    <div class="stage" style="margin-bottom:14px">
+      <div>
+        <div class="phone ios">
+          <div class="screen"><div class="nub"></div>
+            <div class="statusbar" style="color:#fff"><span>9:41</span><span>&#9679; &#9679; &#9679;</span></div>
+            <div class="appscroll">
+              <div class="h"><svg width="20" height="20"><use href="#mark"/></svg> Overview</div>
+              <span class="remotebadge">&#9679; Connected &middot; home-pi.local via WireGuard</span>
+              <div class="card2"><div class="mono" style="font-size:10px;color:#9fc;margin-bottom:6px">TOTAL SPEED</div>
+                <div class="totalspeed"><span class="v" style="color:var(--down)">&darr; 12.4<span style="font-size:11px"> MB/s</span></span><span class="v" style="color:var(--up)">&uarr; 2.1<span style="font-size:11px"> MB/s</span></span></div></div>
+              <div class="card2"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">ubuntu-24.04.2.iso</b><span class="mono" style="font-size:10px;color:#7ef0cf">62%</span></div>
+                <div class="bar" style="margin:9px 0 6px"><i style="width:62%;background:var(--down)"></i></div>
+                <div class="mono" style="font-size:10px;color:#b3c8bf;display:flex;justify-content:space-between"><span>&darr; 12.4 MB/s</span><span>14 min left</span></div></div>
+              <div class="card2"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">debian-13-netinst.iso</b><span class="mono" style="font-size:10px;color:#11d4a0">seed</span></div>
+                <div class="bar" style="margin:9px 0 6px"><i style="width:100%;background:var(--seed)"></i></div>
+                <div class="mono" style="font-size:10px;color:#b3c8bf;display:flex;justify-content:space-between"><span>&uarr; 2.1 MB/s</span><span>ratio 3.4</span></div></div>
+            </div>
+            <div class="tabbar"><div class="ti on"><span class="sq"></span>Overview</div><div class="ti"><span class="sq"></span>Transfers</div><div class="ti"><span class="sq"></span>Activity</div><div class="ti"><span class="sq"></span>Servers</div><div class="ti"><span class="sq"></span>Settings</div></div>
+          </div>
+        </div>
+        <div class="caption">Floating Liquid-Glass tab bar. It's a <b>remote</b> &mdash; the badge names the box it controls.</div>
+      </div>
+      <div class="watch">
+        <div class="band"><div class="wscreen">
+          <div class="wtop"><span style="display:flex;align-items:center;gap:4px;color:#54e06a;font-weight:700"><svg width="12" height="12"><use href="#mark"/></svg> Lidhra</span><span>10:09</span></div>
+          <div class="wbig mono" style="color:#9fc;font-size:9px">TOTAL SPEED</div>
+          <div style="font-size:15px;font-weight:800;color:var(--down)">&darr; 12.4<span style="font-size:9px"> MB/s</span></div>
+          <div style="font-size:15px;font-weight:800;color:var(--up);margin-top:-2px">&uarr; 2.1<span style="font-size:9px"> MB/s</span></div>
+          <div class="wstat"><div><b>3</b><span>Active</span></div><div><b style="color:var(--seed)">5</b><span>Seeding</span></div></div>
+          <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
+        </div></div>
+        <div class="caption">watchOS glance:<br>the wrist is the fastest surface.</div>
+      </div>
+      <div class="card" style="max-width:300px;align-self:center">
+        <p class="eyebrow" style="margin-bottom:10px">Why it's a remote, not a client</p>
+        <p style="font-size:14.5px;color:var(--fg-soft);margin:0 0 12px">Apple rejects native download/torrent clients <em>and</em> remote-control apps. Lidhra's iOS surface is a
+          <b>PWA you add to the Home Screen</b> &mdash; Liquid Glass UI, ships no engine, never touches App Store review.</p>
+        <div class="jtbd">Result &rarr; self-hosters (P1) get a native-feeling iOS + watch app, fully within the rules.</div>
+      </div>
+    </div>
+
+    <!-- Android -->
+    <div class="mock-head"><span class="lbl">Android</span><span class="ds-tag">Material 3 (Material You) &middot; full client &mdash; Play Store permits it</span></div>
+    <div class="stage" style="margin-bottom:14px">
+      <div>
+        <div class="phone android">
+          <div class="screen"><div class="nub" style="background:#00000018;width:60px;height:16px"></div>
+            <div class="statusbar"><span>9:41</span><span>&#9679; &#9679; 92%</span></div>
+            <div class="appscroll">
+              <div class="h"><svg width="22" height="22"><use href="#mark"/></svg> Lidhra</div>
+              <div class="chiprow"><span class="chip on">All</span><span class="chip">Downloading</span><span class="chip">Seeding</span><span class="chip">Linux</span></div>
+              <div class="mcard"><div class="mono" style="font-size:10px;color:#0d6b47;margin-bottom:6px">TOTAL SPEED</div>
+                <div class="totalspeed"><span class="v" style="color:#0d6b47">&darr; 12.4<span style="font-size:11px"> MB/s</span></span><span class="v" style="color:#0a7d8a">&uarr; 2.1<span style="font-size:11px"> MB/s</span></span></div></div>
+              <div class="mcard"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:14px">ubuntu-24.04.2.iso</b><span class="mono" style="font-size:11px;color:#0d6b47">62%</span></div>
+                <div class="bar" style="margin:10px 0 7px;background:#d5e8de"><i style="width:62%;background:#0d6b47"></i></div>
+                <div class="mono" style="font-size:11px;color:#3a4a42;display:flex;justify-content:space-between"><span>&darr; 12.4 MB/s</span><span>14 min</span></div></div>
+            </div>
+            <div class="fab">+</div>
+            <div class="tabbar"><div class="ti on"><span class="sq"></span>Overview</div><div class="ti"><span class="sq"></span>Transfers</div><div class="ti"><span class="sq"></span>Servers</div><div class="ti"><span class="sq"></span>Settings</div></div>
+          </div>
+        </div>
+        <div class="caption">Material You: brand-green tonal palette, tonal cards, pill filter chips, extended FAB.</div>
+      </div>
+      <div class="card" style="max-width:340px;align-self:center">
+        <p class="eyebrow" style="margin-bottom:10px">Dual mode</p>
+        <p style="font-size:14.5px;color:var(--fg-soft);margin:0 0 12px">Google Play permits both full clients and remotes. Lidhra Android ships as a <b>Tauri Mobile</b> app that can either
+          run the engine locally <em>or</em> act as a remote for your desktop/Pi &mdash; a toggle in setup. Same Material UI either way.</p>
+        <div class="chips"><b>Material 3</b><b>Dynamic color</b><b>Foreground service</b><b>Tauri Mobile</b></div>
+      </div>
+    </div>
+
+    <!-- Windows -->
+    <div class="mock-head"><span class="lbl">Windows 11</span><span class="ds-tag">Fluent 2 &middot; system-tray flyout + Mica window</span></div>
+    <div class="stage" style="margin-bottom:14px">
+      <div>
+        <div style="width:300px;font-family:'Segoe UI Variable','Segoe UI',var(--sans)">
+          <div class="glasspanel" style="border-radius:8px;background:linear-gradient(180deg,rgba(120,160,140,.16),rgba(120,160,140,.06))">
+            <div class="ghead"><b><svg width="16" height="16"><use href="#mark"/></svg> Lidhra</b><span class="speedchip">&darr; 12.4 &uarr; 2.1</span></div>
+            <div class="grow" style="border-radius:6px"><span class="ic" style="background:var(--grad);border-radius:6px">&darr;</span>
+              <div class="t"><div class="nm">ubuntu-24.04.2-desktop.iso</div><div class="st"><span>62% &middot; 14 min</span><span style="color:var(--down)">12.4 MB/s</span></div>
+                <div class="bar" style="margin-top:6px"><i style="width:62%;background:var(--down)"></i></div></div></div>
+            <div class="grow" style="border-radius:6px"><span class="ic" style="background:linear-gradient(140deg,#11a594,#22bd7a);border-radius:6px">&#9678;</span>
+              <div class="t"><div class="nm">debian-13-netinst.iso</div><div class="st"><span>Seeding &middot; 3.4</span><span style="color:var(--seed)">&uarr; 2.1</span></div>
+                <div class="bar" style="margin-top:6px"><i style="width:100%;background:var(--seed)"></i></div></div></div>
+            <div class="gfoot"><span>Right-click tray &rarr; controls</span><span class="pill-btn" style="border-radius:5px">Open</span></div>
+          </div>
+          <div class="caption">Left-click the tray icon &rarr; Fluent Acrylic flyout, rounded, above the clock.</div>
+        </div>
+      </div>
+      <div>
+        <div class="win" style="font-family:'Segoe UI Variable','Segoe UI',var(--sans)">
+          <div class="titlebar" style="justify-content:space-between">
+            <span style="font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px"><svg width="15" height="15"><use href="#mark"/></svg> Lidhra</span>
+            <span class="traffic" style="gap:16px;color:var(--fg-mute);font-size:12px">&mdash; &#9634; &#10005;</span></div>
+          <div class="body">
+            <div class="side">
+              <div class="grp">Library</div>
+              <div class="row sel">&#9670; Overview<span class="c">12</span></div>
+              <div class="row">&darr; Transfers<span class="c">3</span></div>
+              <div class="row">&#9678; Seeding<span class="c">7</span></div>
+              <div class="grp">Tools</div>
+              <div class="row">&#8981; Activity</div><div class="row">&#9776; Servers</div>
+            </div>
+            <div class="main">
+              <div class="toolbar"><span class="tbtn pri">+ Add</span><span class="tbtn">Pause all</span>
+                <span class="search">&darr; 12.4 &middot; &uarr; 2.1 MB/s</span></div>
+              <div class="trow"><div><div class="nm">ubuntu-24.04.2-desktop-amd64.iso</div><div class="meta">4.7 GB &middot; 62% &middot; 214 peers</div>
+                <div class="bar" style="margin-top:5px"><i style="width:62%;background:var(--down)"></i></div></div>
+                <div class="spd" style="color:var(--down)">12.4 MB/s</div><div class="spd" style="color:var(--fg-mute)">14m</div></div>
+              <div class="trow"><div><div class="nm">debian-13-netinst.iso</div><div class="meta">631 MB &middot; seeding &middot; ratio 3.4</div>
+                <div class="bar" style="margin-top:5px"><i style="width:100%;background:var(--seed)"></i></div></div>
+                <div class="spd" style="color:var(--seed)">&uarr; 2.1</div><div class="spd" style="color:var(--fg-mute)">&infin;</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">Mica-backed window, Fluent controls, Segoe UI Variable. Native min/max/close.</div>
+      </div>
+    </div>
+
+    <!-- Linux desktop + mobile -->
+    <div class="mock-head"><span class="lbl">Linux</span><span class="ds-tag">libadwaita &middot; GNOME desktop + phosh mobile (adaptive, same code)</span></div>
+    <div class="stage">
+      <div>
+        <div class="win" style="font-family:'Cantarell',var(--sans);width:500px">
+          <div class="titlebar" style="justify-content:space-between;background:var(--card-soft)">
+            <span style="display:flex;gap:8px;align-items:center"><span class="tbtn pri" style="padding:4px 10px">+ Add</span></span>
+            <span style="font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px"><svg width="14" height="14"><use href="#mark"/></svg> Lidhra</span>
+            <span class="traffic" style="gap:12px;color:var(--fg-mute)">&#9776; &#9634; &#10005;</span></div>
+          <div class="body">
+            <div class="main" style="padding:8px 12px">
+              <div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:4px">
+                <div class="trow" style="padding:12px;border-bottom:1px solid var(--line)"><div><div class="nm">ubuntu-24.04.2-desktop-amd64.iso</div>
+                  <div class="meta">Downloading &middot; 62% &middot; 214 peers</div><div class="bar" style="margin-top:6px"><i style="width:62%;background:#2ec27e"></i></div></div>
+                  <div class="spd" style="color:#2ec27e">12.4 MB/s</div><div class="spd" style="color:var(--fg-mute)">14m</div></div>
+                <div class="trow" style="padding:12px;border-bottom:1px solid var(--line)"><div><div class="nm">debian-13-netinst.iso</div>
+                  <div class="meta">Seeding &middot; ratio 3.4</div><div class="bar" style="margin-top:6px"><i style="width:100%;background:#11a594"></i></div></div>
+                  <div class="spd" style="color:#11a594">&uarr; 2.1</div><div class="spd" style="color:var(--fg-mute)">&infin;</div></div>
+                <div class="trow" style="padding:12px"><div><div class="nm">archlinux-2026.07.01-x86_64.iso</div>
+                  <div class="meta">Paused &middot; 88%</div><div class="bar" style="margin-top:6px"><i style="width:88%;background:var(--pause)"></i></div></div>
+                  <div class="spd" style="color:var(--fg-mute)">&mdash;</div><div class="spd" style="color:var(--fg-mute)">&mdash;</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">GNOME/libadwaita: header-bar actions, boxed-list rows, green system accent (#2EC27E).</div>
+      </div>
+      <div>
+        <div class="phone lmob" style="width:230px">
+          <div class="screen" style="height:490px">
+            <div class="headerbar"><span class="hbtn">&#9776;</span><b style="font-size:14px;display:flex;align-items:center;gap:6px"><svg width="15" height="15"><use href="#mark"/></svg> Lidhra</b><span class="hbtn">+</span></div>
+            <div class="appscroll">
+              <div class="arow"><div style="display:flex;justify-content:space-between"><b style="font-size:12.5px">ubuntu-24.04.2.iso</b><span class="mono" style="font-size:10px;color:#54e06a">62%</span></div>
+                <div class="bar" style="margin:8px 0 5px"><i style="width:62%;background:#2ec27e"></i></div>
+                <div class="mono" style="font-size:9.5px;color:#b7c4bd">&darr; 12.4 MB/s &middot; 14 min</div></div>
+              <div class="arow"><div style="display:flex;justify-content:space-between"><b style="font-size:12.5px">debian-13.iso</b><span class="mono" style="font-size:10px;color:#3ce0c0">seed</span></div>
+                <div class="bar" style="margin:8px 0 5px"><i style="width:100%;background:#11a594"></i></div>
+                <div class="mono" style="font-size:9.5px;color:#b7c4bd">&uarr; 2.1 MB/s &middot; ratio 3.4</div></div>
+              <div class="arow" style="opacity:.65"><div style="display:flex;justify-content:space-between"><b style="font-size:12.5px">archlinux.iso</b><span class="mono" style="font-size:10px;color:#9aa8a0">paused</span></div>
+                <div class="bar" style="margin:8px 0 3px"><i style="width:88%;background:var(--pause)"></i></div></div>
+            </div>
+            <div class="tabbar" style="padding-bottom:10px"><div class="ti on"><span class="sq"></span>List</div><div class="ti" style="color:#9aa8a0"><span class="sq"></span>Add</div><div class="ti" style="color:#9aa8a0"><span class="sq"></span>More</div></div>
+          </div>
+        </div>
+        <div class="caption">Linux mobile (phosh/PinePhone): the <b>same libadwaita view</b>, adaptively collapsed.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ARCHITECTURE ============ -->
+<section id="arch">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">04 &middot; Architecture</p>
+      <h2 class="sec">Why Tauri + Rust makes this possible &mdash; and tiny</h2>
+      <p class="lead">One Rust core, many thin native fronts. No bundled browser engine means installers in
+        single-digit megabytes and low idle RAM &mdash; the resource win P2 asked for.</p>
+    </div>
+    <div class="arch">
+      <div class="layer"><span class="lname">Shell &middot; UI</span><div class="ldesc">Per-platform webview rendered by the OS (WKWebView / WebView2 / WebKitGTK). The design-language layer lives here: Liquid Glass, Material 3, Fluent, libadwaita &mdash; CSS themes over one component set.
+        <div class="chips"><b>system webview</b><b>no Chromium</b><b>~600 KB UI</b></div></div></div>
+      <div class="layer core"><span class="lname">Lidhra core</span><div class="ldesc"><b>Rust</b> orchestration: window/tray/menu-bar management, IPC command bus, session state, theming tokens, secure remote transport (WireGuard-friendly). Compiled per target, shared across all platforms.
+        <div class="chips"><b>Tauri 2</b><b>Rust</b><b>tauri-plugin-*</b><b>mobile targets</b></div></div></div>
+      <div class="layer"><span class="lname">Engine</span><div class="ldesc">The proven transfer engine &mdash; <b>libtorrent-rasterbar</b> via FFI (or a Rust reimplementation long-term). Reused, not rewritten: the part users already trust stays intact.
+        <div class="chips"><b>libtorrent</b><b>FFI</b><b>open-source engine</b></div></div></div>
+      <div class="layer"><span class="lname">Remote</span><div class="ldesc">The core exposes / consumes a standard Web API, so the iOS PWA, the watch glance, and any "remote mode" client talk to a headless box on a Pi/NAS with zero new server software.
+        <div class="chips"><b>Web API</b><b>PWA</b><b>self-host friendly</b></div></div></div>
+    </div>
+    <div class="grid g4" style="margin-top:20px">
+      <div class="card"><div class="num">&asymp; 6 MB</div><h3>Installer size</h3><p>vs 80&ndash;150 MB for an Electron equivalent. System webview, no bundled runtime.</p></div>
+      <div class="card"><div class="num">1&times;</div><h3>Shared core</h3><p>Rust logic written once; only the CSS design-language skin differs per OS.</p></div>
+      <div class="card"><div class="num">6</div><h3>Targets</h3><p>iOS &middot; macOS &middot; Android &middot; Windows &middot; Linux &middot; Linux mobile from one Tauri project.</p></div>
+      <div class="card"><div class="num">&darr; RAM</div><h3>Low idle footprint</h3><p>No background Chromium; the tray/menu-bar/watch glance is what stays resident.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPLIANCE ============ -->
+<section id="compliance">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">05 &middot; Store compliance & the piracy question</p>
+      <h2 class="sec">Passing review by designing for the rules, not around them</h2>
+      <p class="lead">The hard constraint isn't technical &mdash; it's policy. Apple bans download/torrent clients <em>and</em>
+        remote controllers on anti-piracy grounds. Lidhra's distribution strategy is different per store, by design &mdash;
+        and the "remote manager for downloads &amp; data" positioning is content-neutral from the name down.</p>
+    </div>
+    <div class="grid g3" style="margin-bottom:24px">
+      <div class="card"><h3 style="color:var(--err)">iOS App Store &mdash; &#10005; don't submit</h3>
+        <p>Apple rejects native torrent clients and remote apps outright. <b>Don't fight this.</b> Ship the iOS + watch experience as an installable <b>PWA</b> served from the user's own box &mdash; Liquid-Glass UI, Home-Screen icon, no review queue, no rejection.</p></div>
+      <div class="card"><h3 style="color:var(--warn)">macOS &mdash; &#9888; notarize, skip MAS</h3>
+        <p>Distribute directly, <b>Developer-ID signed &amp; notarized</b> (Gatekeeper-clean), not via the sandbox-heavy Mac App Store. This is how Transmission, Deluge, and qBittorrent already ship on Mac.</p></div>
+      <div class="card"><h3 style="color:var(--seed)">Play Store &mdash; &#10003; allowed</h3>
+        <p>Google permits download clients and remotes. Ship the full Material 3 app. Keep it <b>content-neutral</b>: no built-in indexes of infringing content, no piracy-adjacent marketing.</p></div>
+    </div>
+    <div class="card" style="background:linear-gradient(120deg,rgba(21,195,182,.10),rgba(84,224,106,.08))">
+      <p class="eyebrow" style="margin-bottom:12px">The content-neutrality doctrine (applies everywhere)</p>
+      <div class="grid g2" style="gap:14px 30px">
+        <div><b style="font-size:14px">&#10003; What keeps it legitimate</b>
+          <ul style="color:var(--fg-soft);font-size:14px;margin:8px 0 0;padding-left:18px">
+            <li>Ships empty &mdash; a general-purpose file-transfer tool, like the OS's own downloader.</li>
+            <li>Default and demo content is Linux ISOs / Creative-Commons &mdash; never copyrighted media.</li>
+            <li>No bundled search indexes of infringing sites; search is opt-in, user-provided.</li>
+            <li>Signed, notarized, reproducible builds &rarr; answers "is this the real Lidhra?" (P3 trust finding).</li>
+          </ul></div>
+        <div><b style="font-size:14px">&#10005; What gets you rejected / delisted</b>
+          <ul style="color:var(--fg-soft);font-size:14px;margin:8px 0 0;padding-left:18px">
+            <li>Marketing that references piracy, "free movies," or specific copyrighted titles.</li>
+            <li>Preloaded trackers or indexes pointing at infringing content.</li>
+            <li>Any App Store submission of a torrent/remote binary for iOS.</li>
+            <li>Bundling a VPN "to hide your downloading" &mdash; reframes the tool as piracy-oriented.</li>
+          </ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap foot">
+  <div class="rail"></div>
+  <p><b>LIDHRA</b> &mdash; <em>Link what matters.</em> A concept: a trusted open-source transfer engine, refracted into six native shells via Tauri + Rust.</p>
+  <p>Concept &amp; research synthesis &middot; built on the open-source
+    <a href="https://github.com/qbittorrent/qBittorrent">libtorrent / qBittorrent</a> lineage; Lidhra is an independent brand. Mockups are illustrative.</p>
+</div>
+
+<script>
+  if(!matchMedia('(prefers-reduced-motion:reduce)').matches){
+    const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.style.opacity=1;e.target.style.transform='none';io.unobserve(e.target)}})},{threshold:.08});
+    document.querySelectorAll('.card,.stage,.layer,.tablewrap,.iconcell').forEach(el=>{el.style.opacity=0;el.style.transform='translateY(14px)';el.style.transition='opacity .6s ease,transform .6s ease';io.observe(el)});
+  }
+</script>

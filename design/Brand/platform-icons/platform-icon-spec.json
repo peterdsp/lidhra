@@ -1,0 +1,37 @@
+{
+  "apple-ios": {
+    "source": "lidhra-app-icon-light.svg",
+    "size": "1024x1024",
+    "notes": "Opaque square source. Do not pre-round; App Store applies mask."
+  },
+  "apple-macos": {
+    "source": "lidhra-app-icon-dark.svg",
+    "size": "1024x1024",
+    "notes": "Use as AppIcon base; retain 10% optical padding."
+  },
+  "android-foreground": {
+    "source": "lidhra-mark-gradient.svg",
+    "size": "432x432",
+    "notes": "Adaptive foreground, keep mark within 66% safe zone."
+  },
+  "android-background": {
+    "source": "lidhra-app-icon-dark.svg",
+    "size": "432x432",
+    "notes": "Use solid #07110F background layer in production."
+  },
+  "windows-store": {
+    "source": "lidhra-app-icon-light.svg",
+    "size": "1024x1024",
+    "notes": "Generate StoreLogo and Square assets from this master."
+  },
+  "linux": {
+    "source": "lidhra-app-icon-filled.svg",
+    "size": "512x512",
+    "notes": "Export symbolic monochrome variant for GNOME menus."
+  },
+  "watchos": {
+    "source": "lidhra-app-icon-dark.svg",
+    "size": "1024x1024",
+    "notes": "Use the simplified mark below 40 pt."
+  }
+}

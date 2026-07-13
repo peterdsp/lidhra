@@ -1,0 +1,15 @@
+[package]
+name = "lidhra-cli"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Lidhra command-line: add a magnet, resolve it through debrid, download it over HTTPS."
+
+[[bin]]
+name = "lidhra"
+path = "src/main.rs"
+
+[dependencies]
+lidhra-debrid = { path = "../lidhra-debrid" }
+lidhra-transfer = { path = "../lidhra-transfer" }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }

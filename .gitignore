@@ -1,0 +1,11 @@
+# Rust
+/target
+**/target
+
+# macOS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp

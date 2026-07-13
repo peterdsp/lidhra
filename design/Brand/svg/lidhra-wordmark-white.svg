@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="760" viewBox="0 0 1100 760"><defs>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#15C3B6"/><stop offset="0.56" stop-color="#2FD191"/><stop offset="1" stop-color="#54E06A"/>
+    </linearGradient>
+    <linearGradient id="brandReverse" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#15C3B6"/><stop offset="0.56" stop-color="#2FD191"/><stop offset="1" stop-color="#54E06A"/>
+    </linearGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#06100E" flood-opacity="0.22"/>
+    </filter></defs><rect width="100%" height="100%" fill="#07110F"/><text x="64" y="630" font-family="Arial, Helvetica, sans-serif" font-size="250" font-weight="700" letter-spacing="54" fill="#FFFFFF">LIDHR</text><path d="M825 630 L900 430 L975 630 Z" fill="#FFFFFF"/><circle cx="900" cy="594" r="20" fill="#2FD191"/></svg>
