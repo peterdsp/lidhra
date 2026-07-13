@@ -33,6 +33,10 @@ crates/          Rust workspace — the engine (builds & tested in CI)
   lidhra-debrid    unified interface over debrid providers + adapters + registry
   lidhra-transfer  segmented, resumable HTTPS download engine
   lidhra-cli       the `lidhra` binary: magnet -> debrid -> download
+  lidhra-server    local HTTP server + JSON API (the headless / Web-UI mode)
+ui/              the shared web UI — one page that runs in a browser (server) or a
+                 native window (Tauri); auto-detects which and talks to the right backend
+app/             the Tauri desktop app — native shell wrapping ui/ (compiles on macOS)
 design/          the complete design system — brand, tokens, per-platform mockups,
                  the living styleguide (open design/index.html), developer color files
 docs/            the marketing website (deployed to lidhra.peterdsp.dev via GitHub Pages)
@@ -45,6 +49,8 @@ docs/            the marketing website (deployed to lidhra.peterdsp.dev via GitH
 | **`lidhra-debrid`** | `DebridProvider` trait + adapters for **Real-Debrid** (live-tested), **AllDebrid**, **TorBox**, **Premiumize**, a provider **registry** (`build_provider`), and a cross-provider policy/failover engine. | builds + unit-tested |
 | **`lidhra-transfer`** | Segmented, **resumable** HTTPS downloads: parallel Range connections, `.part` files with atomic rename, resume-from-partial. | verified byte-identical on live downloads |
 | **`lidhra-cli`** | `lidhra add "<magnet>" --provider <name>` — runs the whole pipeline end to end. | runs |
+| **`lidhra-server`** | Serves the web UI + a JSON API over the engine — "Lidhra like qbittorrent-nox." | runs (verified) |
+| **`app/` (Tauri)** | Native desktop shell wrapping the same UI; commands call the crates directly. | compiles on macOS |
 
 ## Quick start
 
@@ -61,6 +67,14 @@ cargo run -p lidhra-cli -- add "magnet:?xt=urn:btih:...&dn=ubuntu-24.04.iso" \
 
 Use a **legitimate** magnet (a Linux ISO, a Creative-Commons film, your own file).
 
+**Run the app** — a real UI you can click:
+
+```sh
+cargo run -p lidhra-server         # then open http://127.0.0.1:8787
+# — or the native desktop window —
+cargo install tauri-cli --version "^2" && cargo tauri dev
+```
+
 ## Platform reach (honest)
 
 Lidhra targets ~every screen, in three tiers:
@@ -76,7 +90,9 @@ On a TV, Lidhra is a **library + player** (stream your cloud), not a downloader.
 - [x] `lidhra-debrid` — trait, adapters (RD / AllDebrid / TorBox / Premiumize), registry, policy
 - [x] `lidhra-transfer` — segmented + resumable HTTPS engine
 - [x] `lidhra-cli` — end-to-end pipeline
-- [ ] `lidhra-core` — the Tauri app shell (windows, tray, menu-bar) wrapping the crates
+- [x] `lidhra-server` + `ui/` — runnable app (web UI + JSON API over the engine)
+- [x] `app/` — Tauri desktop shell (compiles; wraps the shared UI)
+- [ ] Desktop polish — tray / menu-bar surfaces, live download progress events
 - [ ] `tv-mode` web UI (D-pad focus) → Tizen / webOS / HarmonyOS / browser TVs
 - [ ] Native TV shells (Apple TV / Android TV) + `lidhra-cast`
 - [ ] More provider adapters: Debrid-Link, Offcloud, Mega-Debrid, Deepbrid, High-Way
