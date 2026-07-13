@@ -7,9 +7,10 @@
 //! - App Store build: paid upfront, no trial and no license logic (the store receipt is
 //!   the license) - gate this crate out with a build flavor there.
 //!
-//! Honest limits: a key is not machine-bound, so it can be shared; the trial is stored
-//! on disk, so a determined user can reset it. This is a "keep honest people honest"
-//! system, which is the norm for indie apps. Add a server later if you need more.
+//! Keys can optionally be node-locked (a `MACHINE:<id>` subject, enforced by
+//! [`is_valid_for`]). Honest limits: an unbound key can be shared, and the trial is
+//! stored on disk, so both are bypassable by a determined user. This is a "keep honest
+//! people honest" system; use online activation (see DISTRIBUTION.md) if you need more.
 
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD as B64, Engine};
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
@@ -20,7 +21,7 @@ pub const TRIAL_DAYS: u64 = 7;
 /// Issuer public key (hex, 32 bytes). Replace after `lidhra-keygen genkey`,
 /// then keep the matching private key secret.
 pub const ISSUER_PUBKEY_HEX: &str =
-    "0000000000000000000000000000000000000000000000000000000000000000";
+    "7681123284c2e6d805ec91773009f59483d1012d9a600326f6808a3430436354";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Status {
