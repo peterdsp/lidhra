@@ -220,27 +220,42 @@ def macos_frame(name, headline, sub, win_extra="", dark=False):
     render(name, s)
 
 # ---- iOS App Store screenshots (1290 x 2796) ------------------------------
-def ios_frame(name, headline, sub, dark=False):
-    W, H = 1290, 2796
+def premium_bg(w, h):
+    # Rich dark backdrop with flowing brand-coloured waves (klipa-style polish).
+    s = f'<rect width="{w}" height="{h}" fill="url(#ink)"/>'
+    s += f'<rect width="{w}" height="{h}" fill="url(#glowd)"/>'
+    for yb, op, sw in [(0.16, 0.20, 4), (0.24, 0.15, 3), (0.33, 0.11, 3),
+                       (0.62, 0.10, 3), (0.72, 0.13, 4), (0.82, 0.10, 3)]:
+        y = h * yb
+        d = (f"M -60 {y:.0f} C {w*0.30:.0f} {y-h*0.09:.0f}, {w*0.66:.0f} {y+h*0.10:.0f}, "
+             f"{w+60} {y-h*0.05:.0f}")
+        s += f'<path d="{d}" fill="none" stroke="url(#gh)" stroke-width="{sw}" opacity="{op}"/>'
+    return s
+
+def ios_frame(name, headline, sub):
+    # App Store 6.5" size (1284 x 2778). Phone prominent up top, bold caption below.
+    W, H = 1284, 2778
     s = svg_open(W, H)
-    s += dark_bg(W, H) if dark else light_bg(W, H)
-    hc = "#ffffff" if dark else INK
-    sc = "#bfe9d8" if dark else MUTED
-    s += txt(W//2, 230, headline, 82, 800, hc, SANS, "middle")
-    s += txt(W//2, 320, sub, 40, 400, sc, SANS, "middle")
-    # phone body around a 390x844 screen
-    scale = 2.55
-    sw, sh = 390*scale, 844*scale
-    px, py = (W-sw)/2, 470
-    bez = 26
-    cid = "ph" + name.replace("/", "_").replace("-", "_")
+    s += premium_bg(W, H)
+    scale = 2.34
+    sw, sh = 390 * scale, 844 * scale
+    px, py = (W - sw) / 2, 172
+    bez = 24
+    cid = "ph" + name.replace("/", "_").replace("-", "_").replace(".", "_")
+    # device body + soft glow
     s += (f'<g filter="url(#sh)"><rect x="{px-bez:.0f}" y="{py-bez:.0f}" width="{sw+2*bez:.0f}" '
-          f'height="{sh+2*bez:.0f}" rx="80" fill="#0a1512"/></g>')
+          f'height="{sh+2*bez:.0f}" rx="86" fill="#05100d"/></g>')
     s += (f'<clipPath id="{cid}"><rect x="{px:.0f}" y="{py:.0f}" width="{sw:.0f}" '
-          f'height="{sh:.0f}" rx="52"/></clipPath>')
-    # clip-path on an untransformed wrapper so the clip rect stays in page space
+          f'height="{sh:.0f}" rx="54"/></clipPath>')
     s += (f'<g clip-path="url(#{cid})"><g transform="translate({px:.0f},{py:.0f}) '
           f'scale({scale})">{ios_screen()}</g></g>')
+    # subtle screen edge highlight
+    s += (f'<rect x="{px:.0f}" y="{py:.0f}" width="{sw:.0f}" height="{sh:.0f}" rx="54" '
+          f'fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2"/>')
+    # caption at the bottom: subtitle over a bold headline
+    cap = py + sh + bez
+    s += txt(W // 2, cap + 132, sub, 42, 500, "#8fc7b5", SANS, "middle")
+    s += txt(W // 2, cap + 226, headline, 74, 800, "#ffffff", SANS, "middle")
     s += "</svg>"
     render(name, s)
 
@@ -303,10 +318,15 @@ if __name__ == "__main__":
                 "Native. Ultralight. ~9 MB.",
                 "Built in Rust on the system webview. No Chromium, no bloat.", dark=True)
 
-    print("iOS App Store:")
-    ios_frame("appstore/ios/01-transfers", "Your transfers,", "in your pocket.")
-    ios_frame("appstore/ios/02-debrid", "Debrid-powered.", "App-Store-clean.", dark=True)
-    ios_frame("appstore/ios/03-lang", "Three languages.", "English · Ελληνικά · Shqip")
+    print("iOS App Store (1284x2778):")
+    ios_frame("appstore/ios/01-transfers", "Your transfers, one tap away",
+              "Live health bars, speeds and ETAs at a glance.")
+    ios_frame("appstore/ios/02-debrid", "Bring your own debrid",
+              "Real-Debrid, AllDebrid, TorBox, Premiumize.")
+    ios_frame("appstore/ios/03-private", "Private HTTPS downloads",
+              "The cloud does the work. Your device just downloads.")
+    ios_frame("appstore/ios/04-native", "Native, light, and yours",
+              "English, Greek, Albanian. A one-time purchase.")
 
     print("Ko-fi:")
     kofi_hero("kofi/00-cover")
