@@ -1,0 +1,17 @@
+{
+  "name": "lidhra-license-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker: Ko-fi purchase webhook + online licence activation for Lidhra.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@noble/ed25519": "^2.3.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  }
+}

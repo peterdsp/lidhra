@@ -29,6 +29,11 @@ fn now_unix() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
 }
 
+/// Online activation endpoint (the Cloudflare Worker). Override with
+/// LIDHRA_ACTIVATE_URL. The app posts {email, machine_id}; the Worker checks the
+/// Ko-fi purchase and returns a node-locked key.
+const DEFAULT_ACTIVATE_URL: &str = "https://lidhra-license.peterdsp.workers.dev/activate";
+
 const INDEX: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../ui/index.html"));
 
 /// One local file download, shared with its background task via atomics.
@@ -78,6 +83,7 @@ async fn main() {
         .route("/api/download", post(download_transfer))
         .route("/api/downloads", get(downloads))
         .route("/api/license", get(license).post(activate))
+        .route("/api/license/email", post(activate_email))
         .with_state(state);
 
     let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(8787);
@@ -313,4 +319,41 @@ async fn activate(State(s): State<Shared>, Json(req): Json<ActReq>) -> Result<Js
     let st = s.lock().await;
     lidhra_license::activate(&st.config_dir, &req.key, &st.pubkey).map_err(|e| err(StatusCode::BAD_REQUEST, e))?;
     Ok(Json(lic_dto(&st)))
+}
+
+#[derive(Deserialize)]
+struct EmailReq {
+    email: String,
+}
+/// Online activation: hand the buyer's Ko-fi email to the licence Worker, which
+/// verifies the purchase and returns a node-locked key we then activate locally.
+async fn activate_email(State(s): State<Shared>, Json(req): Json<EmailReq>) -> Result<Json<Lic>, ApiErr> {
+    let (config_dir, pubkey) = {
+        let st = s.lock().await;
+        (st.config_dir.clone(), st.pubkey.clone())
+    };
+    let machine = lidhra_license::machine_id(&config_dir);
+    let url = std::env::var("LIDHRA_ACTIVATE_URL").unwrap_or_else(|_| DEFAULT_ACTIVATE_URL.to_string());
+    let body = serde_json::json!({ "email": req.email.trim(), "machine_id": machine });
+    let resp = reqwest::Client::new()
+        .post(&url)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| err(StatusCode::BAD_GATEWAY, format!("activation server unreachable: {e}")))?;
+    let v: serde_json::Value = resp
+        .json()
+        .await
+        .map_err(|e| err(StatusCode::BAD_GATEWAY, format!("bad activation response: {e}")))?;
+    match v.get("key").and_then(|k| k.as_str()) {
+        Some(key) => {
+            lidhra_license::activate(&config_dir, key, &pubkey).map_err(|e| err(StatusCode::BAD_REQUEST, e))?;
+            let st = s.lock().await;
+            Ok(Json(lic_dto(&st)))
+        }
+        None => {
+            let msg = v.get("error").and_then(|e| e.as_str()).unwrap_or("activation failed");
+            Err(err(StatusCode::BAD_REQUEST, msg))
+        }
+    }
 }
