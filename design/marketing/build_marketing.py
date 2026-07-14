@@ -182,6 +182,69 @@ def ios_screen():
     return "".join(p)
 
 # ---------------------------------------------------------------------------
+# Reusable iPad screen (tablet master-detail), drawn in a 1032 x 1376 box.
+# ---------------------------------------------------------------------------
+def ipad_screen():
+    p = [f'<rect x="0" y="0" width="1032" height="1376" fill="{MIST}"/>']
+    p.append(f'<rect x="0" y="0" width="1032" height="1376" fill="url(#glow)"/>')
+    # status bar
+    p.append(txt(40, 58, "9:41", 22, 700, INK2, MONO))
+    p.append(txt(992, 58, "↓ 12.4   ↑ 2.1 MB/s", 19, 500, FAINT, MONO, "end"))
+    # sidebar
+    p.append(f'<rect x="0" y="88" width="312" height="1288" fill="#f9fcfa"/>')
+    p.append(f'<line x1="312" y1="88" x2="312" y2="1376" stroke="{BORDER}"/>')
+    p.append(mark(40, 106, 46))
+    p.append(txt(100, 142, "Lidhra", 30, 800, INK2))
+    p.append(txt(40, 214, "LIBRARY", 17, 700, FAINT, MONO, ls="1.8"))
+    nav = [("◆ Overview", "12", True), ("◆ Transfers", "3", False),
+           ("◆ Seeding", "7", False), ("◆ Paused", "2", False)]
+    y = 238
+    for label, count, active in nav:
+        if active:
+            p.append(f'<rect x="20" y="{y}" width="272" height="46" rx="12" fill="#dcf1e7"/>')
+        col = "#0b8f79" if active else MUTED
+        wt = 600 if active else 400
+        p.append(txt(42, y + 30, label, 21, wt, col))
+        p.append(txt(280, y + 30, count, 17, 400, FAINT, MONO, "end"))
+        y += 54
+    p.append(txt(40, y + 42, "CATEGORIES", 17, 700, FAINT, MONO, ls="1.8"))
+    y += 66
+    for label, count in (("◆ Linux", "8"), ("◆ Media", "4"), ("◆ ISO images", "6")):
+        p.append(txt(42, y + 30, label, 21, 400, MUTED))
+        p.append(txt(280, y + 30, count, 17, 400, FAINT, MONO, "end"))
+        y += 50
+    # provider chip
+    p.append(f'<rect x="20" y="1290" width="272" height="66" rx="16" fill="{ROW}" stroke="{BORDER}"/>')
+    p.append(f'<circle cx="56" cy="1323" r="15" fill="url(#g)"/>')
+    p.append(txt(82, 1318, "Real-Debrid", 18, 600, INK2))
+    p.append(txt(82, 1342, "connected", 15, 400, "#0b8f79", MONO))
+    # main header
+    p.append(txt(360, 152, "Transfers", 40, 800, INK2))
+    p.append(f'<rect x="820" y="116" width="172" height="50" rx="13" fill="url(#gh)"/>')
+    p.append(txt(906, 148, "+ Add", 22, 700, "#06251b", SANS, "middle"))
+    p.append(txt(360, 194, "3 active · 7 seeding · 2 paused", 18, 400, FAINT, MONO))
+    # transfer cards
+    rows = [
+        ("ubuntu-24.04.2-desktop-amd64.iso", "4.7 GB · 62% · 214 peers", 0.62, DL, "12.4 MB/s", "14 min"),
+        ("debian-13-netinst.iso", "631 MB · seeding · ratio 3.4", 1.0, SEED, "↑ 2.1 MB/s", "∞"),
+        ("blender-4.6-linux-x64.tar.xz", "312 MB · 88% · direct link", 0.88, DL, "9.7 MB/s", "22 sec"),
+        ("archlinux-2026.07.01-x86_64.iso", "1.1 GB · paused · 88%", 0.88, PAUSE, "paused", "-"),
+        ("fedora-40-workstation.iso", "2.1 GB · 34% · 96 peers", 0.34, DL, "7.8 MB/s", "48 sec"),
+    ]
+    y = 236
+    for name, meta, prog, col, spd, eta in rows:
+        p.append(f'<rect x="360" y="{y}" width="632" height="150" rx="20" fill="{CARD}" stroke="{BORDER}"/>')
+        p.append(f'<rect x="386" y="{y+28}" width="46" height="46" rx="12" fill="{col}"/>')
+        p.append(txt(452, y + 50, name, 22, 600, INK2))
+        p.append(txt(452, y + 82, meta, 17, 400, FAINT, MONO))
+        p.append(f'<rect x="452" y="{y+104}" width="430" height="9" rx="4.5" fill="#c9d8d0"/>')
+        p.append(f'<rect x="452" y="{y+104}" width="{430*prog:.0f}" height="9" rx="4.5" fill="{col}"/>')
+        p.append(txt(966, y + 50, spd, 18, 600, col, MONO, "end"))
+        p.append(txt(966, y + 82, eta, 16, 400, FAINT, MONO, "end"))
+        y += 168
+    return "".join(p)
+
+# ---------------------------------------------------------------------------
 def svg_open(w, h):
     return f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">{DEFS}'
 
@@ -259,6 +322,31 @@ def ios_frame(name, headline, sub):
     s += "</svg>"
     render(name, s)
 
+# ---- iPad App Store screenshots (2064 x 2752, 13-inch) --------------------
+def ipad_frame(name, headline, sub):
+    W, H = 2064, 2752
+    s = svg_open(W, H)
+    s += premium_bg(W, H)
+    scale = 1.5
+    sw, sh = 1032 * scale, 1376 * scale
+    px, py = (W - sw) / 2, 150
+    bez = 28
+    cid = "pad" + name.replace("/", "_").replace("-", "_").replace(".", "_")
+    # device body + soft glow
+    s += (f'<g filter="url(#sh)"><rect x="{px-bez:.0f}" y="{py-bez:.0f}" width="{sw+2*bez:.0f}" '
+          f'height="{sh+2*bez:.0f}" rx="48" fill="#05100d"/></g>')
+    s += (f'<clipPath id="{cid}"><rect x="{px:.0f}" y="{py:.0f}" width="{sw:.0f}" '
+          f'height="{sh:.0f}" rx="26"/></clipPath>')
+    s += (f'<g clip-path="url(#{cid})"><g transform="translate({px:.0f},{py:.0f}) '
+          f'scale({scale})">{ipad_screen()}</g></g>')
+    s += (f'<rect x="{px:.0f}" y="{py:.0f}" width="{sw:.0f}" height="{sh:.0f}" rx="26" '
+          f'fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2"/>')
+    cap = py + sh + bez
+    s += txt(W // 2, cap + 128, sub, 46, 500, "#8fc7b5", SANS, "middle")
+    s += txt(W // 2, cap + 224, headline, 82, 800, "#ffffff", SANS, "middle")
+    s += "</svg>"
+    render(name, s)
+
 # ---- Ko-fi images ---------------------------------------------------------
 def kofi_hero(name, W=1600, H=1000):
     s = svg_open(W, H)
@@ -327,6 +415,16 @@ if __name__ == "__main__":
               "The cloud does the work. Your device just downloads.")
     ios_frame("appstore/ios/04-native", "Native, light, and yours",
               "English, Greek, Albanian. A one-time purchase.")
+
+    print("iPad App Store (2064x2752):")
+    ipad_frame("appstore/ipad/01-transfers", "Every transfer, one clean home",
+               "A native sidebar and live health bars, built for the big screen.")
+    ipad_frame("appstore/ipad/02-debrid", "Bring your own debrid",
+               "Real-Debrid, AllDebrid, TorBox, Premiumize. Your account, your files.")
+    ipad_frame("appstore/ipad/03-private", "Private HTTPS downloads",
+               "The cloud does the work. Your iPad just downloads.")
+    ipad_frame("appstore/ipad/04-native", "Native, light, and yours",
+               "English, Greek, Albanian. A one-time purchase.")
 
     print("Ko-fi:")
     kofi_hero("kofi/00-cover")
