@@ -154,6 +154,7 @@
   .fbottom{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:48px;padding-top:22px;border-top:1px solid var(--line);color:var(--mute);font-size:12.5px;font-family:var(--mono)}
 
   @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto;transition:none!important}}
+.langsel{background:rgba(255,255,255,.03);color:var(--soft);border:1px solid var(--line-2);border-radius:100px;font-family:var(--mono);font-size:12px;padding:7px 10px;cursor:pointer}.langsel:hover{color:var(--fg);border-color:var(--acc)}
 </style>
 </head>
 <body>
@@ -167,12 +168,13 @@
 <header class="nav" id="nav"><div class="wrap row">
   <a class="lg" href="#top"><svg viewBox="0 0 1024 1024"><image href="favicon.png" width="1024" height="1024"/></svg> Lidhra</a>
   <nav>
-    <a href="#platforms">Platforms</a><a href="#cloud">Cloud</a><a href="#features">Features</a>
-    <a href="#power">Power</a><a href="#lightweight">Why Lidhra</a>
+    <a data-i18n="nav_platforms" href="#platforms">Platforms</a><a data-i18n="nav_cloud" href="#cloud">Cloud</a><a data-i18n="nav_features" href="#features">Features</a>
+    <a data-i18n="nav_power" href="#power">Power</a><a data-i18n="nav_why" href="#lightweight">Why Lidhra</a>
   </nav>
   <div class="actions">
+    <select id="lang" aria-label="Language" class="langsel"><option value="en">EN</option><option value="el">ΕΛ</option><option value="sq">SQ</option></select>
     <a class="gh" href="#" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.78 2.73 1.27 3.4.97.1-.76.4-1.27.74-1.56-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.28 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg><span>GitHub</span></a>
-    <a class="btn p" href="#download">Download</a>
+    <a data-i18n="btn_download" class="btn p" href="#download">Download</a>
   </div>
 </div></header>
 
@@ -180,16 +182,16 @@
 <section class="hero">
   <canvas id="mesh"></canvas>
   <div class="wrap inner">
-    <div class="eyebrow">Native peer-to-peer transfer</div>
-    <h1>Every peer,<br>one <span class="g">connection.</span></h1>
-    <p class="sub">Lidhra is a fast, native download &amp; transfer manager for every platform - one lightweight
+    <div data-i18n="hero_eyebrow" class="eyebrow">Native peer-to-peer transfer</div>
+    <h1 data-i18n-html="hero_h1">Every peer,<br>one <span class="g">connection.</span></h1>
+    <p data-i18n-html="hero_sub" class="sub">Lidhra is a fast, native download &amp; transfer manager for every platform - one lightweight
        Rust core, wrapped in the interface each OS actually deserves. Add a magnet, a link, or your debrid
        account and it just downloads - on your Mac, PC, Linux box, and phone.</p>
     <div class="btnrow">
       <a class="btn p" href="#download"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0 5-5m-5 5-5-5M5 21h14"/></svg> <span id="dlLabel">Download</span></a>
-      <a class="btn s" href="#platforms">See every platform</a>
+      <a data-i18n="hero_see" class="btn s" href="#platforms">See every platform</a>
     </div>
-    <div class="fine">Free &amp; open source · ~6 MB installer · no accounts · no telemetry</div>
+    <div data-i18n="hero_fine" class="fine">Free &amp; open source · ~6 MB installer · no accounts · no telemetry</div>
   </div>
   <div class="ann" style="top:120px;right:8%">↓ 12.4 MB/s · 214 peers</div>
   <div class="ann" style="top:230px;right:20%">real-debrid · cached</div>
@@ -197,22 +199,22 @@
 </section>
 
 <section class="stats"><div class="wrap row"><div class="row" style="display:grid;width:100%;grid-template-columns:repeat(4,1fr);gap:20px;padding:26px 0">
-  <div class="s"><b>~6 MB</b><span>installer</span></div>
-  <div class="s"><b>6</b><span>platforms</span></div>
-  <div class="s"><b>0</b><span>telemetry</span></div>
-  <div class="s"><b>100%</b><span>open source</span></div>
+  <div class="s"><b>~6 MB</b><span data-i18n="stat_installer">installer</span></div>
+  <div class="s"><b>6</b><span data-i18n="stat_platforms">platforms</span></div>
+  <div class="s"><b>0</b><span data-i18n="stat_telemetry">telemetry</span></div>
+  <div class="s"><b>100%</b><span data-i18n="stat_open">open source</span></div>
 </div></div></section>
 
 <!-- PLATFORMS -->
 <section class="blk" id="platforms"><div class="wrap">
   <div class="sec-head">
-    <div class="eyebrow">One core · six native shells</div>
-    <h2>Native on every screen - not a web app in a box.</h2>
-    <p>The same Rust core, refracted into each platform's real design language. It should feel like it shipped with your OS, because it nearly does.</p>
+    <div data-i18n="plat_eyebrow" class="eyebrow">One core · six native shells</div>
+    <h2 data-i18n="plat_h2">Native on every screen - not a web app in a box.</h2>
+    <p data-i18n="plat_p">The same Rust core, refracted into each platform's real design language. It should feel like it shipped with your OS, because it nearly does.</p>
   </div>
   <div class="plat-grid">
     <div class="pcard"><div class="ph"><b>macOS</b><span class="ds">Liquid Glass</span></div>
-      <div class="mini"><div class="mtag">Menu bar + window</div>
+      <div class="mini"><div data-i18n="mtag_macos" class="mtag">Menu bar + window</div>
         <div class="mrow"><span class="ic" style="background:linear-gradient(140deg,#22bd7a,#54e06a)"></span><span class="nm">ubuntu-24.04.2.iso</span><span class="sp" style="color:var(--download)">12.4</span></div>
         <div class="mbar"><i style="width:62%;background:var(--download)"></i></div>
         <div class="mrow" style="margin-top:9px"><span class="ic" style="background:linear-gradient(140deg,#11a594,#22bd7a)"></span><span class="nm">debian-13.iso</span><span class="sp" style="color:var(--seeding)">↑2.1</span></div>
@@ -223,7 +225,7 @@
         <div style="font-size:9px;color:var(--mute)" class="mono">TOTAL SPEED</div>
         <div style="font-weight:800;color:var(--download);font-size:16px">↓ 12.4 <span style="font-size:9px">MB/s</span></div>
         <div class="mbar" style="margin-top:8px"><i style="width:62%;background:var(--download)"></i></div></div></div>
-    <div class="pcard"><div class="ph"><b>watchOS</b><span class="ds">Glance</span></div>
+    <div class="pcard"><div class="ph"><b>watchOS</b><span data-i18n="watch_glance" class="ds">Glance</span></div>
       <div class="mini" style="display:flex;flex-direction:column;justify-content:center">
         <div style="font-size:9px;color:var(--mute)" class="mono">TOTAL SPEED</div>
         <div style="font-weight:800;color:var(--download);font-size:18px">↓ 12.4</div>
@@ -237,13 +239,13 @@
         <div class="mrow"><span class="ic" style="background:#0d6b47"></span><span class="nm">ubuntu-24.04.2.iso</span><span class="sp">62%</span></div>
         <div class="mbar"><i style="width:62%;background:#2fd191"></i></div></div></div>
     <div class="pcard"><div class="ph"><b>Windows 11</b><span class="ds">Fluent 2</span></div>
-      <div class="mini"><div class="mtag">Tray + Mica window</div>
+      <div class="mini"><div data-i18n="mtag_win" class="mtag">Tray + Mica window</div>
         <div class="mrow"><span class="ic" style="background:linear-gradient(140deg,#22bd7a,#54e06a)"></span><span class="nm">ubuntu-24.04.2.iso</span><span class="sp" style="color:var(--download)">12.4</span></div>
         <div class="mbar"><i style="width:62%;background:var(--download)"></i></div>
         <div class="mrow" style="margin-top:9px"><span class="ic" style="background:#8a94a8"></span><span class="nm">archlinux.iso</span><span class="sp">paused</span></div>
         <div class="mbar"><i style="width:88%;background:var(--paused)"></i></div></div></div>
     <div class="pcard"><div class="ph"><b>Linux</b><span class="ds">libadwaita</span></div>
-      <div class="mini"><div class="mtag">GNOME + phosh (adaptive)</div>
+      <div class="mini"><div data-i18n="mtag_linux" class="mtag">GNOME + phosh (adaptive)</div>
         <div class="mrow"><span class="ic" style="background:#2ec27e"></span><span class="nm">ubuntu-24.04.2.iso</span><span class="sp" style="color:#2ec27e">12.4</span></div>
         <div class="mbar"><i style="width:62%;background:#2ec27e"></i></div>
         <div class="mrow" style="margin-top:9px"><span class="ic" style="background:#11a594"></span><span class="nm">debian-13.iso</span><span class="sp" style="color:var(--seeding)">↑2.1</span></div>
@@ -254,57 +256,57 @@
 <!-- FEATURES -->
 <section class="blk" id="features"><div class="wrap">
   <div class="sec-head">
-    <div class="eyebrow">Built for how you actually use it</div>
-    <h2>The 90% is a glance. The 10% is full control.</h2>
-    <p>Everything the power user needs, none of the 2009 clutter. Progressive by default - simple until you ask for more.</p>
+    <div data-i18n="feat_eyebrow" class="eyebrow">Built for how you actually use it</div>
+    <h2 data-i18n="feat_h2">The 90% is a glance. The 10% is full control.</h2>
+    <p data-i18n="feat_p">Everything the power user needs, none of the 2009 clutter. Progressive by default - simple until you ask for more.</p>
   </div>
   <div class="feat">
-    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="4" rx="1.5"/><path d="M8 12h8M8 16h5"/></svg></div><h3>Menu-bar &amp; tray glance</h3><p>Check speed, pause, or add a transfer without ever opening a window. Your real home screen.</p></div>
-    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 18 18H7Z"/></svg></div><h3>Debrid, built in</h3><p>Bring your Real-Debrid, AllDebrid, or TorBox account - resolve magnets to fast, encrypted HTTPS. Or torrent locally.</p></div>
-    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 3h6M9 21h6"/></svg></div><h3>Phone &amp; watch</h3><p>Native apps on Android and iOS, plus a watch glance. The same queue, on every device you own.</p></div>
-    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5a14 14 0 0 1 14 14M5 12a7 7 0 0 1 7 7"/><circle cx="6" cy="18" r="1.6"/></svg></div><h3>RSS, categories &amp; rules</h3><p>Auto-grab feeds, sort with categories and tags, and let rules file everything where it belongs.</p></div>
-    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13V7"/><path d="M4 13a8 8 0 1 1 16 0"/><path d="m15 10 2-2"/></svg></div><h3>Bandwidth control</h3><p>Schedules, global caps, and per-transfer limits so Lidhra never fights your Zoom call.</p></div>
-    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4 3 7 7 9 4-2 7-5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Private by default</h3><p>No accounts, no telemetry, no cloud. Signed, notarized, reproducible builds you can verify.</p></div>
+    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="4" rx="1.5"/><path d="M8 12h8M8 16h5"/></svg></div><h3 data-i18n="f1_t">Menu-bar &amp; tray glance</h3><p data-i18n="f1_p">Check speed, pause, or add a transfer without ever opening a window. Your real home screen.</p></div>
+    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 18 18H7Z"/></svg></div><h3 data-i18n="f2_t">Debrid, built in</h3><p data-i18n="f2_p">Bring your Real-Debrid, AllDebrid, or TorBox account - resolve magnets to fast, encrypted HTTPS. Or torrent locally.</p></div>
+    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 3h6M9 21h6"/></svg></div><h3 data-i18n="f3_t">Phone &amp; watch</h3><p data-i18n="f3_p">Native apps on Android and iOS, plus a watch glance. The same queue, on every device you own.</p></div>
+    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5a14 14 0 0 1 14 14M5 12a7 7 0 0 1 7 7"/><circle cx="6" cy="18" r="1.6"/></svg></div><h3 data-i18n="f4_t">RSS, categories &amp; rules</h3><p data-i18n="f4_p">Auto-grab feeds, sort with categories and tags, and let rules file everything where it belongs.</p></div>
+    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13V7"/><path d="M4 13a8 8 0 1 1 16 0"/><path d="m15 10 2-2"/></svg></div><h3 data-i18n="f5_t">Bandwidth control</h3><p data-i18n="f5_p">Schedules, global caps, and per-transfer limits so Lidhra never fights your Zoom call.</p></div>
+    <div class="fc"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4 3 7 7 9 4-2 7-5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg></div><h3 data-i18n="f6_t">Private by default</h3><p data-i18n="f6_p">No accounts, no telemetry, no cloud. Signed, notarized, reproducible builds you can verify.</p></div>
   </div>
 </div></section>
 
 <!-- CLOUD / DEBRID -->
 <section class="blk" id="cloud"><div class="wrap">
   <div class="sec-head">
-    <div class="eyebrow">Cloud transfers &middot; debrid</div>
-    <h2>Torrenting without a torrent on your device.</h2>
-    <p>Connect the debrid account you already have. Lidhra hands the magnet to the cloud - the peer-to-peer
+    <div data-i18n="cloud_eyebrow" class="eyebrow">Cloud transfers &middot; debrid</div>
+    <h2 data-i18n="cloud_h2">Torrenting without a torrent on your device.</h2>
+    <p data-i18n-html="cloud_p">Connect the debrid account you already have. Lidhra hands the magnet to the cloud - the peer-to-peer
        part happens on the provider's servers - and you get back a plain, <b style="color:var(--fg)">TLS-encrypted
        HTTPS download</b>. Fast, private, and nothing heavy touching your device or your network.</p>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:8px">
-    <div class="pcard" style="text-align:left"><div class="mtag" style="color:var(--acc)">01 &middot; device</div><b style="font-size:15px">Add a magnet</b><p style="color:var(--soft);font-size:13px;margin:6px 0 0">Paste a link. No search or index in the app.</p></div>
-    <div class="pcard" style="text-align:left"><div class="mtag" style="color:var(--acc)">02 &middot; cloud</div><b style="font-size:15px">Provider torrents it</b><p style="color:var(--soft);font-size:13px;margin:6px 0 0">All P2P runs on their servers. Never yours.</p></div>
-    <div class="pcard" style="text-align:left"><div class="mtag" style="color:var(--acc)">03 &middot; cloud</div><b style="font-size:15px">Direct HTTPS link</b><p style="color:var(--soft);font-size:13px;margin:6px 0 0">Encrypted in transit, often instant if cached.</p></div>
-    <div class="pcard" style="text-align:left"><div class="mtag" style="color:var(--acc)">04 &middot; device</div><b style="font-size:15px">Download &amp; done</b><p style="color:var(--soft);font-size:13px;margin:6px 0 0">Segmented, resumable, straight to a file.</p></div>
+    <div class="pcard" style="text-align:left"><div class="mtag" style="color:var(--acc)">01 &middot; device</div><b data-i18n="s1_t" style="font-size:15px">Add a magnet</b><p data-i18n="s1_p" style="color:var(--soft);font-size:13px;margin:6px 0 0">Paste a link. No search or index in the app.</p></div>
+    <div class="pcard" style="text-align:left"><div class="mtag" style="color:var(--acc)">02 &middot; cloud</div><b data-i18n="s2_t" style="font-size:15px">Provider torrents it</b><p data-i18n="s2_p" style="color:var(--soft);font-size:13px;margin:6px 0 0">All P2P runs on their servers. Never yours.</p></div>
+    <div class="pcard" style="text-align:left"><div class="mtag" style="color:var(--acc)">03 &middot; cloud</div><b data-i18n="s3_t" style="font-size:15px">Direct HTTPS link</b><p data-i18n="s3_p" style="color:var(--soft);font-size:13px;margin:6px 0 0">Encrypted in transit, often instant if cached.</p></div>
+    <div class="pcard" style="text-align:left"><div class="mtag" style="color:var(--acc)">04 &middot; device</div><b data-i18n="s4_t" style="font-size:15px">Download &amp; done</b><p data-i18n="s4_p" style="color:var(--soft);font-size:13px;margin:6px 0 0">Segmented, resumable, straight to a file.</p></div>
   </div>
 
   <div style="margin-top:26px">
-    <div class="mtag" style="color:var(--mute);margin-bottom:10px">Bring your own account - every major provider</div>
+    <div data-i18n="cloud_byo" class="mtag" style="color:var(--mute);margin-bottom:10px">Bring your own account - every major provider</div>
     <div class="chips">
-      <b>Real-Debrid</b><b>AllDebrid</b><b>TorBox</b><b>Premiumize</b><b>Debrid-Link</b><b>Offcloud</b><b>Mega-Debrid</b><b>&plus; more</b>
+      <b>Real-Debrid</b><b>AllDebrid</b><b>TorBox</b><b>Premiumize</b><b>Debrid-Link</b><b>Offcloud</b><b>Mega-Debrid</b><b data-i18n="chip_more">&plus; more</b>
     </div>
   </div>
 
   <div style="margin-top:26px;background:linear-gradient(120deg,rgba(47,209,145,.1),transparent);border:1px solid var(--line2);border-radius:16px;padding:20px 22px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" style="color:var(--acc);flex:0 0 auto"><path d="M16 1c.1 1-.3 2-1 2.7-.6.7-1.6 1.3-2.6 1.2-.1-1 .4-2 1-2.6C14 1.5 15 1 16 1ZM19 17c-.5 1.2-.8 1.7-1.5 2.7-1 1.4-2.3 3.1-4 3.1-1.4 0-1.8-.9-3.7-.9s-2.4.9-3.7.9c-1.6 0-2.9-1.6-3.9-3C-.3 16.6-.6 11 1.6 8.3 2.7 6.9 4.4 6 6 6c1.6 0 2.7 1 4 1 1.3 0 2-1 4-1 1.4 0 2.9.8 4 2-3.5 1.9-3 6.9 1 9Z"/></svg>
-    <div style="flex:1;min-width:240px"><b style="font-size:15px">Because there's no P2P on the device, Lidhra Cloud can ship on the App&nbsp;Store.</b>
-      <p style="color:var(--soft);font-size:13.5px;margin:6px 0 0">Content-neutral, encrypted, bring-your-own-account. The full local torrent engine stays in the direct download for those who want it.</p></div>
+    <div style="flex:1;min-width:240px"><b data-i18n-html="appstore_b" style="font-size:15px">Because there's no P2P on the device, Lidhra Cloud can ship on the App&nbsp;Store.</b>
+      <p data-i18n="appstore_p" style="color:var(--soft);font-size:13.5px;margin:6px 0 0">Content-neutral, encrypted, bring-your-own-account. The full local torrent engine stays in the direct download for those who want it.</p></div>
   </div>
 </div></section>
 
 <!-- POWER / FEATURE PARITY -->
 <section class="blk" id="power"><div class="wrap">
   <div class="sec-head">
-    <div class="eyebrow">Feature-complete</div>
-    <h2>Everything you expect from a torrent client - none of the cruft.</h2>
-    <p>A real desktop-class app you install and run, like qBittorrent - the full power-user toolkit, in an interface that doesn't look like 2009. Torrent locally, or resolve through debrid; your choice, per download.</p>
+    <div data-i18n="power_eyebrow" class="eyebrow">Feature-complete</div>
+    <h2 data-i18n="power_h2">Everything you expect from a torrent client - none of the cruft.</h2>
+    <p data-i18n="power_p">A real desktop-class app you install and run, like qBittorrent - the full power-user toolkit, in an interface that doesn't look like 2009. Torrent locally, or resolve through debrid; your choice, per download.</p>
   </div>
   <div class="chips" style="margin-top:6px">
     <b>Search plugins</b><b>Sequential download</b><b>Stream while downloading</b><b>Create torrents</b>
@@ -316,18 +318,18 @@
 <!-- LIGHTWEIGHT -->
 <section class="blk" id="lightweight"><div class="wrap">
   <div class="sec-head">
-    <div class="eyebrow">Tiny on purpose</div>
-    <h2>Built on Tauri + Rust. It respects your RAM.</h2>
+    <div data-i18n="light_eyebrow" class="eyebrow">Tiny on purpose</div>
+    <h2 data-i18n="light_h2">Built on Tauri + Rust. It respects your RAM.</h2>
   </div>
   <div class="light">
     <div>
-      <p style="color:var(--soft);font-size:17px">No bundled Chromium, no 400 MB idle footprint. Lidhra renders in your OS's own webview and does the heavy lifting in a compiled Rust core - so the installer is single-digit megabytes and it stays out of your way in the background.</p>
+      <p data-i18n="light_p" style="color:var(--soft);font-size:17px">No bundled Chromium, no 400 MB idle footprint. Lidhra renders in your OS's own webview and does the heavy lifting in a compiled Rust core - so the installer is single-digit megabytes and it stays out of your way in the background.</p>
       <div class="chips" style="margin-top:20px"><b>Tauri 2</b><b>Rust core</b><b>system webview</b><b>libtorrent engine</b><b>reproducible builds</b></div>
     </div>
     <div class="compare">
       <div class="cb"><div class="cl"><span>Lidhra</span><span class="v">≈ 6 MB</span></div><div class="track"><i style="width:6%;background:var(--grad)"></i></div></div>
-      <div class="cb"><div class="cl"><span>Typical Electron client</span><span class="v">≈ 150 MB</span></div><div class="track"><i style="width:100%;background:rgba(255,255,255,.16)"></i></div></div>
-      <p style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-top:6px">Installer size, same feature set. Lower idle RAM, faster cold start.</p>
+      <div class="cb"><div class="cl"><span data-i18n="cmp_electron">Typical Electron client</span><span class="v">≈ 150 MB</span></div><div class="track"><i style="width:100%;background:rgba(255,255,255,.16)"></i></div></div>
+      <p data-i18n="cmp_note" style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-top:6px">Installer size, same feature set. Lower idle RAM, faster cold start.</p>
     </div>
   </div>
 </div></section>
@@ -335,9 +337,9 @@
 <!-- DOWNLOAD -->
 <section class="blk dl" id="download"><div class="wrap">
   <div class="sec-head">
-    <div class="eyebrow">Get Lidhra</div>
-    <h2>Free, open source, on every platform.</h2>
-    <p>Pick your platform. Every build is the full native app; iPhone and iPad get Lidhra Cloud on the App Store.</p>
+    <div data-i18n="dl_eyebrow" class="eyebrow">Get Lidhra</div>
+    <h2 data-i18n="dl_h2">Free, open source, on every platform.</h2>
+    <p data-i18n="dl_p">Pick your platform. Every build is the full native app; iPhone and iPad get Lidhra Cloud on the App Store.</p>
   </div>
   <div class="dlgrid">
     <a class="dlcard" href="#"><div class="os"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1c.1 1-.3 2-1 2.7-.6.7-1.6 1.3-2.6 1.2-.1-1 .4-2 1-2.6C14 1.5 15 1 16 1ZM19 17c-.5 1.2-.8 1.7-1.5 2.7-1 1.4-2.3 3.1-4 3.1-1.4 0-1.8-.9-3.7-.9s-2.4.9-3.7.9c-1.6 0-2.9-1.6-3.9-3C-.3 16.6-.6 11 1.6 8.3 2.7 6.9 4.4 6 6 6c1.6 0 2.7 1 4 1 1.3 0 2-1 4-1 1.4 0 2.9.8 4 2-3.5 1.9-3 6.9 1 9Z"/></svg></div><b>macOS</b><span>.dmg · Universal</span></a>
@@ -346,22 +348,22 @@
     <a class="dlcard" href="#"><div class="os"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 8h12v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8Zm2.2-4 1 1.6M15.8 4l-1 1.6M4 10v5m16-5v5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/></svg></div><b>Android</b><span>Play Store · APK</span></a>
     <a class="dlcard" href="#"><div class="os"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="3"/><path d="M11 5h2"/></svg></div><b>iPhone / iPad</b><span>App Store · Cloud</span></a>
   </div>
-  <div class="dlnote">All builds are signed &amp; notarized · verify checksums &amp; sources on GitHub · Lidhra ships empty and content-neutral.</div>
+  <div data-i18n="dl_note" class="dlnote">All builds are signed &amp; notarized · verify checksums &amp; sources on GitHub · Lidhra ships empty and content-neutral.</div>
 </div></section>
 
 <footer><div class="wrap">
   <div class="fcols">
     <div>
       <div class="lg"><svg viewBox="0 0 1024 1024"><image href="favicon.png" width="1024" height="1024"/></svg> Lidhra</div>
-      <p class="tag">Link what matters. A native, cross-platform download &amp; transfer manager - one Rust core, every screen.</p>
+      <p data-i18n="foot_tag" class="tag">Link what matters. A native, cross-platform download &amp; transfer manager - one Rust core, every screen.</p>
     </div>
-    <div><h4>Product</h4><ul><li><a href="#platforms">Platforms</a></li><li><a href="#features">Features</a></li><li><a href="#download">Download</a></li><li><a href="#lightweight">Why Lidhra</a></li></ul></div>
-    <div><h4>Developers</h4><ul><li><a href="#">GitHub</a></li><li><a href="#">Documentation</a></li><li><a href="#">Web API</a></li><li><a href="#">Releases</a></li></ul></div>
-    <div><h4>Project</h4><ul><li><a href="#cloud">Debrid</a></li><li><a href="#">Privacy</a></li><li><a href="#">License</a></li><li><a href="#">Brand</a></li></ul></div>
+    <div><h4 data-i18n="foot_product">Product</h4><ul><li><a data-i18n="fl_platforms" href="#platforms">Platforms</a></li><li><a data-i18n="fl_features" href="#features">Features</a></li><li><a data-i18n="fl_download" href="#download">Download</a></li><li><a data-i18n="fl_why" href="#lightweight">Why Lidhra</a></li></ul></div>
+    <div><h4 data-i18n="foot_devs">Developers</h4><ul><li><a href="#">GitHub</a></li><li><a data-i18n="fl_docs" href="#">Documentation</a></li><li><a href="#">Web API</a></li><li><a data-i18n="fl_releases" href="#">Releases</a></li></ul></div>
+    <div><h4 data-i18n="foot_project">Project</h4><ul><li><a data-i18n="fl_debrid" href="#cloud">Debrid</a></li><li><a data-i18n="fl_privacy" href="#">Privacy</a></li><li><a data-i18n="fl_license" href="#">License</a></li><li><a data-i18n="fl_brand" href="#">Brand</a></li></ul></div>
   </div>
   <div class="fbottom">
     <span>© 2026 Lidhra · peterdsp.dev</span>
-    <span>Open source · not affiliated with the qBittorrent project</span>
+    <span data-i18n="foot_notaffil">Open source · not affiliated with the qBittorrent project</span>
   </div>
 </div></footer>
 
@@ -369,12 +371,7 @@
   // sticky nav border
   const nav=document.getElementById('nav');
   addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>10),{passive:true});
-  // OS-aware download label
-  (function(){const p=navigator.platform+' '+navigator.userAgent;const l=document.getElementById('dlLabel');
-    let os='Download';if(/Mac/i.test(p)&&!/iPhone|iPad/i.test(p))os='Download for macOS';
-    else if(/Win/i.test(p))os='Download for Windows';else if(/Android/i.test(p))os='Get it on Android';
-    else if(/iPhone|iPad/i.test(p))os='Get on the App Store';else if(/Linux/i.test(p))os='Download for Linux';
-    if(l)l.textContent=os;})();
+  // OS-aware download label is set by applyI18n()/setDlLabel() below
   // peer-mesh canvas
   (function(){
     const c=document.getElementById('mesh'); if(!c) return;
@@ -397,6 +394,185 @@
     }
     init();frame();
     let to;addEventListener('resize',()=>{clearTimeout(to);to=setTimeout(()=>{cancelAnimationFrame(raf);init();frame();},150);});
+  })();
+
+  /* ---- i18n: English / Greek / Albanian ---- */
+  const I18N = {
+    en: {
+      meta_title:"Lidhra - Every peer, one connection",
+      nav_platforms:"Platforms", nav_cloud:"Cloud", nav_features:"Features", nav_power:"Power", nav_why:"Why Lidhra",
+      btn_download:"Download",
+      hero_eyebrow:"Native peer-to-peer transfer",
+      hero_h1:'Every peer,<br>one <span class="g">connection.</span>',
+      hero_sub:"Lidhra is a fast, native download & transfer manager for every platform, one lightweight Rust core, wrapped in the interface each OS actually deserves. Add a magnet, a link, or your debrid account and it just downloads, on your Mac, PC, Linux box, and phone.",
+      hero_see:"See every platform",
+      hero_fine:"Free & open source · ~6 MB installer · no accounts · no telemetry",
+      stat_installer:"installer", stat_platforms:"platforms", stat_telemetry:"telemetry", stat_open:"open source",
+      plat_eyebrow:"One core · six native shells",
+      plat_h2:"Native on every screen, not a web app in a box.",
+      plat_p:"The same Rust core, refracted into each platform's real design language. It should feel like it shipped with your OS, because it nearly does.",
+      mtag_macos:"Menu bar + window", mtag_win:"Tray + Mica window", mtag_linux:"GNOME + phosh (adaptive)", watch_glance:"Glance",
+      feat_eyebrow:"Built for how you actually use it",
+      feat_h2:"The 90% is a glance. The 10% is full control.",
+      feat_p:"Everything the power user needs, none of the 2009 clutter. Progressive by default, simple until you ask for more.",
+      f1_t:"Menu-bar & tray glance", f1_p:"Check speed, pause, or add a transfer without ever opening a window. Your real home screen.",
+      f2_t:"Debrid, built in", f2_p:"Bring your Real-Debrid, AllDebrid, or TorBox account, resolve magnets to fast, encrypted HTTPS. Or torrent locally.",
+      f3_t:"Phone & watch", f3_p:"Native apps on Android and iOS, plus a watch glance. The same queue, on every device you own.",
+      f4_t:"RSS, categories & rules", f4_p:"Auto-grab feeds, sort with categories and tags, and let rules file everything where it belongs.",
+      f5_t:"Bandwidth control", f5_p:"Schedules, global caps, and per-transfer limits so Lidhra never fights your Zoom call.",
+      f6_t:"Private by default", f6_p:"No accounts, no telemetry, no cloud. Signed, notarized, reproducible builds you can verify.",
+      cloud_eyebrow:"Cloud transfers · debrid",
+      cloud_h2:"Torrenting without a torrent on your device.",
+      cloud_p:'Connect the debrid account you already have. Lidhra hands the magnet to the cloud, the peer-to-peer part happens on the provider\'s servers, and you get back a plain, <b style="color:var(--fg)">TLS-encrypted HTTPS download</b>. Fast, private, and nothing heavy touching your device or your network.',
+      s1_t:"Add a magnet", s1_p:"Paste a link. No search or index in the app.",
+      s2_t:"Provider torrents it", s2_p:"All P2P runs on their servers. Never yours.",
+      s3_t:"Direct HTTPS link", s3_p:"Encrypted in transit, often instant if cached.",
+      s4_t:"Download & done", s4_p:"Segmented, resumable, straight to a file.",
+      cloud_byo:"Bring your own account, every major provider", chip_more:"+ more",
+      appstore_b:"Because there's no P2P on the device, Lidhra Cloud can ship on the App Store.",
+      appstore_p:"Content-neutral, encrypted, bring-your-own-account. The full local torrent engine stays in the direct download for those who want it.",
+      power_eyebrow:"Feature-complete",
+      power_h2:"Everything you expect from a torrent client, none of the cruft.",
+      power_p:"A real desktop-class app you install and run, like qBittorrent, the full power-user toolkit, in an interface that doesn't look like 2009. Torrent locally, or resolve through debrid; your choice, per download.",
+      light_eyebrow:"Tiny on purpose",
+      light_h2:"Built on Tauri + Rust. It respects your RAM.",
+      light_p:"No bundled Chromium, no 400 MB idle footprint. Lidhra renders in your OS's own webview and does the heavy lifting in a compiled Rust core, so the installer is single-digit megabytes and it stays out of your way in the background.",
+      cmp_electron:"Typical Electron client", cmp_note:"Installer size, same feature set. Lower idle RAM, faster cold start.",
+      dl_eyebrow:"Get Lidhra",
+      dl_h2:"Free, open source, on every platform.",
+      dl_p:"Pick your platform. Every build is the full native app; iPhone and iPad get Lidhra Cloud on the App Store.",
+      dl_note:"All builds are signed & notarized · verify checksums & sources on GitHub · Lidhra ships empty and content-neutral.",
+      foot_tag:"Link what matters. A native, cross-platform download & transfer manager, one Rust core, every screen.",
+      foot_product:"Product", foot_devs:"Developers", foot_project:"Project",
+      fl_platforms:"Platforms", fl_features:"Features", fl_download:"Download", fl_why:"Why Lidhra",
+      fl_docs:"Documentation", fl_releases:"Releases", fl_debrid:"Debrid", fl_privacy:"Privacy", fl_license:"License", fl_brand:"Brand",
+      foot_notaffil:"Open source · not affiliated with the qBittorrent project",
+      dl_generic:"Download", dl_mac:"Download for macOS", dl_win:"Download for Windows",
+      dl_android:"Get it on Android", dl_ios:"Get on the App Store", dl_linux:"Download for Linux"
+    },
+    el: {
+      meta_title:"Lidhra - Κάθε peer, μία σύνδεση",
+      nav_platforms:"Πλατφόρμες", nav_cloud:"Cloud", nav_features:"Δυνατότητες", nav_power:"Ισχύς", nav_why:"Γιατί Lidhra",
+      btn_download:"Λήψη",
+      hero_eyebrow:"Εγγενής μεταφορά peer-to-peer",
+      hero_h1:'Κάθε peer,<br>μία <span class="g">σύνδεση.</span>',
+      hero_sub:"Το Lidhra είναι ένας γρήγορος, εγγενής διαχειριστής λήψεων & μεταφορών για κάθε πλατφόρμα, ένας ελαφρύς πυρήνας σε Rust, τυλιγμένος στο περιβάλλον που κάθε λειτουργικό αξίζει πραγματικά. Πρόσθεσε ένα magnet, έναν σύνδεσμο ή τον λογαριασμό debrid σου και απλώς κατεβαίνει, σε Mac, PC, Linux και κινητό.",
+      hero_see:"Δες κάθε πλατφόρμα",
+      hero_fine:"Δωρεάν & ανοιχτού κώδικα · installer ~6 MB · χωρίς λογαριασμούς · χωρίς τηλεμετρία",
+      stat_installer:"installer", stat_platforms:"πλατφόρμες", stat_telemetry:"τηλεμετρία", stat_open:"ανοιχτός κώδικας",
+      plat_eyebrow:"Ένας πυρήνας · έξι εγγενή κελύφη",
+      plat_h2:"Εγγενές σε κάθε οθόνη, όχι μια web εφαρμογή σε κουτί.",
+      plat_p:"Ο ίδιος πυρήνας Rust, προσαρμοσμένος στη γλώσσα σχεδιασμού κάθε πλατφόρμας. Πρέπει να μοιάζει σαν να ήρθε μαζί με το λειτουργικό σου, γιατί σχεδόν έτσι είναι.",
+      mtag_macos:"Γραμμή μενού + παράθυρο", mtag_win:"Δίσκος + παράθυρο Mica", mtag_linux:"GNOME + phosh (προσαρμοστικό)", watch_glance:"Ματιά",
+      feat_eyebrow:"Φτιαγμένο για το πώς το χρησιμοποιείς πραγματικά",
+      feat_h2:"Το 90% είναι μια ματιά. Το 10% είναι πλήρης έλεγχος.",
+      feat_p:"Ό,τι χρειάζεται ο έμπειρος χρήστης, χωρίς την ακαταστασία του 2009. Προοδευτικό εξ ορισμού, απλό μέχρι να ζητήσεις περισσότερα.",
+      f1_t:"Ματιά από γραμμή μενού & tray", f1_p:"Δες ταχύτητα, βάλε παύση ή πρόσθεσε μεταφορά χωρίς να ανοίξεις ποτέ παράθυρο. Η πραγματική σου αρχική οθόνη.",
+      f2_t:"Debrid, ενσωματωμένο", f2_p:"Σύνδεσε τον λογαριασμό σου Real-Debrid, AllDebrid ή TorBox, μετέτρεψε magnet σε γρήγορο, κρυπτογραφημένο HTTPS. Ή κατέβασε τοπικά με torrent.",
+      f3_t:"Κινητό & ρολόι", f3_p:"Εγγενείς εφαρμογές σε Android και iOS, συν μια ματιά στο ρολόι. Η ίδια ουρά, σε κάθε συσκευή σου.",
+      f4_t:"RSS, κατηγορίες & κανόνες", f4_p:"Αυτόματη λήψη από feeds, ταξινόμηση με κατηγορίες και ετικέτες, και κανόνες που τα βάζουν όλα στη θέση τους.",
+      f5_t:"Έλεγχος εύρους ζώνης", f5_p:"Χρονοπρογραμματισμοί, γενικά όρια και όρια ανά μεταφορά, ώστε το Lidhra να μην ανταγωνίζεται ποτέ την κλήση σου στο Zoom.",
+      f6_t:"Ιδιωτικό εξ ορισμού", f6_p:"Χωρίς λογαριασμούς, χωρίς τηλεμετρία, χωρίς cloud. Υπογεγραμμένα, notarized, αναπαραγώγιμα builds που μπορείς να επαληθεύσεις.",
+      cloud_eyebrow:"Μεταφορές cloud · debrid",
+      cloud_h2:"Torrent χωρίς torrent στη συσκευή σου.",
+      cloud_p:'Σύνδεσε τον λογαριασμό debrid που ήδη έχεις. Το Lidhra δίνει το magnet στο cloud, το peer-to-peer κομμάτι γίνεται στους διακομιστές του παρόχου, και παίρνεις πίσω μια απλή, <b style="color:var(--fg)">κρυπτογραφημένη με TLS λήψη HTTPS</b>. Γρήγορο, ιδιωτικό, και τίποτα βαρύ δεν αγγίζει τη συσκευή ή το δίκτυό σου.',
+      s1_t:"Πρόσθεσε ένα magnet", s1_p:"Επικόλλησε έναν σύνδεσμο. Καμία αναζήτηση ή ευρετήριο στην εφαρμογή.",
+      s2_t:"Ο πάροχος κάνει το torrent", s2_p:"Όλο το P2P τρέχει στους διακομιστές τους. Ποτέ στους δικούς σου.",
+      s3_t:"Άμεσος σύνδεσμος HTTPS", s3_p:"Κρυπτογραφημένο κατά τη μεταφορά, συχνά άμεσο αν είναι στην cache.",
+      s4_t:"Λήψη & τέλος", s4_p:"Τμηματικό, με δυνατότητα συνέχισης, κατευθείαν σε αρχείο.",
+      cloud_byo:"Φέρε τον δικό σου λογαριασμό, κάθε μεγάλος πάροχος", chip_more:"+ κι άλλοι",
+      appstore_b:"Επειδή δεν υπάρχει P2P στη συσκευή, το Lidhra Cloud μπορεί να κυκλοφορήσει στο App Store.",
+      appstore_p:"Ουδέτερο ως προς το περιεχόμενο, κρυπτογραφημένο, με δικό σου λογαριασμό. Η πλήρης τοπική μηχανή torrent μένει στη λήψη απευθείας για όσους τη θέλουν.",
+      power_eyebrow:"Πλήρες σε δυνατότητες",
+      power_h2:"Ό,τι περιμένεις από έναν torrent client, χωρίς τα περιττά.",
+      power_p:"Μια πραγματική εφαρμογή επιπέδου desktop που εγκαθιστάς και τρέχεις, όπως το qBittorrent, όλα τα εργαλεία του έμπειρου χρήστη, σε ένα περιβάλλον που δεν μοιάζει με το 2009. Torrent τοπικά ή μέσω debrid, δική σου επιλογή, ανά λήψη.",
+      light_eyebrow:"Μικρό επίτηδες",
+      light_h2:"Χτισμένο σε Tauri + Rust. Σέβεται τη RAM σου.",
+      light_p:"Χωρίς ενσωματωμένο Chromium, χωρίς αποτύπωμα 400 MB σε αδράνεια. Το Lidhra αποδίδει στο webview του λειτουργικού σου και κάνει τη βαριά δουλειά σε έναν μεταγλωττισμένο πυρήνα Rust, οπότε ο installer είναι μονοψήφια megabytes και μένει διακριτικό στο παρασκήνιο.",
+      cmp_electron:"Τυπικός client Electron", cmp_note:"Μέγεθος installer, ίδιες δυνατότητες. Λιγότερη RAM σε αδράνεια, ταχύτερη ψυχρή εκκίνηση.",
+      dl_eyebrow:"Απόκτησε το Lidhra",
+      dl_h2:"Δωρεάν, ανοιχτού κώδικα, σε κάθε πλατφόρμα.",
+      dl_p:"Διάλεξε την πλατφόρμα σου. Κάθε build είναι η πλήρης εγγενής εφαρμογή· iPhone και iPad παίρνουν το Lidhra Cloud στο App Store.",
+      dl_note:"Όλα τα builds είναι υπογεγραμμένα & notarized · επαλήθευσε checksums & πηγές στο GitHub · το Lidhra κυκλοφορεί άδειο και ουδέτερο ως προς το περιεχόμενο.",
+      foot_tag:"Σύνδεσε ό,τι έχει σημασία. Ένας εγγενής, cross-platform διαχειριστής λήψεων & μεταφορών, ένας πυρήνας Rust, κάθε οθόνη.",
+      foot_product:"Προϊόν", foot_devs:"Προγραμματιστές", foot_project:"Έργο",
+      fl_platforms:"Πλατφόρμες", fl_features:"Δυνατότητες", fl_download:"Λήψη", fl_why:"Γιατί Lidhra",
+      fl_docs:"Τεκμηρίωση", fl_releases:"Εκδόσεις", fl_debrid:"Debrid", fl_privacy:"Απόρρητο", fl_license:"Άδεια", fl_brand:"Επωνυμία",
+      foot_notaffil:"Ανοιχτού κώδικα · χωρίς σχέση με το έργο qBittorrent",
+      dl_generic:"Λήψη", dl_mac:"Λήψη για macOS", dl_win:"Λήψη για Windows",
+      dl_android:"Απόκτησέ το στο Android", dl_ios:"Απόκτησέ το στο App Store", dl_linux:"Λήψη για Linux"
+    },
+    sq: {
+      meta_title:"Lidhra - Çdo peer, një lidhje",
+      nav_platforms:"Platformat", nav_cloud:"Cloud", nav_features:"Veçoritë", nav_power:"Fuqia", nav_why:"Pse Lidhra",
+      btn_download:"Shkarko",
+      hero_eyebrow:"Transferim vendor peer-to-peer",
+      hero_h1:'Çdo peer,<br>një <span class="g">lidhje.</span>',
+      hero_sub:"Lidhra është një menaxher i shpejtë dhe vendor për shkarkime & transferime në çdo platformë, një bërthamë e lehtë në Rust, e mbështjellë në ndërfaqen që secili sistem operativ e meriton vërtet. Shto një magnet, një lidhje ose llogarinë tënde debrid dhe thjesht shkarkohet, në Mac, PC, Linux dhe telefonin tënd.",
+      hero_see:"Shiko çdo platformë",
+      hero_fine:"Falas & me kod të hapur · instalues ~6 MB · pa llogari · pa telemetri",
+      stat_installer:"instalues", stat_platforms:"platforma", stat_telemetry:"telemetri", stat_open:"kod i hapur",
+      plat_eyebrow:"Një bërthamë · gjashtë guaska vendore",
+      plat_h2:"Vendor në çdo ekran, jo një web app në kuti.",
+      plat_p:"E njëjta bërthamë Rust, e përshtatur në gjuhën e vërtetë të dizajnit të secilës platformë. Duhet të duket sikur erdhi bashkë me sistemin tënd, sepse pothuajse ashtu është.",
+      mtag_macos:"Shiriti i menusë + dritare", mtag_win:"Tabaka + dritare Mica", mtag_linux:"GNOME + phosh (adaptive)", watch_glance:"Vështrim",
+      feat_eyebrow:"Ndërtuar për mënyrën si e përdor vërtet",
+      feat_h2:"90% është një vështrim. 10% është kontroll i plotë.",
+      feat_p:"Gjithçka që i duhet përdoruesit të avancuar, pa rrëmujën e vitit 2009. Progresive si parazgjedhje, e thjeshtë derisa të kërkosh më shumë.",
+      f1_t:"Vështrim nga shiriti i menusë & tabaka", f1_p:"Kontrollo shpejtësinë, ndalo, ose shto një transferim pa hapur kurrë një dritare. Ekrani yt i vërtetë kryesor.",
+      f2_t:"Debrid, i integruar", f2_p:"Sill llogarinë tënde Real-Debrid, AllDebrid ose TorBox, kthe magnet-et në HTTPS të shpejtë e të enkriptuar. Ose bëj torrent lokalisht.",
+      f3_t:"Telefon & orë", f3_p:"Aplikacione vendore në Android dhe iOS, plus një vështrim në orë. E njëjta radhë, në çdo pajisje që zotëron.",
+      f4_t:"RSS, kategori & rregulla", f4_p:"Merr automatikisht feed-et, rendit me kategori dhe etiketa, dhe lëri rregullat të vendosin gjithçka aty ku i takon.",
+      f5_t:"Kontroll i brezit", f5_p:"Planifikime, kufij global dhe kufij për transferim, që Lidhra të mos konkurrojë kurrë me telefonatën tënde në Zoom.",
+      f6_t:"Privat si parazgjedhje", f6_p:"Pa llogari, pa telemetri, pa cloud. Build-e të nënshkruar, të noterizuar dhe të riprodhueshëm që mund t'i verifikosh.",
+      cloud_eyebrow:"Transferime cloud · debrid",
+      cloud_h2:"Torrent pa një torrent në pajisjen tënde.",
+      cloud_p:'Lidh llogarinë debrid që tashmë ke. Lidhra ia jep magnet-in cloud-it, pjesa peer-to-peer ndodh në serverët e ofruesit, dhe ti merr mbrapsht një shkarkim të thjeshtë, <b style="color:var(--fg)">HTTPS të enkriptuar me TLS</b>. I shpejtë, privat, dhe asgjë e rëndë nuk prek pajisjen apo rrjetin tënd.',
+      s1_t:"Shto një magnet", s1_p:"Ngjit një lidhje. Pa kërkim ose indeks në aplikacion.",
+      s2_t:"Ofruesi bën torrent-in", s2_p:"I gjithë P2P-ja ndodh në serverët e tyre. Kurrë në tuajt.",
+      s3_t:"Lidhje HTTPS e drejtpërdrejtë", s3_p:"E enkriptuar gjatë transferimit, shpesh e menjëhershme nëse është në cache.",
+      s4_t:"Shkarko & mbaro", s4_p:"E segmentuar, e rifillueshme, drejt e në një skedar.",
+      cloud_byo:"Sill llogarinë tënde, çdo ofrues i madh", chip_more:"+ të tjerë",
+      appstore_b:"Meqë s'ka P2P në pajisje, Lidhra Cloud mund të dalë në App Store.",
+      appstore_p:"Neutral ndaj përmbajtjes, i enkriptuar, me llogarinë tënde. Motori i plotë lokal i torrent-it mbetet në shkarkimin e drejtpërdrejtë për ata që e duan.",
+      power_eyebrow:"I plotë në veçori",
+      power_h2:"Gjithçka që pret nga një klient torrent, pa tepricat.",
+      power_p:"Një aplikacion i vërtetë i klasës desktop që e instalon dhe e nis, si qBittorrent, i gjithë grupi i veglave për përdoruesit e avancuar, në një ndërfaqe që nuk duket si 2009. Bëj torrent lokalisht, ose zgjidh përmes debrid; zgjedhja jote, për çdo shkarkim.",
+      light_eyebrow:"I vogël me qëllim",
+      light_h2:"Ndërtuar mbi Tauri + Rust. E respekton RAM-in tënd.",
+      light_p:"Pa Chromium të paketuar, pa gjurmë 400 MB në pushim. Lidhra shfaqet në webview-in e vetë sistemit tënd dhe e bën punën e rëndë në një bërthamë Rust të kompiluar, kështu instaluesi është nën dhjetë megabajt dhe rri pa të penguar në sfond.",
+      cmp_electron:"Klient tipik Electron", cmp_note:"Madhësia e instaluesit, i njëjti grup veçorish. Më pak RAM në pushim, nisje e ftohtë më e shpejtë.",
+      dl_eyebrow:"Merr Lidhra",
+      dl_h2:"Falas, me kod të hapur, në çdo platformë.",
+      dl_p:"Zgjidh platformën tënde. Çdo build është aplikacioni i plotë vendor; iPhone dhe iPad marrin Lidhra Cloud në App Store.",
+      dl_note:"Të gjitha build-et janë të nënshkruara & të noterizuara · verifiko checksum-et & burimet në GitHub · Lidhra vjen bosh dhe neutral ndaj përmbajtjes.",
+      foot_tag:"Lidh atë që ka rëndësi. Një menaxher vendor, ndër-platformë për shkarkime & transferime, një bërthamë Rust, çdo ekran.",
+      foot_product:"Produkti", foot_devs:"Zhvilluesit", foot_project:"Projekti",
+      fl_platforms:"Platformat", fl_features:"Veçoritë", fl_download:"Shkarko", fl_why:"Pse Lidhra",
+      fl_docs:"Dokumentimi", fl_releases:"Versionet", fl_debrid:"Debrid", fl_privacy:"Privatësia", fl_license:"Licenca", fl_brand:"Brandi",
+      foot_notaffil:"Kod i hapur · pa lidhje me projektin qBittorrent",
+      dl_generic:"Shkarko", dl_mac:"Shkarko për macOS", dl_win:"Shkarko për Windows",
+      dl_android:"Merre në Android", dl_ios:"Merre në App Store", dl_linux:"Shkarko për Linux"
+    }
+  };
+  let LANG = localStorage.getItem('lidhra_site_lang') || (['el','sq'].find(l=>(navigator.language||'en').toLowerCase().startsWith(l)) || 'en');
+  function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.en[k] || ''; }
+  function setDlLabel(){ const p=navigator.platform+' '+navigator.userAgent, l=document.getElementById('dlLabel'); if(!l) return;
+    let key='dl_generic';
+    if(/Mac/i.test(p)&&!/iPhone|iPad/i.test(p))key='dl_mac'; else if(/Win/i.test(p))key='dl_win';
+    else if(/Android/i.test(p))key='dl_android'; else if(/iPhone|iPad/i.test(p))key='dl_ios'; else if(/Linux/i.test(p))key='dl_linux';
+    l.textContent=t(key); }
+  function applyI18n(){
+    document.documentElement.lang=LANG;
+    document.title=t('meta_title');
+    document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.getAttribute('data-i18n')); if(v) el.textContent=v; });
+    document.querySelectorAll('[data-i18n-html]').forEach(el=>{ const v=t(el.getAttribute('data-i18n-html')); if(v) el.innerHTML=v; });
+    setDlLabel();
+    const s=document.getElementById('lang'); if(s) s.value=LANG;
+  }
+  (function(){ const s=document.getElementById('lang');
+    if(s){ s.value=LANG; s.addEventListener('change',()=>{ LANG=s.value; localStorage.setItem('lidhra_site_lang',LANG); applyI18n(); }); }
+    applyI18n();
   })();
 </script>
 </body>
