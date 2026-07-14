@@ -32,10 +32,28 @@ popd >/dev/null
 cleanup() { cp /tmp/Lidhra.Cargo.toml.bak app/src-tauri/Cargo.toml 2>/dev/null || true; }
 trap cleanup EXIT
 
+# App Store icons must be fully opaque (no alpha). Flatten the generated iOS
+# AppIcon set onto its own dark tile colour (Apple masks the corners anyway).
+ICONSET="app/src-tauri/gen/apple/Assets.xcassets/AppIcon.appiconset"
+if [ -d "$ICONSET" ]; then
+  python3 - "$ICONSET" <<'PY'
+import sys, glob
+from PIL import Image
+for f in glob.glob(sys.argv[1] + "/*.png"):
+    im = Image.open(f).convert("RGBA"); w, h = im.size; px = im.load()
+    fill = (18, 24, 36)
+    for x in range(w):
+        r, g, b, a = px[x, h // 2]
+        if a > 250: fill = (r, g, b); break
+    bg = Image.new("RGB", im.size, fill); bg.paste(im, mask=im.split()[3]); bg.save(f)
+print("flattened iOS AppIcon (removed alpha)")
+PY
+fi
+
 ( cd app && cargo tauri ios build --export-method app-store-connect )
 cleanup; trap - EXIT
 
-IPA=$(ls -t app/src-tauri/gen/apple/build/**/*.ipa app/src-tauri/gen/apple/build/*.ipa 2>/dev/null | head -1)
+IPA=$(ls -t app/src-tauri/gen/apple/build/*/*.ipa 2>/dev/null | head -1)
 [ -n "$IPA" ] || { echo "no IPA produced"; exit 1; }
 cp "$IPA" "$HOME/Downloads/Lidhra.ipa"
 echo "==> Built: $IPA (copied to ~/Downloads/Lidhra.ipa)"
