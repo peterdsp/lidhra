@@ -17,3 +17,4 @@ serde_json = "1"
 lidhra-debrid = { path = "../lidhra-debrid" }
 lidhra-transfer = { path = "../lidhra-transfer" }
 lidhra-license = { path = "../lidhra-license" }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }

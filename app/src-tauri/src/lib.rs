@@ -238,6 +238,31 @@ async fn license_activate(state: tauri::State<'_, AppState>, key: String) -> Res
     lidhra_license::activate(&dir, &key, lidhra_license::ISSUER_PUBKEY_HEX)?;
     Ok(lic_dto(&dir))
 }
+// Online activation: send the buyer's Ko-fi email to the licence Worker, which
+// verifies the purchase and returns a node-locked key we activate locally.
+#[cfg(not(feature = "appstore"))]
+#[tauri::command]
+async fn license_activate_email(state: tauri::State<'_, AppState>, email: String) -> Result<Lic, String> {
+    let dir = state.0.lock().await.config_dir.clone();
+    let machine = lidhra_license::machine_id(&dir);
+    let url = std::env::var("LIDHRA_ACTIVATE_URL")
+        .unwrap_or_else(|_| "https://lidhra-license.peterdsp.workers.dev/activate".to_string());
+    let body = serde_json::json!({ "email": email.trim(), "machine_id": machine });
+    let resp = reqwest::Client::new()
+        .post(&url)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("activation server unreachable: {e}"))?;
+    let v: serde_json::Value = resp.json().await.map_err(|e| format!("bad activation response: {e}"))?;
+    match v.get("key").and_then(|k| k.as_str()) {
+        Some(key) => {
+            lidhra_license::activate(&dir, key, lidhra_license::ISSUER_PUBKEY_HEX)?;
+            Ok(lic_dto(&dir))
+        }
+        None => Err(v.get("error").and_then(|e| e.as_str()).unwrap_or("activation failed").to_string()),
+    }
+}
 
 // App Store build: paid upfront, always licensed, no trial.
 #[cfg(feature = "appstore")]
@@ -248,6 +273,11 @@ async fn license(_s: tauri::State<'_, AppState>) -> Result<Lic, String> {
 #[cfg(feature = "appstore")]
 #[tauri::command]
 async fn license_activate(_s: tauri::State<'_, AppState>, _key: String) -> Result<Lic, String> {
+    Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()) })
+}
+#[cfg(feature = "appstore")]
+#[tauri::command]
+async fn license_activate_email(_s: tauri::State<'_, AppState>, _email: String) -> Result<Lic, String> {
     Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()) })
 }
 
@@ -282,7 +312,8 @@ pub fn run() {
 
     builder
         .invoke_handler(tauri::generate_handler![
-            providers, connect, add, fetch, transfers, download, downloads, license, license_activate
+            providers, connect, add, fetch, transfers, download, downloads, license, license_activate,
+            license_activate_email
         ])
         .run(tauri::generate_context!())
         .expect("error while running Lidhra");

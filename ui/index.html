@@ -143,7 +143,7 @@
       empty_connect:"Connect your debrid account, then add a magnet.", empty_none:"No transfers here.", empty_dl:"Nothing downloading yet.",
       st_downloading:"downloading", st_seeding:"seeding", st_ready:"ready", st_done:"done", st_queued:"queued", st_error:"error",
       trial_left:"{0} day(s) left in your free trial.", get_license:"Get a license",
-      trial_ended:"Your free trial ended. Enter your Ko-fi license key:", activate:"Activate", buy_kofi:"Buy on Ko-fi",
+      trial_ended:"Your free trial ended.", act_email:"Activate with your Ko-fi email", email_ph:"your Ko-fi email", activate:"Activate", buy_kofi:"Buy on Ko-fi",
       m_connecting:"connecting...", m_adding:"adding...", m_starting:"starting download...", m_added:"added",
       m_need_connect:"connect your debrid account to add magnets", m_enter_token:"enter your API token", m_invalid:"invalid key",
       link_download:"download", files:"{0} file(s)", transfers:"{0} transfer(s)", queued_n:"{0} queued", premium:"premium",
@@ -156,7 +156,7 @@
       empty_connect:"Σύνδεσε τον λογαριασμό debrid, μετά πρόσθεσε ένα magnet.", empty_none:"Καμία μεταφορά εδώ.", empty_dl:"Καμία λήψη ακόμη.",
       st_downloading:"λήψη", st_seeding:"διαμοιρασμός", st_ready:"έτοιμο", st_done:"ολοκληρώθηκε", st_queued:"σε αναμονή", st_error:"σφάλμα",
       trial_left:"{0} ημέρα(ες) απομένουν στη δωρεάν δοκιμή σου.", get_license:"Απόκτησε άδεια",
-      trial_ended:"Η δωρεάν δοκιμή έληξε. Εισήγαγε το κλειδί άδειας Ko-fi:", activate:"Ενεργοποίηση", buy_kofi:"Αγορά στο Ko-fi",
+      trial_ended:"Η δωρεάν δοκιμή έληξε.", act_email:"Ενεργοποίηση με το email σου στο Ko-fi", email_ph:"το email σου στο Ko-fi", activate:"Ενεργοποίηση", buy_kofi:"Αγορά στο Ko-fi",
       m_connecting:"σύνδεση...", m_adding:"προσθήκη...", m_starting:"έναρξη λήψης...", m_added:"προστέθηκε",
       m_need_connect:"σύνδεσε τον λογαριασμό debrid για να προσθέσεις magnet", m_enter_token:"εισήγαγε το διακριτικό API", m_invalid:"μη έγκυρο κλειδί",
       link_download:"λήψη", files:"{0} αρχείο(α)", transfers:"{0} μεταφορά(ές)", queued_n:"{0} σε αναμονή", premium:"premium",
@@ -169,7 +169,7 @@
       empty_connect:"Lidh llogarinë tënde debrid, pastaj shto një magnet.", empty_none:"Asnjë transferim këtu.", empty_dl:"Asgjë në shkarkim ende.",
       st_downloading:"duke shkarkuar", st_seeding:"shpërndarje", st_ready:"gati", st_done:"përfunduar", st_queued:"në radhë", st_error:"gabim",
       trial_left:"{0} ditë të mbetura në provën tënde falas.", get_license:"Merr një licencë",
-      trial_ended:"Prova jote falas mbaroi. Fut çelësin e licencës Ko-fi:", activate:"Aktivizo", buy_kofi:"Blej në Ko-fi",
+      trial_ended:"Prova jote falas mbaroi.", act_email:"Aktivizo me email-in tënd të Ko-fi", email_ph:"email-i yt i Ko-fi", activate:"Aktivizo", buy_kofi:"Blej në Ko-fi",
       m_connecting:"duke u lidhur...", m_adding:"duke shtuar...", m_starting:"duke nisur shkarkimin...", m_added:"u shtua",
       m_need_connect:"lidh llogarinë debrid për të shtuar magnet", m_enter_token:"fut token-in API", m_invalid:"çelës i pavlefshëm",
       link_download:"shkarko", files:"{0} skedar(ë)", transfers:"{0} transferim(e)", queued_n:"{0} në radhë", premium:"premium",
@@ -193,6 +193,7 @@
     add:['POST','/api/add'], fetch:['POST','/api/fetch'],
     transfers:['GET','/api/transfers'], download:['POST','/api/download'], downloads:['GET','/api/downloads'],
     license:['GET','/api/license'], license_activate:['POST','/api/license'],
+    license_activate_email:['POST','/api/license/email'],
   };
   async function api(name,args){
     if(TAURI) return window.__TAURI__.core.invoke(name,args||{});
@@ -300,7 +301,9 @@
       if(l.state==='trial'){ el.className='lic trial show';
         el.innerHTML=`<span><b>${l.days_left}</b> ${t('trial_left',l.days_left).replace(/^\S+\s/,'')}</span><a href="https://ko-fi.com/peterdsp" target="_blank">${t('get_license')}</a>`; return; }
       el.className='lic expired show';
-      el.innerHTML=`<span>${t('trial_ended')}</span><input id="lkey" placeholder="LIDHRA-..."><button id="lact">${t('activate')}</button><a href="https://ko-fi.com/peterdsp" target="_blank">${t('buy_kofi')}</a>`;
+      el.innerHTML=`<span>${t('trial_ended')}</span><input id="lemail" type="email" placeholder="${t('email_ph')}"><button id="lactemail">${t('act_email')}</button><input id="lkey" placeholder="LIDHRA-..."><button id="lact">${t('activate')}</button><a href="https://ko-fi.com/s/4bbb9c112a" target="_blank">${t('buy_kofi')}</a>`;
+      $('#lactemail').onclick=async()=>{ const em=$('#lemail').value.trim(); if(!em) return; const b=$('#lactemail'); b.textContent='...';
+        try{ await api('license_activate_email',{email:em}); refreshLicense(); }catch(e){ b.textContent=e.message||t('m_invalid'); } };
       $('#lact').onclick=async()=>{ const k=$('#lkey').value.trim(); if(!k) return; $('#lact').textContent='...';
         try{ await api('license_activate',{key:k}); refreshLicense(); }catch(e){ $('#lact').textContent=t('m_invalid'); } };
     }catch(e){}

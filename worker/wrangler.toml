@@ -1,0 +1,24 @@
+name = "lidhra-license"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+# Buyer records + activation counts. Create with:
+#   wrangler kv namespace create LICENSES
+# then paste the printed id below.
+[[kv_namespaces]]
+binding = "LICENSES"
+id = "REPLACE_WITH_KV_ID"
+
+[vars]
+# The shop item's direct-link code (the tail of the product URL
+# https://ko-fi.com/s/4bbb9c112a). Leave empty to accept any Shop Order.
+KOFI_PRODUCT_CODE = "4bbb9c112a"
+# Verified sender for the activation email (needs Resend domain verification).
+FROM_EMAIL = "licenses@lidhra.peterdsp.dev"
+# Devices a single licence may activate.
+MAX_ACTIVATIONS = "3"
+
+# Secrets are NOT stored here. Set them once with wrangler:
+#   wrangler secret put ISSUER_SEED_HEX     # the 64-hex issuer PRIVATE key
+#   wrangler secret put KOFI_TOKEN          # Ko-fi > Settings > API > Verification Token
+#   wrangler secret put RESEND_API_KEY      # optional: enables the activation email
