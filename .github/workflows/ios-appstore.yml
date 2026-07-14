@@ -1,0 +1,89 @@
+name: iOS App Store
+
+# Builds the signed iOS IPA and uploads it to App Store Connect, the same way
+# klipa does for the Mac App Store. Runs on a version tag once the required
+# secrets are set; otherwise it prints a notice and skips.
+#
+# Required repo secrets (Settings > Secrets and variables > Actions):
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY_P8_BASE64   (App Store Connect API key)  <- already set
+#   IOS_DIST_CERT_P12_BASE64      base64 of a .p12 holding the "Apple Distribution" identity
+#   IOS_DIST_CERT_P12_PASSWORD    password for that .p12
+#   IOS_PROVISION_PROFILE_BASE64  base64 of the App Store .mobileprovision for dev.peterdsp.lidhra
+#   CI_KEYCHAIN_PASSWORD          any throwaway password for the temp CI keychain
+#   TEAMID                        Apple team id (YTS4KJBX3P)
+#
+# One-time prerequisite: the Lidhra app RECORD must exist in App Store Connect.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  ios:
+    runs-on: macos-15
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+      IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+      IOS_DIST_CERT_P12_PASSWORD: ${{ secrets.IOS_DIST_CERT_P12_PASSWORD }}
+      IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+      KEYCHAIN_PASSWORD: ${{ secrets.CI_KEYCHAIN_PASSWORD }}
+      TEAMID: ${{ secrets.TEAMID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip if signing secrets are not set
+        id: gate
+        run: |
+          if [ -z "$IOS_DIST_CERT_P12_BASE64" ] || [ -z "$ASC_API_KEY_P8_BASE64" ]; then
+            echo "iOS App Store secrets not set - skipping build + upload."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.gate.outputs.run == 'true'
+        with:
+          targets: aarch64-apple-ios
+
+      - name: Install CocoaPods
+        if: steps.gate.outputs.run == 'true'
+        run: gem install cocoapods --no-document || brew install cocoapods
+
+      - name: Build + upload to App Store Connect
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          # 1. Import the iOS distribution cert into a temp keychain.
+          KEYCHAIN="$RUNNER_TEMP/ios.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "$IOS_DIST_CERT_P12_BASE64" | base64 -d > "$RUNNER_TEMP/ios.p12"
+          security import "$RUNNER_TEMP/ios.p12" -k "$KEYCHAIN" -P "$IOS_DIST_CERT_P12_PASSWORD" -T /usr/bin/codesign
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          rm -f "$RUNNER_TEMP/ios.p12"
+
+          # 2. Install the provisioning profile.
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "$IOS_PROVISION_PROFILE_BASE64" | base64 -d > "$HOME/Library/MobileDevice/Provisioning Profiles/lidhra.mobileprovision"
+
+          # 3. App Store Connect API key for altool.
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          echo "$ASC_API_KEY_P8_BASE64" | base64 -d > "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+
+          # 4. Build the signed IPA (appstore feature = no self-updater).
+          sed -i '' 's/^default = \["kofi"\]/default = ["appstore"]/' app/src-tauri/Cargo.toml
+          ( cd app && APPLE_DEVELOPMENT_TEAM="$TEAMID" cargo tauri ios build --export-method app-store-connect )
+
+          IPA=$(ls -t app/src-tauri/gen/apple/build/**/*.ipa 2>/dev/null | head -1)
+          echo "IPA: $IPA"
+
+          # 5. Validate + upload.
+          xcrun altool --validate-app -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          xcrun altool --upload-app  -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          echo "Uploaded $IPA to App Store Connect."
