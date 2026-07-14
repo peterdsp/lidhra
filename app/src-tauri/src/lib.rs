@@ -246,7 +246,7 @@ async fn license_activate_email(state: tauri::State<'_, AppState>, email: String
     let dir = state.0.lock().await.config_dir.clone();
     let machine = lidhra_license::machine_id(&dir);
     let url = std::env::var("LIDHRA_ACTIVATE_URL")
-        .unwrap_or_else(|_| "https://lidhra-license.peterdsp.workers.dev/activate".to_string());
+        .unwrap_or_else(|_| "https://lidhra-license.petros.workers.dev/activate".to_string());
     let body = serde_json::json!({ "email": email.trim(), "machine_id": machine });
     let resp = reqwest::Client::new()
         .post(&url)
