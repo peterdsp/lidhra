@@ -37,10 +37,27 @@ on every `v*` tag, gated so it skips until the signing secrets are set.
 | Secret | What | Status |
 | --- | --- | --- |
 | `ASC_KEY_ID` / `ASC_ISSUER_ID` / `ASC_API_KEY_P8_BASE64` | App Store Connect API key | **set** |
-| `IOS_DIST_CERT_P12_BASE64` / `IOS_DIST_CERT_P12_PASSWORD` | .p12 of the "Apple Distribution" identity | needed for CI |
-| `IOS_PROVISION_PROFILE_BASE64` | base64 of the App Store `.mobileprovision` | needed for CI |
-| `CI_KEYCHAIN_PASSWORD` | throwaway keychain password | needed for CI |
-| `TEAMID` | `YTS4KJBX3P` | needed for CI |
+| `APPLE_ID` | Apple ID for uploads/notarization (`peterdsp29@gmail.com`) | **set** |
+| `APPLE_APP_SPECIFIC_PASSWORD` | "LIDHRA CI" app-specific password | **set** |
+| `APPLE_TEAM_ID` | `YTS4KJBX3P` | **set** |
+| `APPLE_SIGNING_IDENTITY` | `Developer ID Application: PETROS DHESPOLLARI (YTS4KJBX3P)` | **set** |
+| `IOS_DIST_CERT_P12_BASE64` / `IOS_DIST_CERT_P12_PASSWORD` | .p12 of the "Apple Distribution" identity (iOS CI build) | needed for iOS CI |
+| `IOS_PROVISION_PROFILE_BASE64` | base64 of the App Store `.mobileprovision` (iOS CI build) | needed for iOS CI |
+| `CI_KEYCHAIN_PASSWORD` | throwaway keychain password | needed for iOS CI |
+| `APPLE_CERTIFICATE` / `APPLE_CERTIFICATE_PASSWORD` | .p12 of the "Developer ID Application" identity (macOS notarization) | needed for macOS notarization |
+
+## Desktop (macOS) notarization
+
+`release.yml` now passes `APPLE_ID` + `APPLE_APP_SPECIFIC_PASSWORD` (as
+`APPLE_PASSWORD`) + `APPLE_TEAM_ID` + `APPLE_SIGNING_IDENTITY` to tauri-action.
+The moment you add `APPLE_CERTIFICATE` (base64 of the Developer ID `.p12`) and
+`APPLE_CERTIFICATE_PASSWORD`, tagged desktop releases are **signed + notarized**
+automatically (no more Gatekeeper warnings on the Ko-fi / direct `.dmg`). Export:
+
+```sh
+# Keychain Access -> export "Developer ID Application: PETROS DHESPOLLARI ..." incl. private key -> devid.p12
+base64 -i devid.p12 | pbcopy   # -> APPLE_CERTIFICATE   (and set APPLE_CERTIFICATE_PASSWORD)
+```
 
 Export the cert + profile for the CI secrets:
 ```sh
