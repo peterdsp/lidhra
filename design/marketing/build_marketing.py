@@ -43,14 +43,14 @@ DEFS = f'''<defs>
  <feDropShadow dx="0" dy="26" stdDeviation="34" flood-color="#0a2a24" flood-opacity="0.22"/></filter>
 </defs>'''
 
-# S-curve mark. Base art is on a 1024 grid; scale = px/1024.
-_MARK = ('<path d="M 348 258 C 214 315, 210 510, 326 594 C 414 658, 490 618, 550 558"/>'
-         '<path d="M 676 766 C 810 709, 814 514, 698 430 C 610 366, 534 406, 474 466"/>')
+# App icon (the cloud mark), embedded as a data URI so every SVG is self-contained.
+import base64 as _b64
+_ICON = _b64.b64encode(open(os.path.join(HERE, "app-icon-256.png"), "rb").read()).decode()
+_ICON_DATA = "data:image/png;base64," + _ICON
 
-def mark(x, y, px, stroke="url(#g)", w=112):
-    s = px / 1024.0
-    return (f'<g transform="translate({x},{y}) scale({s})" fill="none" stroke="{stroke}" '
-            f'stroke-width="{w}" stroke-linecap="round" stroke-linejoin="round">{_MARK}</g>')
+def mark(x, y, px, stroke=None, w=None):
+    # stroke/w kept for call-site compatibility; the raster icon carries its own color.
+    return f'<image href="{_ICON_DATA}" x="{x}" y="{y}" width="{px}" height="{px}"/>'
 
 def esc(t):
     return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
