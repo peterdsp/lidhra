@@ -389,7 +389,7 @@ def kofi_feature(name, headline, sub, kind):
         s += f'<rect x="{(W-760)//2}" y="420" width="760" height="470" rx="36" fill="{CARD}" stroke="{BORDER}" filter="url(#sh)"/>'
         s += mark(W//2-90, 470, 180)
         s += txt(W//2, 720, "7 days free", 66, 800, INK2, SANS, "middle")
-        s += txt(W//2, 792, "then €3.99 · yours forever", 40, 500, MUTED, SANS, "middle")
+        s += txt(W//2, 792, "then €8.99 · yours forever", 40, 500, MUTED, SANS, "middle")
         s += txt(W//2, 852, "one licence · auto-updates · all platforms", 28, 400, FAINT, MONO, "middle")
     s += "</svg>"
     render(name, s)
