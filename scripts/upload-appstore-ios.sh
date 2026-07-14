@@ -36,7 +36,7 @@ trap cleanup EXIT
 # AppIcon set onto its own dark tile colour (Apple masks the corners anyway).
 ICONSET="app/src-tauri/gen/apple/Assets.xcassets/AppIcon.appiconset"
 if [ -d "$ICONSET" ]; then
-  python3 - "$ICONSET" <<'PY'
+  /usr/bin/python3 - "$ICONSET" <<'PY'
 import sys, glob
 from PIL import Image
 for f in glob.glob(sys.argv[1] + "/*.png"):
