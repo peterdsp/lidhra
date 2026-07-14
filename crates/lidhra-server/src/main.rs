@@ -32,7 +32,7 @@ fn now_unix() -> u64 {
 /// Online activation endpoint (the Cloudflare Worker). Override with
 /// LIDHRA_ACTIVATE_URL. The app posts {email, machine_id}; the Worker checks the
 /// Ko-fi purchase and returns a node-locked key.
-const DEFAULT_ACTIVATE_URL: &str = "https://lidhra-license.peterdsp.workers.dev/activate";
+const DEFAULT_ACTIVATE_URL: &str = "https://lidhra-license.petros.workers.dev/activate";
 
 const INDEX: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../ui/index.html"));
 

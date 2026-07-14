@@ -40,7 +40,7 @@ Then two small hookups:
 
 - **Ko-fi**: More → API → Webhooks → set the Webhook URL to `<worker-url>/kofi`.
 - **App**: if your Worker URL differs from the default
-  `https://lidhra-license.peterdsp.workers.dev`, set `LIDHRA_ACTIVATE_URL` (the
+  `https://lidhra-license.petros.workers.dev`, set `LIDHRA_ACTIVATE_URL` (the
   app reads it) or change the constant in `crates/lidhra-server/src/main.rs` and
   `app/src-tauri/src/lib.rs`, then rebuild.
 
