@@ -5,7 +5,7 @@ Lidhra ships in two flavors from one codebase, chosen with a Cargo feature.
 | | Ko-fi / direct | App Store (macOS / iOS) |
 |---|---|---|
 | Feature | `kofi` (default) | `appstore` |
-| Price | **$4.99** | **$2.99** |
+| Price | **€3.99** | **$5.99** |
 | Trial | **7 days free**, then a license key | none (paid upfront) |
 | License logic | Ed25519 key check (offline) | none (store receipt is the license) |
 | Auto-update | **yes** (built-in updater) | no (the store updates it) |
@@ -44,19 +44,19 @@ themselves. Nothing else to host.
 
 ## Selling on Ko-fi
 
-1. Create a Ko-fi product/shop item at $4.99.
+1. Create a Ko-fi product/shop item at €3.99.
 2. On each purchase, mint the buyer a key:
    ```sh
    cargo run -p lidhra-license --bin lidhra-keygen -- sign <ISSUER_PRIVATE_HEX> "buyer@email"
    ```
 3. Deliver the `LIDHRA-...` key (Ko-fi delivery message / email). The user pastes it when the trial ends.
 
-## App Store ($2.99, no self-update)
+## App Store ($5.99, no self-update)
 
 - Build the `appstore` flavor with a config that has **no** `plugins.updater` block
   (`src-tauri/tauri.appstore.conf.json`; copy `tauri.conf.json` and delete the updater section).
 - Sign, notarize, and submit through Xcode / Transporter with your Apple Developer account.
-- Set the price tier to $2.99. Apple handles updates.
+- Set the price tier to $5.99. Apple handles updates.
 
 ## Auto-update: silent, no passwords
 
@@ -76,7 +76,7 @@ No downloadable native app can be made 100% unpirateable; a determined person ca
 Ranked by how hard they are to defeat:
 
 1. **App Store build (strongest).** Apple's receipt + DRM makes it effectively unpirateable for normal
-   users, and it is the $2.99 tier. Push mainstream users here.
+   users, and it is the $5.99 tier. Push mainstream users here.
 2. **Online activation (recommended for the direct build).** Sell through a platform with a license API,
    such as **Lemon Squeezy**, Gumroad, or Keygen.sh, which auto-delivers keys, limits activations per key,
    and binds them to a machine server-side. Much harder to share than offline keys. Ko-fi has no license
@@ -100,5 +100,5 @@ online activation for the direct build.** Tell me which and I will wire the acti
 
 - Everything above needs **your** accounts/keys: Apple Developer (~$99/yr), a Windows cert, and a license
   platform. The pipeline is wired; it activates once those exist.
-- Pricing is exactly as you asked ($2.99 App Store, $4.99 direct). Most apps price the store higher to
-  absorb Apple's 15-30% cut; adjust if you like.
+- Pricing is as you asked (**$5.99 App Store, €3.99 direct**). Pricing the store higher than direct is the
+  usual pattern, since it absorbs Apple's 15-30% cut.
