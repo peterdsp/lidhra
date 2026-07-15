@@ -171,6 +171,47 @@
   .prc-feat li::before{content:"";position:absolute;left:0;top:5px;width:16px;height:16px;border-radius:50%;background:rgba(47,209,145,.15)}
   .prc-feat li::after{content:"";position:absolute;left:5px;top:8px;width:5px;height:9px;border:2px solid var(--acc);border-top:0;border-left:0;transform:rotate(40deg)}
   .prc .btn{margin-top:auto}
+
+  /* speed test */
+  .speed-panel{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:22px;padding:26px;margin-top:44px}
+  .speed-gauges{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:640px){.speed-gauges{grid-template-columns:repeat(2,1fr)}}
+  .gauge{background:#08130f;border:1px solid var(--line);border-radius:16px;padding:18px 14px;text-align:center;transition:border-color .25s}
+  .gauge.active{border-color:var(--acc);box-shadow:0 0 26px -12px rgba(47,209,145,.6)}
+  .gauge .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+  .gauge .val{font-size:clamp(26px,4.4vw,36px);font-weight:800;letter-spacing:-.03em;margin-top:8px;line-height:1;font-variant-numeric:tabular-nums;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .gauge .val.idle{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--mute)}
+  .gauge .unit{font-family:var(--mono);font-size:10.5px;color:var(--soft);margin-top:5px}
+  .speed-ctl{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:22px}
+  .speed-run{border:0}
+  .speed-run.busy{opacity:.7;cursor:progress}
+  .speed-status{font-family:var(--mono);font-size:12.5px;color:var(--soft)}
+  .speed-bar{height:6px;border-radius:100px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:18px}
+  .speed-bar>i{display:block;height:100%;width:0;border-radius:100px;background:var(--grad);transition:width .35s ease}
+  .speed-loc{font-family:var(--mono);font-size:11.5px;color:var(--mute);margin-top:14px;min-height:16px}
+  .scen-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:34px}
+  .scen-head b{font-size:16px;font-weight:700}
+  .scen-head span{font-family:var(--mono);font-size:11px;color:var(--mute)}
+  .scen-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+  @media(max-width:940px){.scen-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.scen-grid{grid-template-columns:1fr}}
+  .scen{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;transition:border-color .2s,transform .2s}
+  .scen:hover{transform:translateY(-2px);border-color:var(--line-2)}
+  .scen .sh{display:flex;align-items:flex-start;gap:11px}
+  .scen .si{width:34px;height:34px;border-radius:10px;background:rgba(47,209,145,.12);display:grid;place-items:center;color:var(--acc);flex:0 0 auto}
+  .scen .sn{font-size:14px;font-weight:700;line-height:1.2}
+  .scen .sr{font-family:var(--mono);font-size:10px;color:var(--mute);margin-top:3px;letter-spacing:.02em}
+  .scen .verdict{margin-top:13px;display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;padding:5px 11px;border-radius:100px;border:1px solid var(--line);color:var(--mute);text-transform:uppercase}
+  .scen .verdict .dot{width:7px;height:7px;border-radius:50%;background:var(--mute);flex:0 0 auto}
+  .scen.smooth{border-color:rgba(47,209,145,.42)}
+  .scen.smooth .verdict{color:var(--green);border-color:rgba(47,209,145,.42);background:rgba(47,209,145,.06)}
+  .scen.smooth .dot{background:var(--green)}
+  .scen.tight .verdict{color:#e8c15a;border-color:rgba(232,193,90,.42);background:rgba(232,193,90,.05)}
+  .scen.tight .dot{background:#e8c15a}
+  .scen.rough .verdict{color:#e0685f;border-color:rgba(224,104,95,.42);background:rgba(224,104,95,.05)}
+  .scen.rough .dot{background:#e0685f}
+  .scen .eta{font-family:var(--mono);font-size:10px;color:var(--soft);margin-top:9px;min-height:13px}
+  .speed-disc{font-family:var(--mono);font-size:12px;color:var(--mute);margin-top:24px;max-width:78ch;line-height:1.7}
 </style>
 </head>
 <body>
@@ -184,7 +225,7 @@
 <header class="nav" id="nav"><div class="wrap row">
   <a class="lg" href="#top"><svg viewBox="0 0 1024 1024"><image href="favicon.png" width="1024" height="1024"/></svg> Lidhra</a>
   <nav>
-    <a data-i18n="nav_platforms" href="#platforms">Platforms</a><a data-i18n="nav_cloud" href="#cloud">Cloud</a><a data-i18n="nav_features" href="#features">Features</a>
+    <a data-i18n="nav_platforms" href="#platforms">Platforms</a><a data-i18n="nav_cloud" href="#cloud">Cloud</a><a data-i18n="nav_speed" href="#speed">Speed</a><a data-i18n="nav_features" href="#features">Features</a>
     <a data-i18n="nav_power" href="#power">Power</a><a data-i18n="nav_why" href="#lightweight">Why Lidhra</a><a data-i18n="nav_pricing" href="#pricing">Pricing</a>
   </nav>
   <div class="actions">
@@ -317,6 +358,93 @@
   </div>
 </div></section>
 
+<!-- SPEED TEST -->
+<section class="blk" id="speed"><div class="wrap">
+  <div class="sec-head">
+    <div data-i18n="speed_eyebrow" class="eyebrow">Test your line · nothing to install</div>
+    <h2 data-i18n="speed_h2">Will your connection handle it? Find out in 20 seconds.</h2>
+    <p data-i18n="speed_p">A real download, upload and latency test, right in your browser - then we translate the numbers into the things you actually do: 4K, IPTV, cloud gaming, cameras, debrid downloads and whole-home combos. Only throwaway test traffic leaves your device.</p>
+  </div>
+
+  <div class="speed-panel">
+    <div class="speed-gauges">
+      <div class="gauge" id="g-download"><div data-i18n="sp_download" class="lbl">Download</div><div class="val idle" id="v-download">--</div><div class="unit">Mbps</div></div>
+      <div class="gauge" id="g-upload"><div data-i18n="sp_upload" class="lbl">Upload</div><div class="val idle" id="v-upload">--</div><div class="unit">Mbps</div></div>
+      <div class="gauge" id="g-ping"><div data-i18n="sp_ping" class="lbl">Ping</div><div class="val idle" id="v-ping">--</div><div class="unit">ms</div></div>
+      <div class="gauge" id="g-jitter"><div data-i18n="sp_jitter" class="lbl">Jitter</div><div class="val idle" id="v-jitter">--</div><div class="unit">ms</div></div>
+    </div>
+    <div class="speed-ctl">
+      <button class="btn p speed-run" id="speedRun" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 8 8"/><path d="M4.5 19a9 9 0 1 1 15 0"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>
+        <span id="speedRunLabel" data-i18n="sp_run">Run speed test</span>
+      </button>
+      <span class="speed-status" id="speedStatus" data-i18n="sp_status_idle">Ready when you are.</span>
+    </div>
+    <div class="speed-bar"><i id="speedBar"></i></div>
+    <div class="speed-loc" id="speedLoc"></div>
+  </div>
+
+  <div class="scen-head">
+    <b data-i18n="sp_scenarios">What your speed means</b>
+    <span data-i18n="sp_scen_hint">Ratings update after you run the test</span>
+  </div>
+  <div class="scen-grid">
+    <div class="scen" data-scen="web">
+      <div class="sh"><span class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span>
+        <div><div class="sn" data-i18n="scen_web">Web &amp; social</div><div class="sr">≈ 5 Mbps</div></div></div>
+      <div class="verdict"><span class="dot"></span><span class="vt" data-i18n="sp_await">Awaiting test</span></div>
+    </div>
+    <div class="scen" data-scen="hd">
+      <div class="sh"><span class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m11 8 3 2-3 2Z" fill="currentColor"/></svg></span>
+        <div><div class="sn" data-i18n="scen_hd">HD streaming</div><div class="sr">≈ 8 Mbps · 1080p</div></div></div>
+      <div class="verdict"><span class="dot"></span><span class="vt" data-i18n="sp_await">Awaiting test</span></div>
+    </div>
+    <div class="scen" data-scen="uhd">
+      <div class="sh"><span class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><text x="12" y="15.4" font-size="7.5" font-family="monospace" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none">4K</text></svg></span>
+        <div><div class="sn" data-i18n="scen_uhd">Netflix / 4K UHD</div><div class="sr">≈ 25 Mbps</div></div></div>
+      <div class="verdict"><span class="dot"></span><span class="vt" data-i18n="sp_await">Awaiting test</span></div>
+    </div>
+    <div class="scen" data-scen="iptv">
+      <div class="sh"><span class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 3l4 3 4-3"/></svg></span>
+        <div><div class="sn" data-i18n="scen_iptv">IPTV live TV</div><div class="sr">≈ 20 Mbps · steady</div></div></div>
+      <div class="verdict"><span class="dot"></span><span class="vt" data-i18n="sp_await">Awaiting test</span></div>
+    </div>
+    <div class="scen" data-scen="gaming">
+      <div class="sh"><span class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="5"/><path d="M7 11v2M6 12h2"/><circle cx="16" cy="11.5" r="1"/><circle cx="18" cy="13.5" r="1"/></svg></span>
+        <div><div class="sn" data-i18n="scen_gaming">Cloud gaming</div><div class="sr">≈ 35 Mbps · ping &lt; 40</div></div></div>
+      <div class="verdict"><span class="dot"></span><span class="vt" data-i18n="sp_await">Awaiting test</span></div>
+    </div>
+    <div class="scen" data-scen="cam">
+      <div class="sh"><span class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8l14-3 1 4-14 3zM4 12l1 5 4-1"/><circle cx="10" cy="9" r="1.4"/><path d="M18 10l3-1v5l-3-1"/></svg></span>
+        <div><div class="sn" data-i18n="scen_cam">Security cameras</div><div class="sr">≈ 8 Mbps up</div></div></div>
+      <div class="verdict"><span class="dot"></span><span class="vt" data-i18n="sp_await">Awaiting test</span></div>
+    </div>
+    <div class="scen" data-scen="call">
+      <div class="sh"><span class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="m15 10 6-3v10l-6-3"/></svg></span>
+        <div><div class="sn" data-i18n="scen_call">Video calls</div><div class="sr">≈ 4 Mbps up · ping &lt; 100</div></div></div>
+      <div class="verdict"><span class="dot"></span><span class="vt" data-i18n="sp_await">Awaiting test</span></div>
+    </div>
+    <div class="scen" data-scen="debrid">
+      <div class="sh"><span class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 18 18"/><path d="M12 12v6m0 0 2.5-2.5M12 18l-2.5-2.5"/></svg></span>
+        <div><div class="sn" data-i18n="scen_debrid">Debrid downloads</div><div class="sr">Real-Debrid · AllDebrid · TorBox</div></div></div>
+      <div class="verdict"><span class="dot"></span><span class="vt" data-i18n="sp_await">Awaiting test</span></div>
+      <div class="eta" data-i18n="sp_debrid_hint">Run the test for a 5 GB estimate</div>
+    </div>
+    <div class="scen" data-scen="moviegame">
+      <div class="sh"><span class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 4v5M17 4v5M7 20v-5M17 20v-5"/></svg></span>
+        <div><div class="sn" data-i18n="scen_moviegame">Movie night + gaming</div><div class="sr">≈ 60 Mbps · low ping</div></div></div>
+      <div class="verdict"><span class="dot"></span><span class="vt" data-i18n="sp_await">Awaiting test</span></div>
+    </div>
+    <div class="scen" data-scen="smart">
+      <div class="sh"><span class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-4h4v4"/></svg></span>
+        <div><div class="sn" data-i18n="scen_smart">Full smart home</div><div class="sr">≈ 80↓ · 10↑ Mbps</div></div></div>
+      <div class="verdict"><span class="dot"></span><span class="vt" data-i18n="sp_await">Awaiting test</span></div>
+    </div>
+  </div>
+
+  <p class="speed-disc" data-i18n="sp_disclaimer">Guidance, not a guarantee - real-world results also depend on your Wi-Fi, your device and the service itself. Measurement uses Cloudflare's public speed endpoints; only anonymous test traffic is exchanged and nothing about your test is stored by Lidhra.</p>
+</div></section>
+
 <!-- POWER / FEATURE PARITY -->
 <section class="blk" id="power"><div class="wrap">
   <div class="sec-head">
@@ -406,7 +534,7 @@
       <div class="lg"><svg viewBox="0 0 1024 1024"><image href="favicon.png" width="1024" height="1024"/></svg> Lidhra</div>
       <p data-i18n="foot_tag" class="tag">Link what matters. A native, cross-platform download &amp; transfer manager - one Rust core, every screen.</p>
     </div>
-    <div><h4 data-i18n="foot_product">Product</h4><ul><li><a data-i18n="fl_platforms" href="#platforms">Platforms</a></li><li><a data-i18n="fl_features" href="#features">Features</a></li><li><a data-i18n="fl_download" href="#download">Download</a></li><li><a data-i18n="fl_why" href="#lightweight">Why Lidhra</a></li><li><a data-i18n="fl_pricing" href="#pricing">Pricing</a></li></ul></div>
+    <div><h4 data-i18n="foot_product">Product</h4><ul><li><a data-i18n="fl_platforms" href="#platforms">Platforms</a></li><li><a data-i18n="fl_features" href="#features">Features</a></li><li><a data-i18n="fl_speed" href="#speed">Speed test</a></li><li><a data-i18n="fl_download" href="#download">Download</a></li><li><a data-i18n="fl_why" href="#lightweight">Why Lidhra</a></li><li><a data-i18n="fl_pricing" href="#pricing">Pricing</a></li></ul></div>
     <div><h4 data-i18n="foot_devs">Developers</h4><ul><li><a href="#">GitHub</a></li><li><a data-i18n="fl_docs" href="#">Documentation</a></li><li><a href="#">Web API</a></li><li><a data-i18n="fl_releases" href="#">Releases</a></li></ul></div>
     <div><h4 data-i18n="foot_project">Project</h4><ul><li><a data-i18n="fl_debrid" href="#cloud">Debrid</a></li><li><a data-i18n="fl_privacy" href="#">Privacy</a></li><li><a data-i18n="fl_license" href="#">License</a></li><li><a data-i18n="fl_brand" href="#">Brand</a></li></ul></div>
   </div>
@@ -496,6 +624,19 @@
       fl_platforms:"Platforms", fl_features:"Features", fl_download:"Download", fl_why:"Why Lidhra",
       fl_docs:"Documentation", fl_releases:"Releases", fl_debrid:"Debrid", fl_privacy:"Privacy", fl_license:"License", fl_brand:"Brand",
       foot_notaffil:"Open source · not affiliated with the qBittorrent project",
+      nav_speed:"Speed", fl_speed:"Speed test",
+      speed_eyebrow:"Test your line · nothing to install",
+      speed_h2:"Will your connection handle it? Find out in 20 seconds.",
+      speed_p:"A real download, upload and latency test, right in your browser, then we translate the numbers into the things you actually do: 4K, IPTV, cloud gaming, cameras, debrid downloads and whole-home combos. Only throwaway test traffic leaves your device.",
+      sp_download:"Download", sp_upload:"Upload", sp_ping:"Ping", sp_jitter:"Jitter",
+      sp_run:"Run speed test", sp_running:"Testing…", sp_again:"Test again",
+      sp_status_idle:"Ready when you are.", sp_status_ping:"Measuring latency…", sp_status_down:"Measuring download…", sp_status_up:"Measuring upload…", sp_status_done:"Done, see how your line holds up below.", sp_status_err:"Test couldn't finish, check your connection and try again.",
+      sp_via:"Tested via", sp_await:"Awaiting test",
+      v_smooth:"Smooth", v_tight:"Tight", v_rough:"Struggles",
+      sp_scenarios:"What your speed means", sp_scen_hint:"Ratings update after you run the test",
+      sp_file5:"5 GB file ≈", sp_debrid_hint:"Run the test for a 5 GB estimate",
+      scen_web:"Web & social", scen_hd:"HD streaming", scen_uhd:"Netflix / 4K UHD", scen_iptv:"IPTV live TV", scen_gaming:"Cloud gaming", scen_cam:"Security cameras", scen_call:"Video calls", scen_debrid:"Debrid downloads", scen_moviegame:"Movie night + gaming", scen_smart:"Full smart home",
+      sp_disclaimer:"Guidance, not a guarantee, real-world results also depend on your Wi-Fi, your device and the service itself. Measurement uses Cloudflare's public speed endpoints; only anonymous test traffic is exchanged and nothing about your test is stored by Lidhra.",
       dl_generic:"Download", dl_mac:"Download for macOS", dl_win:"Download for Windows",
       dl_android:"Get it on Android", dl_ios:"Get on the App Store", dl_linux:"Download for Linux",
       nav_pricing:"Pricing", fl_pricing:"Pricing",
@@ -555,6 +696,19 @@
       fl_platforms:"Πλατφόρμες", fl_features:"Δυνατότητες", fl_download:"Λήψη", fl_why:"Γιατί Lidhra",
       fl_docs:"Τεκμηρίωση", fl_releases:"Εκδόσεις", fl_debrid:"Debrid", fl_privacy:"Απόρρητο", fl_license:"Άδεια", fl_brand:"Επωνυμία",
       foot_notaffil:"Ανοιχτού κώδικα · χωρίς σχέση με το έργο qBittorrent",
+      nav_speed:"Ταχύτητα", fl_speed:"Τεστ ταχύτητας",
+      speed_eyebrow:"Δοκίμασε τη γραμμή σου · χωρίς εγκατάσταση",
+      speed_h2:"Θα τα καταφέρει η σύνδεσή σου; Μάθε το σε 20 δευτερόλεπτα.",
+      speed_p:"Ένα πραγματικό τεστ λήψης, αποστολής και καθυστέρησης, μέσα στον browser σου, και μετά μεταφράζουμε τους αριθμούς σε αυτά που πραγματικά κάνεις: 4K, IPTV, cloud gaming, κάμερες, λήψεις debrid και συνδυασμούς για όλο το σπίτι. Μόνο προσωρινή κίνηση δοκιμής φεύγει από τη συσκευή σου.",
+      sp_download:"Λήψη", sp_upload:"Αποστολή", sp_ping:"Ping", sp_jitter:"Jitter",
+      sp_run:"Ξεκίνα το τεστ", sp_running:"Δοκιμή…", sp_again:"Ξανά",
+      sp_status_idle:"Έτοιμο όποτε θες.", sp_status_ping:"Μέτρηση καθυστέρησης…", sp_status_down:"Μέτρηση λήψης…", sp_status_up:"Μέτρηση αποστολής…", sp_status_done:"Έτοιμο, δες παρακάτω πώς αντέχει η γραμμή σου.", sp_status_err:"Το τεστ δεν ολοκληρώθηκε, έλεγξε τη σύνδεσή σου και δοκίμασε ξανά.",
+      sp_via:"Δοκιμή μέσω", sp_await:"Αναμονή τεστ",
+      v_smooth:"Άνετα", v_tight:"Οριακά", v_rough:"Δυσκολεύεται",
+      sp_scenarios:"Τι σημαίνει η ταχύτητά σου", sp_scen_hint:"Οι αξιολογήσεις ενημερώνονται μετά το τεστ",
+      sp_file5:"Αρχείο 5 GB ≈", sp_debrid_hint:"Τρέξε το τεστ για εκτίμηση 5 GB",
+      scen_web:"Web & κοινωνικά", scen_hd:"Streaming HD", scen_uhd:"Netflix / 4K UHD", scen_iptv:"IPTV ζωντανή TV", scen_gaming:"Cloud gaming", scen_cam:"Κάμερες ασφαλείας", scen_call:"Βιντεοκλήσεις", scen_debrid:"Λήψεις debrid", scen_moviegame:"Ταινία + gaming", scen_smart:"Πλήρες έξυπνο σπίτι",
+      sp_disclaimer:"Καθοδήγηση, όχι εγγύηση, τα πραγματικά αποτελέσματα εξαρτώνται και από το Wi-Fi, τη συσκευή και την ίδια την υπηρεσία. Η μέτρηση χρησιμοποιεί τα δημόσια endpoints ταχύτητας της Cloudflare· ανταλλάσσεται μόνο ανώνυμη κίνηση δοκιμής και τίποτα από το τεστ σου δεν αποθηκεύεται από το Lidhra.",
       dl_generic:"Λήψη", dl_mac:"Λήψη για macOS", dl_win:"Λήψη για Windows",
       dl_android:"Απόκτησέ το στο Android", dl_ios:"Απόκτησέ το στο App Store", dl_linux:"Λήψη για Linux",
       nav_pricing:"Τιμολόγηση", fl_pricing:"Τιμολόγηση",
@@ -614,6 +768,19 @@
       fl_platforms:"Platformat", fl_features:"Veçoritë", fl_download:"Shkarko", fl_why:"Pse Lidhra",
       fl_docs:"Dokumentimi", fl_releases:"Versionet", fl_debrid:"Debrid", fl_privacy:"Privatësia", fl_license:"Licenca", fl_brand:"Brandi",
       foot_notaffil:"Kod i hapur · pa lidhje me projektin qBittorrent",
+      nav_speed:"Shpejtësia", fl_speed:"Test shpejtësie",
+      speed_eyebrow:"Testo lidhjen tënde · pa instaluar asgjë",
+      speed_h2:"A do ta përballojë lidhja jote? Zbuloje për 20 sekonda.",
+      speed_p:"Një test i vërtetë shkarkimi, ngarkimi dhe vonese, drejt e në shfletuesin tënd, dhe pastaj i përkthejmë numrat në gjërat që bën vërtet: 4K, IPTV, cloud gaming, kamera, shkarkime debrid dhe kombinime për gjithë shtëpinë. Vetëm trafik i përkohshëm testi largohet nga pajisja jote.",
+      sp_download:"Shkarkim", sp_upload:"Ngarkim", sp_ping:"Ping", sp_jitter:"Jitter",
+      sp_run:"Nis testin", sp_running:"Duke testuar…", sp_again:"Testo sërish",
+      sp_status_idle:"Gati kur të duash.", sp_status_ping:"Duke matur vonesën…", sp_status_down:"Duke matur shkarkimin…", sp_status_up:"Duke matur ngarkimin…", sp_status_done:"U krye, shiko më poshtë si e mban lidhja jote.", sp_status_err:"Testi nuk përfundoi, kontrollo lidhjen dhe provo sërish.",
+      sp_via:"Testuar përmes", sp_await:"Në pritje të testit",
+      v_smooth:"Rrjedhshëm", v_tight:"Në kufi", v_rough:"Mundohet",
+      sp_scenarios:"Çfarë do të thotë shpejtësia jote", sp_scen_hint:"Vlerësimet përditësohen pas testit",
+      sp_file5:"Skedar 5 GB ≈", sp_debrid_hint:"Nis testin për një vlerësim 5 GB",
+      scen_web:"Web & rrjete sociale", scen_hd:"Streaming HD", scen_uhd:"Netflix / 4K UHD", scen_iptv:"IPTV TV live", scen_gaming:"Cloud gaming", scen_cam:"Kamera sigurie", scen_call:"Videotelefonata", scen_debrid:"Shkarkime debrid", scen_moviegame:"Film + gaming", scen_smart:"Shtëpi e zgjuar e plotë",
+      sp_disclaimer:"Udhëzim, jo garanci, rezultatet reale varen edhe nga Wi-Fi, pajisja jote dhe vetë shërbimi. Matja përdor endpoint-et publike të shpejtësisë të Cloudflare; shkëmbehet vetëm trafik anonim testi dhe asgjë nga testi yt nuk ruhet nga Lidhra.",
       dl_generic:"Shkarko", dl_mac:"Shkarko për macOS", dl_win:"Shkarko për Windows",
       dl_android:"Merre në Android", dl_ios:"Merre në App Store", dl_linux:"Shkarko për Linux",
       nav_pricing:"Çmimet", fl_pricing:"Çmimet",
@@ -643,6 +810,177 @@
   (function(){ const s=document.getElementById('lang');
     if(s){ s.value=LANG; s.addEventListener('change',()=>{ LANG=s.value; localStorage.setItem('lidhra_site_lang',LANG); applyI18n(); }); }
     applyI18n();
+  })();
+
+  /* ---- speed test (Cloudflare public endpoints, client-side, no backend) ---- */
+  (function(){
+    const CF='https://speed.cloudflare.com';
+    const runBtn=document.getElementById('speedRun');
+    if(!runBtn) return;
+    const runLabel=document.getElementById('speedRunLabel');
+    const statusEl=document.getElementById('speedStatus');
+    const barEl=document.getElementById('speedBar');
+    const locEl=document.getElementById('speedLoc');
+    let running=false, LAST=null;
+
+    // scenario models: return level 2 (smooth) / 1 (tight) / 0 (struggles)
+    const lvl=r=>r>=1.5?2:r>=1?1:0;
+    const gate=(v,good,bad)=>v<=good?2:v<=bad?1:0;
+    const SCEN={
+      web:(d)=>lvl(d/5),
+      hd:(d)=>lvl(d/8),
+      uhd:(d)=>lvl(d/25),
+      iptv:(d,u,p,j)=>Math.min(lvl(d/20),gate(j,25,60)),
+      gaming:(d,u,p,j)=>Math.min(lvl(d/35),gate(p,40,80),gate(j,15,45)),
+      cam:(d,u)=>lvl(u/8),
+      call:(d,u,p)=>Math.min(lvl(u/4),lvl(d/6),gate(p,100,200)),
+      debrid:(d)=>lvl(d/50),
+      moviegame:(d,u,p)=>Math.min(lvl(d/60),gate(p,60,120)),
+      smart:(d,u)=>Math.min(lvl(d/80),lvl(u/10))
+    };
+
+    const fmt=v=>(!isFinite(v)||v<=0)?'0':(v>=100?Math.round(v).toString():v.toFixed(1));
+    const setVal=(id,v)=>{const e=document.getElementById('v-'+id);if(e){e.textContent=v;e.classList.remove('idle');}};
+    const active=id=>{const e=document.getElementById('g-'+id);if(e)e.classList.add('active');};
+    const inactive=id=>{const e=document.getElementById('g-'+id);if(e)e.classList.remove('active');};
+    const setStatus=k=>{statusEl.setAttribute('data-i18n',k);statusEl.textContent=t(k);};
+    const setBar=p=>{barEl.style.width=Math.max(0,Math.min(100,p))+'%';};
+
+    function etaFor(gb,mbps){
+      if(!mbps||mbps<=0) return '';
+      const s=gb*8000/mbps; // GB*8000 = Mbit ; /Mbps = seconds
+      let time;
+      if(s<60) time=Math.round(s)+'s';
+      else{const m=s/60; time=m<60?(m<10?m.toFixed(1):Math.round(m))+' min':(m/60).toFixed(1)+' h';}
+      return t('sp_file5')+' '+time;
+    }
+
+    function rateScenarios(m){
+      if(!m) return;
+      document.querySelectorAll('.scen').forEach(card=>{
+        const id=card.getAttribute('data-scen'); const fn=SCEN[id]; if(!fn) return;
+        const level=fn(m.down,m.up,m.ping,m.jitter);
+        card.classList.remove('smooth','tight','rough');
+        card.classList.add(level===2?'smooth':level===1?'tight':'rough');
+        const vt=card.querySelector('.vt'); const key=level===2?'v_smooth':level===1?'v_tight':'v_rough';
+        if(vt){vt.setAttribute('data-i18n',key);vt.textContent=t(key);}
+        if(id==='debrid'){const eta=card.querySelector('.eta'); if(eta){eta.removeAttribute('data-i18n');eta.textContent=etaFor(5,m.down);}}
+      });
+    }
+    // re-localise verdicts / ETA when language changes
+    const langSel=document.getElementById('lang');
+    if(langSel) langSel.addEventListener('change',()=>{ if(LAST) setTimeout(()=>rateScenarios(LAST),0); });
+
+    async function measurePing(n){
+      const times=[];
+      for(let i=0;i<n;i++){
+        const s=performance.now();
+        try{ await fetch(CF+'/__down?bytes=0&t='+i,{cache:'no-store'}); }catch(e){ continue; }
+        times.push(performance.now()-s);
+      }
+      if(!times.length) return null;
+      const sorted=[...times].sort((a,b)=>a-b);
+      const keep=sorted.slice(0,Math.max(1,sorted.length-2));
+      const avg=keep.reduce((a,b)=>a+b,0)/keep.length;
+      let j=0,c=0; for(let i=1;i<times.length;i++){j+=Math.abs(times[i]-times[i-1]);c++;}
+      return {ping:avg, jitter:c?j/c:0};
+    }
+
+    async function transfer(dir,onProgress){
+      const isDown=dir==='down';
+      const streams=isDown?6:4;
+      const chunk=isDown?26214400:8388608;               // 25 / 8 MB
+      const maxBytes=isDown?209715200:83886080;            // 200 / 80 MB cap
+      const maxMs=11000, warmup=1500;
+      const payload=isDown?null:new Uint8Array(chunk);
+      let total=0, base=0, tbase=0, warmed=false, stop=false, ok=false;
+      const start=performance.now();
+      function tick(){
+        const el=performance.now()-start;
+        if(!warmed && el>=warmup){warmed=true;base=total;tbase=el;}
+        const secs=Math.max(0.001,(warmed?el-tbase:el)/1000);
+        const bytes=warmed?total-base:total;
+        onProgress(bytes*8/secs/1e6, Math.min(1,el/maxMs));
+        if(el>=maxMs || total>=maxBytes) stop=true;
+      }
+      async function worker(){
+        while(!stop){
+          if((performance.now()-start)>=maxMs || total>=maxBytes){stop=true;break;}
+          try{
+            if(isDown){
+              const res=await fetch(CF+'/__down?bytes='+chunk,{cache:'no-store'});
+              const reader=res.body.getReader();
+              while(true){
+                const r=await reader.read();
+                if(r.done) break;
+                total+=r.value.length; ok=true; tick();
+                if(stop){try{reader.cancel();}catch(e){} break;}
+              }
+            }else{
+              await fetch(CF+'/__up',{method:'POST',body:payload,cache:'no-store'});
+              total+=chunk; ok=true; tick();
+            }
+          }catch(e){ stop=true; break; }
+        }
+      }
+      await Promise.all(Array.from({length:streams},worker));
+      const el=performance.now()-start;
+      const secs=Math.max(0.001,(warmed?el-tbase:el)/1000);
+      const bytes=warmed?total-base:total;
+      return {mbps:ok?bytes*8/secs/1e6:0, ok};
+    }
+
+    async function fetchLoc(){
+      try{
+        const r=await fetch(CF+'/meta',{cache:'no-store'});
+        const m=await r.json();
+        const colo=(m.colo&&typeof m.colo==='object')?(m.colo.iata||m.colo.city):m.colo;
+        const city=m.city||(m.colo&&m.colo.city)||'';
+        const bits=[city,colo&&colo!==city?('('+colo+')'):''].filter(Boolean).join(' ');
+        locEl.textContent=t('sp_via')+' Cloudflare'+(bits?(' · '+bits):'');
+      }catch(e){ /* non-fatal */ }
+    }
+
+    function resetGauges(){
+      ['download','upload','ping','jitter'].forEach(id=>{
+        const e=document.getElementById('v-'+id); if(e){e.textContent='--';e.classList.add('idle');}
+        inactive(id);
+      });
+    }
+
+    async function runTest(){
+      if(running) return; running=true;
+      runBtn.classList.add('busy'); runBtn.disabled=true;
+      runLabel.setAttribute('data-i18n','sp_running'); runLabel.textContent=t('sp_running');
+      resetGauges(); setBar(3); locEl.textContent='';
+      fetchLoc();
+      try{
+        // latency
+        setStatus('sp_status_ping'); active('ping'); active('jitter');
+        const pg=await measurePing(12);
+        if(pg){ setVal('ping',Math.round(pg.ping)); setVal('jitter',Math.round(pg.jitter)); }
+        inactive('ping'); inactive('jitter'); setBar(15);
+        // download
+        setStatus('sp_status_down'); active('download');
+        const dn=await transfer('down',(mbps,frac)=>{ setVal('download',fmt(mbps)); setBar(15+frac*48); });
+        setVal('download',fmt(dn.mbps)); inactive('download'); setBar(64);
+        // upload
+        setStatus('sp_status_up'); active('upload');
+        const up=await transfer('up',(mbps,frac)=>{ setVal('upload',fmt(mbps)); setBar(64+frac*36); });
+        setVal('upload',fmt(up.mbps)); inactive('upload'); setBar(100);
+
+        if(!dn.ok && !up.ok && !pg){ setStatus('sp_status_err'); }
+        else{
+          LAST={down:dn.mbps, up:up.mbps, ping:pg?pg.ping:999, jitter:pg?pg.jitter:999};
+          rateScenarios(LAST);
+          setStatus('sp_status_done');
+        }
+      }catch(e){ setStatus('sp_status_err'); }
+      runLabel.setAttribute('data-i18n','sp_again'); runLabel.textContent=t('sp_again');
+      runBtn.classList.remove('busy'); runBtn.disabled=false; running=false;
+    }
+
+    runBtn.addEventListener('click',runTest);
   })();
 </script>
 </body>
