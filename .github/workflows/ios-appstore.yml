@@ -82,6 +82,7 @@ jobs:
 
           # 4. Build the signed IPA (appstore feature = no self-updater).
           sed -i '' 's/^default = \["kofi"\]/default = ["appstore"]/' app/src-tauri/Cargo.toml
+          ( cd app && cargo tauri ios init --ci --skip-targets-install )
           ( cd app && APPLE_DEVELOPMENT_TEAM="$TEAMID" cargo tauri ios build --export-method app-store-connect )
 
           IPA=$(ls -t app/src-tauri/gen/apple/build/**/*.ipa 2>/dev/null | head -1)
