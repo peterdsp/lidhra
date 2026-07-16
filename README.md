@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/favicon.svg" width="84" alt="Lidhra logo">
+  <img src="docs/favicon.png" width="84" alt="Lidhra app logo">
   <h1>Lidhra</h1>
   <p><b>A fast, native, cross-platform download &amp; transfer app.</b><br>
   One Rust core, the interface each OS actually deserves. <em>Link what matters.</em></p>
