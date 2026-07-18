@@ -23,6 +23,9 @@
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
   .wrap{max-width:720px;margin:0 auto}
+  .topbar{max-width:720px;margin:0 auto 8px;display:flex;justify-content:flex-end}
+  .langsel{background:rgba(255,255,255,.03);color:var(--muted);border:1px solid var(--stroke);border-radius:100px;font-size:12px;padding:7px 10px;cursor:pointer}
+  .langsel:hover{color:var(--text);border-color:var(--accent)}
   header{text-align:center;margin-bottom:44px}
   .logo{width:92px;height:92px;border-radius:22px;filter:drop-shadow(0 14px 34px rgba(0,0,0,.55))}
   h1{font-size:36px;letter-spacing:-.02em;margin:20px 0 4px}
@@ -36,72 +39,175 @@
     padding:22px;margin-top:32px;backdrop-filter:blur(12px)}
   .card h2{margin-top:0}
   footer{margin-top:56px;text-align:center;color:var(--muted);font-size:13px}
+  @media (prefers-reduced-motion: no-preference){::view-transition-old(root),::view-transition-new(root){animation-duration:320ms;animation-timing-function:ease}}
 </style>
 </head>
 <body>
+<div class="topbar">
+  <select id="lang" aria-label="Language" class="langsel"><option value="en">EN</option><option value="el">ΕΛ</option><option value="sq">SQ</option></select>
+</div>
 <div class="wrap">
   <header>
     <img class="logo" src="favicon.png" alt="Lidhra" />
-    <h1>Privacy Policy</h1>
-    <p class="updated">Last updated: 15 July 2026</p>
+    <h1 data-i18n="ppH1">Privacy Policy</h1>
+    <p class="updated" data-i18n="ppUpdated">Last updated: 15 July 2026</p>
   </header>
 
-  <p>Lidhra is a native download and transfer app that runs on your own device
+  <p data-i18n="ppIntro">Lidhra is a native download and transfer app that runs on your own device
   and your own debrid account. This policy explains what the app does and does
   not do with your information. It is short because there is very little to say.</p>
 
   <div class="card">
-    <h2>The short version</h2>
-    <p><b>Lidhra collects no personal data.</b> There are no accounts to create
+    <h2 data-i18n="ppShortH">The short version</h2>
+    <p data-i18n-html="ppShort"><b>Lidhra collects no personal data.</b> There are no accounts to create
     with us, no analytics, no telemetry, no tracking, and no advertising. We do
     not operate servers that receive your activity, and we cannot see what you
     download.</p>
   </div>
 
-  <h2>Your debrid account</h2>
-  <p>You connect a debrid account you already have (for example Real-Debrid,
+  <h2 data-i18n="ppDebridH">Your debrid account</h2>
+  <p data-i18n-html="ppDebrid">You connect a debrid account you already have (for example Real-Debrid,
   AllDebrid, TorBox or Premiumize). The credentials or API token you enter are
   stored <b>locally on your device</b> and are sent only to the debrid provider
   you chose, over an encrypted HTTPS connection, so the app can resolve your
   links. Those credentials are never sent to us and never leave your device for
   any other purpose.</p>
 
-  <h2>Downloads</h2>
-  <p>When you add a link, the resolving happens on your provider's servers and
+  <h2 data-i18n="ppDlH">Downloads</h2>
+  <p data-i18n="ppDl">When you add a link, the resolving happens on your provider's servers and
   the resulting file is downloaded directly to your device over HTTPS. The links
   you add and the files you download stay on your device. We do not receive, log
   or store any of them.</p>
 
-  <h2>Licensing</h2>
-  <p>On the App Store, your purchase is verified by Apple's App Store receipt on
+  <h2 data-i18n="ppLicH">Licensing</h2>
+  <p data-i18n="ppLic">On the App Store, your purchase is verified by Apple's App Store receipt on
   your device; no information is sent to us. On the direct and Ko-fi builds, the
   email you enter to activate is sent once to our licence service only to confirm
   your purchase and issue your key; it is not used for anything else and is not
   shared.</p>
 
-  <h2>Third parties</h2>
-  <p>Lidhra bundles no third-party advertising or analytics SDKs. When you use
+  <h2 data-i18n="ppTpH">Third parties</h2>
+  <p data-i18n="ppTp">Lidhra bundles no third-party advertising or analytics SDKs. When you use
   the app it communicates only with the debrid provider you configured and the
   file hosts your downloads come from. Their handling of data is governed by
   their own privacy policies.</p>
 
-  <h2>Children</h2>
-  <p>Lidhra is a general-purpose utility and is not directed at children. It
+  <h2 data-i18n="ppKidsH">Children</h2>
+  <p data-i18n="ppKids">Lidhra is a general-purpose utility and is not directed at children. It
   collects no personal data from anyone.</p>
 
-  <h2>Data deletion</h2>
-  <p>All app data, including your debrid credentials and settings, lives on your
+  <h2 data-i18n="ppDelH">Data deletion</h2>
+  <p data-i18n="ppDel">All app data, including your debrid credentials and settings, lives on your
   device. Removing the app deletes it. You can also disconnect your account from
   within the app at any time.</p>
 
-  <h2>Changes</h2>
-  <p>If this policy changes, the updated date above will change. Material changes
+  <h2 data-i18n="ppChgH">Changes</h2>
+  <p data-i18n="ppChg">If this policy changes, the updated date above will change. Material changes
   will be noted on this page.</p>
 
-  <h2>Contact</h2>
-  <p>Questions about privacy? Email <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a>.</p>
+  <h2 data-i18n="ppContactH">Contact</h2>
+  <p data-i18n-html="ppContact">Questions about privacy? Email <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a>.</p>
 
-  <footer>© 2026 Petros Dhespollari · <a href="/">lidhra.peterdsp.dev</a></footer>
+  <footer data-i18n-html="ppFooter">© 2026 Petros Dhespollari · <a href="/">lidhra.peterdsp.dev</a></footer>
 </div>
+
+<script>
+(function(){
+  const I18N = {
+    en: {
+      title:"Lidhra - Privacy Policy",
+      ppH1:"Privacy Policy",
+      ppUpdated:"Last updated: 15 July 2026",
+      ppIntro:"Lidhra is a native download and transfer app that runs on your own device and your own debrid account. This policy explains what the app does and does not do with your information. It is short because there is very little to say.",
+      ppShortH:"The short version",
+      ppShort:`<b>Lidhra collects no personal data.</b> There are no accounts to create with us, no analytics, no telemetry, no tracking, and no advertising. We do not operate servers that receive your activity, and we cannot see what you download.`,
+      ppDebridH:"Your debrid account",
+      ppDebrid:`You connect a debrid account you already have (for example Real-Debrid, AllDebrid, TorBox or Premiumize). The credentials or API token you enter are stored <b>locally on your device</b> and are sent only to the debrid provider you chose, over an encrypted HTTPS connection, so the app can resolve your links. Those credentials are never sent to us and never leave your device for any other purpose.`,
+      ppDlH:"Downloads",
+      ppDl:"When you add a link, the resolving happens on your provider's servers and the resulting file is downloaded directly to your device over HTTPS. The links you add and the files you download stay on your device. We do not receive, log or store any of them.",
+      ppLicH:"Licensing",
+      ppLic:"On the App Store, your purchase is verified by Apple's App Store receipt on your device; no information is sent to us. On the direct and Ko-fi builds, the email you enter to activate is sent once to our licence service only to confirm your purchase and issue your key; it is not used for anything else and is not shared.",
+      ppTpH:"Third parties",
+      ppTp:"Lidhra bundles no third-party advertising or analytics SDKs. When you use the app it communicates only with the debrid provider you configured and the file hosts your downloads come from. Their handling of data is governed by their own privacy policies.",
+      ppKidsH:"Children",
+      ppKids:"Lidhra is a general-purpose utility and is not directed at children. It collects no personal data from anyone.",
+      ppDelH:"Data deletion",
+      ppDel:"All app data, including your debrid credentials and settings, lives on your device. Removing the app deletes it. You can also disconnect your account from within the app at any time.",
+      ppChgH:"Changes",
+      ppChg:"If this policy changes, the updated date above will change. Material changes will be noted on this page.",
+      ppContactH:"Contact",
+      ppContact:`Questions about privacy? Email <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a>.`,
+      ppFooter:`© 2026 Petros Dhespollari · <a href="/">lidhra.peterdsp.dev</a>`,
+    },
+    el: {
+      title:"Lidhra - Πολιτική Απορρήτου",
+      ppH1:"Πολιτική Απορρήτου",
+      ppUpdated:"Τελευταία ενημέρωση: 15 Ιουλίου 2026",
+      ppIntro:"Το Lidhra είναι μια εγγενής εφαρμογή λήψεων και μεταφορών που τρέχει στη δική σας συσκευή και στον δικό σας λογαριασμό debrid. Αυτή η πολιτική εξηγεί τι κάνει και τι δεν κάνει η εφαρμογή με τις πληροφορίες σας. Είναι σύντομη επειδή υπάρχουν πολύ λίγα να πούμε.",
+      ppShortH:"Η σύντομη εκδοχή",
+      ppShort:`<b>Το Lidhra δεν συλλέγει προσωπικά δεδομένα.</b> Δεν υπάρχουν λογαριασμοί να δημιουργήσετε σε εμάς, ούτε analytics, ούτε τηλεμετρία, ούτε παρακολούθηση, ούτε διαφημίσεις. Δεν λειτουργούμε διακομιστές που λαμβάνουν τη δραστηριότητά σας, και δεν μπορούμε να δούμε τι κατεβάζετε.`,
+      ppDebridH:"Ο λογαριασμός debrid σας",
+      ppDebrid:`Συνδέετε έναν λογαριασμό debrid που ήδη έχετε (για παράδειγμα Real-Debrid, AllDebrid, TorBox ή Premiumize). Τα διαπιστευτήρια ή το API token που εισάγετε αποθηκεύονται <b>τοπικά στη συσκευή σας</b> και αποστέλλονται μόνο στον πάροχο debrid που επιλέξατε, μέσω κρυπτογραφημένης σύνδεσης HTTPS, ώστε η εφαρμογή να μπορεί να αναλύσει τους συνδέσμους σας. Αυτά τα διαπιστευτήρια δεν αποστέλλονται ποτέ σε εμάς και δεν φεύγουν ποτέ από τη συσκευή σας για κανέναν άλλο σκοπό.`,
+      ppDlH:"Λήψεις",
+      ppDl:"Όταν προσθέτετε έναν σύνδεσμο, η ανάλυση γίνεται στους διακομιστές του παρόχου σας και το αρχείο που προκύπτει κατεβαίνει απευθείας στη συσκευή σας μέσω HTTPS. Οι σύνδεσμοι που προσθέτετε και τα αρχεία που κατεβάζετε παραμένουν στη συσκευή σας. Δεν τα λαμβάνουμε, δεν τα καταγράφουμε και δεν τα αποθηκεύουμε.",
+      ppLicH:"Άδειες χρήσης",
+      ppLic:"Στο App Store, η αγορά σας επαληθεύεται από την απόδειξη του App Store της Apple στη συσκευή σας· καμία πληροφορία δεν αποστέλλεται σε εμάς. Στις εκδόσεις άμεσης λήψης και Ko-fi, το email που εισάγετε για ενεργοποίηση αποστέλλεται μία φορά στην υπηρεσία αδειών μας μόνο για να επιβεβαιώσει την αγορά σας και να εκδώσει το κλειδί σας· δεν χρησιμοποιείται για τίποτα άλλο και δεν κοινοποιείται.",
+      ppTpH:"Τρίτα μέρη",
+      ppTp:"Το Lidhra δεν ενσωματώνει SDK διαφημίσεων ή analytics τρίτων. Όταν χρησιμοποιείτε την εφαρμογή, επικοινωνεί μόνο με τον πάροχο debrid που ρυθμίσατε και με τους διακομιστές αρχείων από τους οποίους προέρχονται οι λήψεις σας. Ο χειρισμός των δεδομένων τους διέπεται από τις δικές τους πολιτικές απορρήτου.",
+      ppKidsH:"Παιδιά",
+      ppKids:"Το Lidhra είναι ένα εργαλείο γενικής χρήσης και δεν απευθύνεται σε παιδιά. Δεν συλλέγει προσωπικά δεδομένα από κανέναν.",
+      ppDelH:"Διαγραφή δεδομένων",
+      ppDel:"Όλα τα δεδομένα της εφαρμογής, συμπεριλαμβανομένων των διαπιστευτηρίων debrid και των ρυθμίσεών σας, βρίσκονται στη συσκευή σας. Η αφαίρεση της εφαρμογής τα διαγράφει. Μπορείτε επίσης να αποσυνδέσετε τον λογαριασμό σας μέσα από την εφαρμογή ανά πάσα στιγμή.",
+      ppChgH:"Αλλαγές",
+      ppChg:"Αν αυτή η πολιτική αλλάξει, η ημερομηνία ενημέρωσης παραπάνω θα αλλάξει. Οι ουσιώδεις αλλαγές θα σημειώνονται σε αυτήν τη σελίδα.",
+      ppContactH:"Επικοινωνία",
+      ppContact:`Ερωτήσεις για το απόρρητο; Στείλτε email στο <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a>.`,
+      ppFooter:`© 2026 Petros Dhespollari · <a href="/">lidhra.peterdsp.dev</a>`,
+    },
+    sq: {
+      title:"Lidhra - Politika e Privatësisë",
+      ppH1:"Politika e Privatësisë",
+      ppUpdated:"Përditësuar së fundmi: 15 korrik 2026",
+      ppIntro:"Lidhra është një aplikacion vendas për shkarkime dhe transferime që funksionon në pajisjen tënde dhe në llogarinë tënde debrid. Kjo politikë shpjegon çfarë bën dhe çfarë nuk bën aplikacioni me informacionin tënd. Është e shkurtër sepse ka shumë pak për të thënë.",
+      ppShortH:"Versioni i shkurtër",
+      ppShort:`<b>Lidhra nuk mbledh të dhëna personale.</b> S'ka llogari për të krijuar tek ne, s'ka analitikë, s'ka telemetri, s'ka gjurmim dhe s'ka reklama. Ne nuk operojmë servera që marrin aktivitetin tënd, dhe nuk mund të shohim çfarë shkarkon.`,
+      ppDebridH:"Llogaria jote debrid",
+      ppDebrid:`Ti lidh një llogari debrid që e ke tashmë (për shembull Real-Debrid, AllDebrid, TorBox ose Premiumize). Kredencialet ose token-i API që fut ruhen <b>lokalisht në pajisjen tënde</b> dhe dërgohen vetëm te ofruesi debrid që zgjodhe, përmes një lidhjeje të koduar HTTPS, që aplikacioni të mund të zgjidhë lidhjet e tua. Ato kredenciale nuk dërgohen kurrë tek ne dhe nuk largohen kurrë nga pajisja jote për asnjë qëllim tjetër.`,
+      ppDlH:"Shkarkimet",
+      ppDl:"Kur shton një lidhje, zgjidhja ndodh në serverat e ofruesit tënd dhe skedari që rezulton shkarkohet drejtpërdrejt në pajisjen tënde përmes HTTPS. Lidhjet që shton dhe skedarët që shkarkon qëndrojnë në pajisjen tënde. Ne nuk i marrim, nuk i regjistrojmë dhe nuk i ruajmë ato.",
+      ppLicH:"Licencimi",
+      ppLic:"Në App Store, blerja jote verifikohet nga fatura e App Store të Apple në pajisjen tënde; asnjë informacion nuk dërgohet tek ne. Në versionet e drejtpërdrejta dhe Ko-fi, email-i që fut për ta aktivizuar dërgohet një herë te shërbimi ynë i licencave vetëm për të konfirmuar blerjen tënde dhe për të lëshuar çelësin; nuk përdoret për asgjë tjetër dhe nuk ndahet.",
+      ppTpH:"Palët e treta",
+      ppTp:"Lidhra nuk përfshin SDK reklamash ose analitike të palëve të treta. Kur e përdor aplikacionin, ai komunikon vetëm me ofruesin debrid që konfigurove dhe me hostet e skedarëve nga vijnë shkarkimet e tua. Trajtimi i të dhënave prej tyre qeveriset nga politikat e tyre të privatësisë.",
+      ppKidsH:"Fëmijët",
+      ppKids:"Lidhra është një mjet i përgjithshëm dhe nuk u drejtohet fëmijëve. Nuk mbledh të dhëna personale nga askush.",
+      ppDelH:"Fshirja e të dhënave",
+      ppDel:"Të gjitha të dhënat e aplikacionit, përfshirë kredencialet debrid dhe cilësimet e tua, jetojnë në pajisjen tënde. Heqja e aplikacionit i fshin ato. Mund gjithashtu të shkëpusësh llogarinë tënde nga brenda aplikacionit në çdo kohë.",
+      ppChgH:"Ndryshimet",
+      ppChg:"Nëse kjo politikë ndryshon, data e përditësimit më sipër do të ndryshojë. Ndryshimet thelbësore do të shënohen në këtë faqe.",
+      ppContactH:"Kontakti",
+      ppContact:`Pyetje për privatësinë? Dërgo email te <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a>.`,
+      ppFooter:`© 2026 Petros Dhespollari · <a href="/">lidhra.peterdsp.dev</a>`,
+    },
+  };
+
+  let LANG = localStorage.getItem('lidhra_site_lang') || (['el','sq'].find(l=>(navigator.language||'en').toLowerCase().startsWith(l)) || 'en');
+  function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.en[k] || ''; }
+  function applyI18n(){
+    document.documentElement.lang=LANG;
+    document.title=t('title');
+    document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.getAttribute('data-i18n')); if(v) el.textContent=v; });
+    document.querySelectorAll('[data-i18n-html]').forEach(el=>{ const v=t(el.getAttribute('data-i18n-html')); if(v) el.innerHTML=v; });
+    const s=document.getElementById('lang'); if(s) s.value=LANG;
+  }
+  (function(){ const s=document.getElementById('lang');
+    const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function switchLang(){ LANG=s.value; localStorage.setItem('lidhra_site_lang',LANG);
+      if(!reduce&&document.startViewTransition){ document.startViewTransition(applyI18n); } else { applyI18n(); } }
+    if(s){ s.value=LANG; s.addEventListener('change',switchLang); }
+    applyI18n();
+  })();
+})();
+</script>
 </body>
 </html>
