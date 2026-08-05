@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lidhra - Support</title>
+<script type="speculationrules">{"prefetch":[{"source":"document","where":{"href_matches":"/*"},"eagerness":"moderate"}]}</script>
+<meta name="description" content="Get help with Lidhra. Frequently asked questions, troubleshooting, and how to contact support." />
+<link rel="icon" type="image/png" href="favicon.png" />
+<meta name="theme-color" content="#07201b" />
+<style>
+  :root{
+    --bg:#07120f; --card:rgba(120,220,180,.06);
+    --stroke:rgba(120,220,180,.14); --text:#eafff6; --muted:#9ec3b7;
+    --accent:#54e06a; --acc2:#2fd191;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text);background:var(--bg);line-height:1.65;
+    background-image:radial-gradient(1100px 600px at 50% -10%,rgba(47,209,145,.16),transparent 60%);
+    -webkit-font-smoothing:antialiased;padding:60px 22px 80px;
+  }
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:720px;margin:0 auto}
+  .topbar{max-width:720px;margin:0 auto 8px;display:flex;justify-content:flex-end;gap:12px;align-items:center}
+  .back{color:var(--muted);font-size:13px}
+  .back:hover{color:var(--text)}
+  .langsel{background:rgba(255,255,255,.03);color:var(--muted);border:1px solid var(--stroke);border-radius:100px;font-size:12px;padding:7px 10px;cursor:pointer}
+  .langsel:hover{color:var(--text);border-color:var(--accent)}
+  header{text-align:center;margin-bottom:44px}
+  .logo{width:92px;height:92px;border-radius:22px;filter:drop-shadow(0 14px 34px rgba(0,0,0,.55))}
+  h1{font-size:36px;letter-spacing:-.02em;margin:20px 0 4px}
+  .sub{color:var(--muted);font-size:16px;max-width:48ch;margin:8px auto 0}
+  h2{font-size:20px;letter-spacing:-.01em;margin:34px 0 10px}
+  p{color:#cfe7dd;margin-bottom:14px}
+  ul{margin:0 0 14px 24px;color:#cfe7dd}
+  li{margin-bottom:6px}
+  b{color:#eafff6}
+  code{font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;font-size:.9em;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:5px}
+  .card{border:1px solid var(--stroke);background:var(--card);border-radius:16px;
+    padding:22px;margin-top:32px;backdrop-filter:blur(12px)}
+  .card h2{margin-top:0}
+  .contact-card{border-color:var(--accent);box-shadow:0 0 30px -10px rgba(47,209,145,.3)}
+  .faq{margin-top:28px}
+  .faq details{border:1px solid var(--stroke);border-radius:12px;margin-bottom:12px;overflow:hidden}
+  .faq summary{padding:14px 18px;cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;align-items:center;gap:10px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"";width:20px;height:20px;flex:0 0 auto;border-radius:50%;background:rgba(47,209,145,.15);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2354e06a' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M3 5l3 3 3-3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;transition:transform .2s}
+  .faq details[open] summary::before{transform:rotate(180deg)}
+  .faq summary:hover{color:var(--accent)}
+  .faq .ans{padding:0 18px 16px;color:#cfe7dd;font-size:14.5px;line-height:1.7}
+  .faq .ans p{margin-bottom:10px}
+  .faq .ans p:last-child{margin-bottom:0}
+  footer{margin-top:56px;text-align:center;color:var(--muted);font-size:13px}
+  @view-transition{navigation:auto}
+  @media (prefers-reduced-motion: no-preference){::view-transition-old(root),::view-transition-new(root){animation-duration:320ms;animation-timing-function:ease}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="back" href="/">&larr; <span data-i18n="supBack">Back to Lidhra</span></a>
+  <select id="lang" aria-label="Language" class="langsel"><option value="en">EN</option><option value="el">EL</option><option value="sq">SQ</option></select>
+</div>
+<div class="wrap">
+  <header>
+    <img class="logo" src="favicon.png" alt="Lidhra" />
+    <h1 data-i18n="supH1">Support</h1>
+    <p class="sub" data-i18n="supSub">Get help with Lidhra. Find answers below or reach out directly.</p>
+  </header>
+
+  <div class="card contact-card">
+    <h2 data-i18n="supContactH">Contact us</h2>
+    <p data-i18n-html="supContact">For questions, bug reports, or feature requests, email us at <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a>. We typically respond within 24 hours.</p>
+    <p data-i18n-html="supGithub">You can also <a href="https://github.com/peterdsp/lidhra/issues" target="_blank" rel="noopener">open an issue on GitHub</a> for bug reports and feature requests.</p>
+  </div>
+
+  <h2 data-i18n="supFaqH">Frequently asked questions</h2>
+
+  <div class="faq">
+    <details>
+      <summary data-i18n="faqDebridQ">What is a debrid service and do I need one?</summary>
+      <div class="ans">
+        <p data-i18n="faqDebridA">A debrid service (such as Real-Debrid, AllDebrid, or TorBox) is a third-party cloud service that downloads torrents on its servers and gives you a direct HTTPS link. You bring your own debrid account and API token. Lidhra does not provide debrid accounts or content.</p>
+        <p data-i18n="faqDebridA2">On the App Store version, a debrid account is required because direct torrenting is not available. On the desktop direct-download version, you can choose to torrent locally without a debrid account.</p>
+      </div>
+    </details>
+    <details>
+      <summary data-i18n="faqTokenQ">How do I find my debrid API token?</summary>
+      <div class="ans">
+        <p data-i18n-html="faqTokenA">Log in to your debrid provider's website and look for an API or settings page. For example, on Real-Debrid go to <b>My Account &rarr; API</b> to find your API token. Copy it and paste it into Lidhra when prompted.</p>
+      </div>
+    </details>
+    <details>
+      <summary data-i18n="faqTrialQ">Is there a free trial?</summary>
+      <div class="ans">
+        <p data-i18n="faqTrialA">The direct-download version (macOS, Windows, Linux via Ko-fi) includes a 7-day free trial. No account is needed to start the trial. After the trial, a one-time licence purchase unlocks the app permanently.</p>
+        <p data-i18n="faqTrialA2">The App Store version (iPhone, iPad, Mac) has no trial. It is a one-time purchase at checkout. Once purchased, the app is fully unlocked with no additional purchases or subscriptions required.</p>
+      </div>
+    </details>
+    <details>
+      <summary data-i18n="faqActivateQ">How do I activate my licence after buying on Ko-fi?</summary>
+      <div class="ans">
+        <p data-i18n="faqActivateA">Open Lidhra and choose "Activate with your Ko-fi email." Enter the email address you used for the Ko-fi purchase. The app contacts the licence service, verifies your purchase, and activates automatically. Your licence covers up to 3 devices.</p>
+      </div>
+    </details>
+    <details>
+      <summary data-i18n="faqAppstoreQ">What is included in the App Store version?</summary>
+      <div class="ans">
+        <p data-i18n="faqAppstoreA">The App Store version includes debrid cloud transfers (resolving magnets through your debrid provider over HTTPS). It works on iPhone, iPad, and Mac. Updates are managed by the App Store, and Family Sharing is supported. There are no in-app purchases or subscriptions.</p>
+        <p data-i18n="faqAppstoreA2">The direct torrent engine (local peer-to-peer) is only available in the direct-download desktop version.</p>
+      </div>
+    </details>
+    <details>
+      <summary data-i18n="faqPrivacyQ">What data does Lidhra collect?</summary>
+      <div class="ans">
+        <p data-i18n-html="faqPrivacyA">None. Lidhra has no accounts, no analytics, no telemetry, and no tracking. Your debrid credentials are stored locally on your device and sent only to the debrid provider you chose. See our <a href="privacy.html">Privacy Policy</a> for details.</p>
+      </div>
+    </details>
+    <details>
+      <summary data-i18n="faqPlatformQ">Which platforms are supported?</summary>
+      <div class="ans">
+        <p data-i18n="faqPlatformA">Lidhra is available on macOS, Windows, Linux (AppImage, deb, Flatpak), iOS (App Store), and Android. A watchOS companion shows transfer status at a glance.</p>
+      </div>
+    </details>
+    <details>
+      <summary data-i18n="faqNotWorkQ">My downloads are not starting. What should I check?</summary>
+      <div class="ans">
+        <p data-i18n="faqNotWorkA">First, verify that your debrid API token is correct and that your debrid account has an active premium subscription. Check your internet connection. If you are on a restrictive network (corporate, school), HTTPS traffic to your debrid provider may be blocked.</p>
+        <p data-i18n-html="faqNotWorkA2">If the problem persists, email <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a> with your platform, app version, and a description of the issue.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="supReqH">System requirements</h2>
+    <ul>
+      <li data-i18n-html="supReqMac"><b>macOS:</b> macOS 12 Monterey or later (Universal binary)</li>
+      <li data-i18n-html="supReqWin"><b>Windows:</b> Windows 10 version 1803 or later (x64 / ARM)</li>
+      <li data-i18n-html="supReqLinux"><b>Linux:</b> Ubuntu 22.04+, Fedora 38+, or equivalent with WebKitGTK</li>
+      <li data-i18n-html="supReqIOS"><b>iOS / iPadOS:</b> iOS 16 or later</li>
+      <li data-i18n-html="supReqAndroid"><b>Android:</b> Android 8.0 or later</li>
+    </ul>
+  </div>
+
+  <footer data-i18n-html="supFooter">&copy; 2026 Petros Dhespollari &middot; <a href="/">lidhra.peterdsp.dev</a></footer>
+</div>
+
+<script>
+(function(){
+  const I18N = {
+    en: {
+      title:"Lidhra - Support",
+      supBack:"Back to Lidhra",
+      supH1:"Support",
+      supSub:"Get help with Lidhra. Find answers below or reach out directly.",
+      supContactH:"Contact us",
+      supContact:`For questions, bug reports, or feature requests, email us at <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a>. We typically respond within 24 hours.`,
+      supGithub:`You can also <a href="https://github.com/peterdsp/lidhra/issues" target="_blank" rel="noopener">open an issue on GitHub</a> for bug reports and feature requests.`,
+      supFaqH:"Frequently asked questions",
+      faqDebridQ:"What is a debrid service and do I need one?",
+      faqDebridA:"A debrid service (such as Real-Debrid, AllDebrid, or TorBox) is a third-party cloud service that downloads torrents on its servers and gives you a direct HTTPS link. You bring your own debrid account and API token. Lidhra does not provide debrid accounts or content.",
+      faqDebridA2:"On the App Store version, a debrid account is required because direct torrenting is not available. On the desktop direct-download version, you can choose to torrent locally without a debrid account.",
+      faqTokenQ:"How do I find my debrid API token?",
+      faqTokenA:`Log in to your debrid provider's website and look for an API or settings page. For example, on Real-Debrid go to <b>My Account &rarr; API</b> to find your API token. Copy it and paste it into Lidhra when prompted.`,
+      faqTrialQ:"Is there a free trial?",
+      faqTrialA:"The direct-download version (macOS, Windows, Linux via Ko-fi) includes a 7-day free trial. No account is needed to start the trial. After the trial, a one-time licence purchase unlocks the app permanently.",
+      faqTrialA2:"The App Store version (iPhone, iPad, Mac) has no trial. It is a one-time purchase at checkout. Once purchased, the app is fully unlocked with no additional purchases or subscriptions required.",
+      faqActivateQ:"How do I activate my licence after buying on Ko-fi?",
+      faqActivateA:"Open Lidhra and choose \"Activate with your Ko-fi email.\" Enter the email address you used for the Ko-fi purchase. The app contacts the licence service, verifies your purchase, and activates automatically. Your licence covers up to 3 devices.",
+      faqAppstoreQ:"What is included in the App Store version?",
+      faqAppstoreA:"The App Store version includes debrid cloud transfers (resolving magnets through your debrid provider over HTTPS). It works on iPhone, iPad, and Mac. Updates are managed by the App Store, and Family Sharing is supported. There are no in-app purchases or subscriptions.",
+      faqAppstoreA2:"The direct torrent engine (local peer-to-peer) is only available in the direct-download desktop version.",
+      faqPrivacyQ:"What data does Lidhra collect?",
+      faqPrivacyA:`None. Lidhra has no accounts, no analytics, no telemetry, and no tracking. Your debrid credentials are stored locally on your device and sent only to the debrid provider you chose. See our <a href="privacy.html">Privacy Policy</a> for details.`,
+      faqPlatformQ:"Which platforms are supported?",
+      faqPlatformA:"Lidhra is available on macOS, Windows, Linux (AppImage, deb, Flatpak), iOS (App Store), and Android. A watchOS companion shows transfer status at a glance.",
+      faqNotWorkQ:"My downloads are not starting. What should I check?",
+      faqNotWorkA:"First, verify that your debrid API token is correct and that your debrid account has an active premium subscription. Check your internet connection. If you are on a restrictive network (corporate, school), HTTPS traffic to your debrid provider may be blocked.",
+      faqNotWorkA2:`If the problem persists, email <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a> with your platform, app version, and a description of the issue.`,
+      supReqH:"System requirements",
+      supReqMac:"<b>macOS:</b> macOS 12 Monterey or later (Universal binary)",
+      supReqWin:"<b>Windows:</b> Windows 10 version 1803 or later (x64 / ARM)",
+      supReqLinux:"<b>Linux:</b> Ubuntu 22.04+, Fedora 38+, or equivalent with WebKitGTK",
+      supReqIOS:"<b>iOS / iPadOS:</b> iOS 16 or later",
+      supReqAndroid:"<b>Android:</b> Android 8.0 or later",
+      supFooter:`&copy; 2026 Petros Dhespollari &middot; <a href="/">lidhra.peterdsp.dev</a>`,
+    },
+    el: {
+      title:"Lidhra - Υποστήριξη",
+      supBack:"Πίσω στο Lidhra",
+      supH1:"Υποστήριξη",
+      supSub:"Λάβε βοήθεια με το Lidhra. Βρες απαντήσεις παρακάτω ή επικοινώνησε απευθείας.",
+      supContactH:"Επικοινωνήστε μαζί μας",
+      supContact:`Για ερωτήσεις, αναφορές σφαλμάτων ή αιτήματα λειτουργιών, στείλτε email στο <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a>. Συνήθως απαντάμε εντός 24 ωρών.`,
+      supGithub:`Μπορείτε επίσης να <a href="https://github.com/peterdsp/lidhra/issues" target="_blank" rel="noopener">ανοίξετε ένα issue στο GitHub</a> για αναφορές σφαλμάτων και αιτήματα λειτουργιών.`,
+      supFaqH:"Συχνές ερωτήσεις",
+      faqDebridQ:"Τι είναι η υπηρεσία debrid και τη χρειάζομαι;",
+      faqDebridA:"Η υπηρεσία debrid (όπως Real-Debrid, AllDebrid ή TorBox) είναι μια υπηρεσία cloud τρίτων που κατεβάζει torrents στους διακομιστές της και σας δίνει έναν άμεσο σύνδεσμο HTTPS. Φέρνετε τον δικό σας λογαριασμό debrid και API token. Το Lidhra δεν παρέχει λογαριασμούς debrid ή περιεχόμενο.",
+      faqDebridA2:"Στην έκδοση App Store, απαιτείται λογαριασμός debrid επειδή η άμεση λήψη torrent δεν είναι διαθέσιμη. Στην έκδοση απευθείας λήψης για desktop, μπορείτε να κάνετε torrent τοπικά χωρίς λογαριασμό debrid.",
+      faqTokenQ:"Πώς βρίσκω το API token του debrid μου;",
+      faqTokenA:`Συνδεθείτε στον ιστότοπο του παρόχου debrid σας και αναζητήστε μια σελίδα API ή ρυθμίσεων. Για παράδειγμα, στο Real-Debrid μεταβείτε στο <b>Ο Λογαριασμός μου &rarr; API</b> για να βρείτε το API token σας. Αντιγράψτε το και επικολλήστε το στο Lidhra όταν σας ζητηθεί.`,
+      faqTrialQ:"Υπάρχει δωρεάν δοκιμή;",
+      faqTrialA:"Η έκδοση απευθείας λήψης (macOS, Windows, Linux μέσω Ko-fi) περιλαμβάνει δωρεάν δοκιμή 7 ημερών. Δεν απαιτείται λογαριασμός για να ξεκινήσετε τη δοκιμή. Μετά τη δοκιμή, μια εφάπαξ αγορά άδειας ξεκλειδώνει την εφαρμογή μόνιμα.",
+      faqTrialA2:"Η έκδοση App Store (iPhone, iPad, Mac) δεν έχει δοκιμή. Είναι εφάπαξ αγορά στο ταμείο. Μόλις αγοραστεί, η εφαρμογή είναι πλήρως ξεκλειδωμένη χωρίς πρόσθετες αγορές ή συνδρομές.",
+      faqActivateQ:"Πώς ενεργοποιώ την άδειά μου μετά την αγορά στο Ko-fi;",
+      faqActivateA:"Ανοίξτε το Lidhra και επιλέξτε \"Ενεργοποίηση με το email σας στο Ko-fi.\" Εισάγετε τη διεύθυνση email που χρησιμοποιήσατε για την αγορά στο Ko-fi. Η εφαρμογή επικοινωνεί με την υπηρεσία αδειών, επαληθεύει την αγορά σας και ενεργοποιείται αυτόματα. Η άδειά σας καλύπτει έως 3 συσκευές.",
+      faqAppstoreQ:"Τι περιλαμβάνει η έκδοση App Store;",
+      faqAppstoreA:"Η έκδοση App Store περιλαμβάνει μεταφορές debrid cloud (ανάλυση magnets μέσω του παρόχου debrid σας μέσω HTTPS). Λειτουργεί σε iPhone, iPad και Mac. Οι ενημερώσεις διαχειρίζονται από το App Store και υποστηρίζεται η Οικογενειακή Κοινή Χρήση. Δεν υπάρχουν αγορές εντός εφαρμογής ή συνδρομές.",
+      faqAppstoreA2:"Η μηχανή τοπικού torrent (τοπικό peer-to-peer) είναι διαθέσιμη μόνο στην έκδοση απευθείας λήψης για desktop.",
+      faqPrivacyQ:"Τι δεδομένα συλλέγει το Lidhra;",
+      faqPrivacyA:`Κανένα. Το Lidhra δεν έχει λογαριασμούς, ούτε analytics, ούτε τηλεμετρία, ούτε παρακολούθηση. Τα διαπιστευτήρια debrid σας αποθηκεύονται τοπικά στη συσκευή σας και αποστέλλονται μόνο στον πάροχο debrid που επιλέξατε. Δείτε την <a href="privacy.html">Πολιτική Απορρήτου</a> μας για λεπτομέρειες.`,
+      faqPlatformQ:"Ποιες πλατφόρμες υποστηρίζονται;",
+      faqPlatformA:"Το Lidhra είναι διαθέσιμο σε macOS, Windows, Linux (AppImage, deb, Flatpak), iOS (App Store) και Android. Ένας σύντροφος watchOS δείχνει την κατάσταση μεταφορών με μια ματιά.",
+      faqNotWorkQ:"Οι λήψεις μου δεν ξεκινούν. Τι πρέπει να ελέγξω;",
+      faqNotWorkA:"Πρώτα, επαληθεύστε ότι το API token του debrid σας είναι σωστό και ότι ο λογαριασμός debrid σας έχει ενεργή premium συνδρομή. Ελέγξτε τη σύνδεσή σας στο διαδίκτυο. Αν βρίσκεστε σε περιοριστικό δίκτυο (εταιρικό, σχολικό), η κίνηση HTTPS προς τον πάροχο debrid σας μπορεί να είναι αποκλεισμένη.",
+      faqNotWorkA2:`Αν το πρόβλημα παραμένει, στείλτε email στο <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a> με την πλατφόρμα σας, την έκδοση της εφαρμογής και μια περιγραφή του προβλήματος.`,
+      supReqH:"Απαιτήσεις συστήματος",
+      supReqMac:"<b>macOS:</b> macOS 12 Monterey ή νεότερο (Universal binary)",
+      supReqWin:"<b>Windows:</b> Windows 10 έκδοση 1803 ή νεότερο (x64 / ARM)",
+      supReqLinux:"<b>Linux:</b> Ubuntu 22.04+, Fedora 38+ ή ισοδύναμο με WebKitGTK",
+      supReqIOS:"<b>iOS / iPadOS:</b> iOS 16 ή νεότερο",
+      supReqAndroid:"<b>Android:</b> Android 8.0 ή νεότερο",
+      supFooter:`&copy; 2026 Petros Dhespollari &middot; <a href="/">lidhra.peterdsp.dev</a>`,
+    },
+    sq: {
+      title:"Lidhra - Ndihmë",
+      supBack:"Kthehu te Lidhra",
+      supH1:"Ndihmë",
+      supSub:"Merr ndihmë me Lidhra. Gjej përgjigje më poshtë ose na kontakto drejtpërdrejt.",
+      supContactH:"Na kontaktoni",
+      supContact:`Për pyetje, raporte gabimesh ose kërkesa veçorish, na dërgoni email te <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a>. Zakonisht përgjigjemi brenda 24 orësh.`,
+      supGithub:`Mund gjithashtu të <a href="https://github.com/peterdsp/lidhra/issues" target="_blank" rel="noopener">hapni një çështje në GitHub</a> për raporte gabimesh dhe kërkesa veçorish.`,
+      supFaqH:"Pyetje të shpeshta",
+      faqDebridQ:"Çfarë është një shërbim debrid dhe a më duhet?",
+      faqDebridA:"Një shërbim debrid (si Real-Debrid, AllDebrid ose TorBox) është një shërbim cloud i palëve të treta që shkarkon torrent-e në serverët e tij dhe ju jep një lidhje të drejtpërdrejtë HTTPS. Ju sillni llogarinë tuaj debrid dhe tokenin API. Lidhra nuk ofron llogari debrid ose përmbajtje.",
+      faqDebridA2:"Në versionin e App Store, kërkohet llogari debrid sepse shkarkimi direkt i torrent-eve nuk është i disponueshëm. Në versionin e shkarkimit të drejtpërdrejtë për desktop, mund të bëni torrent lokalisht pa llogari debrid.",
+      faqTokenQ:"Si e gjej tokenin API të debrid-it tim?",
+      faqTokenA:`Hyni në faqen e ofruesit tuaj debrid dhe kërkoni një faqe API ose cilësimesh. Për shembull, në Real-Debrid shkoni te <b>Llogaria Ime &rarr; API</b> për të gjetur tokenin tuaj API. Kopjojeni dhe ngjiteni në Lidhra kur t'ju kërkohet.`,
+      faqTrialQ:"A ka provë falas?",
+      faqTrialA:"Versioni i shkarkimit të drejtpërdrejtë (macOS, Windows, Linux përmes Ko-fi) përfshin provë falas 7-ditore. S'kërkohet llogari për të nisur provën. Pas provës, blerja e licencës një herë e shkyç aplikacionin përgjithmonë.",
+      faqTrialA2:"Versioni i App Store (iPhone, iPad, Mac) nuk ka provë. Është blerje një herë në arkë. Pasi blihet, aplikacioni shkyçet plotësisht pa blerje ose abonime shtesë.",
+      faqActivateQ:"Si e aktivizoj licencën pas blerjes në Ko-fi?",
+      faqActivateA:"Hapni Lidhra dhe zgjidhni \"Aktivizo me email-in tënd të Ko-fi.\" Fusni adresën email që përdorët për blerjen në Ko-fi. Aplikacioni kontakton shërbimin e licencave, verifikon blerjen tuaj dhe aktivizohet automatikisht. Licenca juaj mbulon deri në 3 pajisje.",
+      faqAppstoreQ:"Çfarë përfshihet në versionin e App Store?",
+      faqAppstoreA:"Versioni i App Store përfshin transferime debrid cloud (zgjidhje magnet-esh përmes ofruesit tuaj debrid mbi HTTPS). Funksionon në iPhone, iPad dhe Mac. Përditësimet menaxhohen nga App Store, dhe Ndarja Familjare mbështetet. S'ka blerje brenda aplikacionit ose abonime.",
+      faqAppstoreA2:"Motori lokal i torrent-it (peer-to-peer lokal) është i disponueshëm vetëm në versionin e shkarkimit të drejtpërdrejtë për desktop.",
+      faqPrivacyQ:"Çfarë të dhënash mbledh Lidhra?",
+      faqPrivacyA:`Asnjë. Lidhra nuk ka llogari, as analitikë, as telemetri, as gjurmim. Kredencialet tuaja debrid ruhen lokalisht në pajisjen tuaj dhe dërgohen vetëm te ofruesi debrid që zgjodhët. Shihni <a href="privacy.html">Politikën e Privatësisë</a> tonë për detaje.`,
+      faqPlatformQ:"Cilat platforma mbështeten?",
+      faqPlatformA:"Lidhra është i disponueshëm në macOS, Windows, Linux (AppImage, deb, Flatpak), iOS (App Store) dhe Android. Një shoqërues watchOS tregon statusin e transferimeve me një vështrim.",
+      faqNotWorkQ:"Shkarkimet e mia nuk nisin. Çfarë duhet të kontrolloj?",
+      faqNotWorkA:"Së pari, verifikoni që tokeni API i debrid-it tuaj është i saktë dhe që llogaria juaj debrid ka abonimin premium aktiv. Kontrolloni lidhjen tuaj të internetit. Nëse jeni në një rrjet kufizues (korporativ, shkollor), trafiku HTTPS drejt ofruesit tuaj debrid mund të jetë i bllokuar.",
+      faqNotWorkA2:`Nëse problemi vazhdon, dërgoni email te <a href="mailto:info@peterdsp.dev">info@peterdsp.dev</a> me platformën tuaj, versionin e aplikacionit dhe një përshkrim të problemit.`,
+      supReqH:"Kërkesat e sistemit",
+      supReqMac:"<b>macOS:</b> macOS 12 Monterey ose më i ri (Universal binary)",
+      supReqWin:"<b>Windows:</b> Windows 10 versioni 1803 ose më i ri (x64 / ARM)",
+      supReqLinux:"<b>Linux:</b> Ubuntu 22.04+, Fedora 38+ ose ekuivalent me WebKitGTK",
+      supReqIOS:"<b>iOS / iPadOS:</b> iOS 16 ose më i ri",
+      supReqAndroid:"<b>Android:</b> Android 8.0 ose më i ri",
+      supFooter:`&copy; 2026 Petros Dhespollari &middot; <a href="/">lidhra.peterdsp.dev</a>`,
+    },
+  };
+
+  let LANG = localStorage.getItem('lidhra_site_lang') || (['el','sq'].find(l=>(navigator.language||'en').toLowerCase().startsWith(l)) || 'en');
+  function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.en[k] || ''; }
+  function applyI18n(){
+    document.documentElement.lang=LANG;
+    document.title=t('title');
+    document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.getAttribute('data-i18n')); if(v) el.textContent=v; });
+    document.querySelectorAll('[data-i18n-html]').forEach(el=>{ const v=t(el.getAttribute('data-i18n-html')); if(v) el.innerHTML=v; });
+    const s=document.getElementById('lang'); if(s) s.value=LANG;
+  }
+  (function(){ const s=document.getElementById('lang');
+    const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function switchLang(){ LANG=s.value; localStorage.setItem('lidhra_site_lang',LANG);
+      if(!reduce&&document.startViewTransition){ document.startViewTransition(applyI18n); } else { applyI18n(); } }
+    if(s){ s.value=LANG; s.addEventListener('change',switchLang); }
+    applyI18n();
+  })();
+})();
+</script>
+</body>
+</html>
