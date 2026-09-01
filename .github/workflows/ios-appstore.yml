@@ -31,11 +31,12 @@ jobs:
       IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
       KEYCHAIN_PASSWORD: ${{ secrets.CI_KEYCHAIN_PASSWORD }}
       TEAMID: ${{ secrets.APPLE_TEAM_ID }}
-      # App Store Connect API key: lets Xcode do automatic signing on CI with no
-      # logged-in Apple account (it creates/downloads the Apple Distribution cert
-      # and App Store profile itself). This key must have Admin access.
-      APPLE_API_ISSUER: ${{ secrets.ASC_ISSUER_ID }}
-      APPLE_API_KEY: ${{ secrets.ASC_KEY_ID }}
+      # Names `tauri ios build` reads to do MANUAL signing (from the same secrets).
+      # Without these, Tauri falls back to automatic signing, which needs an Apple
+      # account logged into Xcode and fails on CI with "No Accounts" / "No profiles".
+      IOS_CERTIFICATE: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+      IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DIST_CERT_P12_PASSWORD }}
+      IOS_MOBILE_PROVISION: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
 
@@ -66,31 +67,69 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         run: |
           set -euo pipefail
-          # 1. A keychain for Xcode to store the Apple Distribution certificate it
-          #    creates or downloads via the App Store Connect API key.
+          # 1. Import the iOS distribution cert into a temp keychain.
           KEYCHAIN="$RUNNER_TEMP/ios.keychain-db"
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
           security set-keychain-settings -lut 21600 "$KEYCHAIN"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "$IOS_DIST_CERT_P12_BASE64" | base64 -d > "$RUNNER_TEMP/ios.p12"
+          security import "$RUNNER_TEMP/ios.p12" -k "$KEYCHAIN" -P "$IOS_DIST_CERT_P12_PASSWORD" -T /usr/bin/codesign
           security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
-          security default-keychain -s "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          rm -f "$RUNNER_TEMP/ios.p12"
 
-          # 2. App Store Connect API key, used for BOTH automatic signing and upload.
+          # 2. Install the provisioning profile and read its identity.
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          PROFILE="$HOME/Library/MobileDevice/Provisioning Profiles/lidhra.mobileprovision"
+          echo "$IOS_PROVISION_PROFILE_BASE64" | base64 -d > "$PROFILE"
+          PLIST="$(security cms -D -i "$PROFILE" 2>/dev/null)"
+          PROFILE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< "$PLIST")"
+          PROFILE_UUID="$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< "$PLIST")"
+          APP_ID="$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' /dev/stdin <<< "$PLIST" 2>/dev/null || true)"
+          HAS_DEVICES="$(/usr/libexec/PlistBuddy -c 'Print :ProvisionedDevices' /dev/stdin <<< "$PLIST" >/dev/null 2>&1 && echo yes || echo no)"
+          echo "Provisioning profile: name='$PROFILE_NAME' uuid='$PROFILE_UUID' app-id='$APP_ID' has-devices='$HAS_DEVICES'"
+          # An App Store distribution profile lists no devices. If it does, it is a
+          # development/ad-hoc profile and cannot be uploaded to the App Store.
+          if [ "$HAS_DEVICES" = "yes" ]; then
+            echo "::error::IOS_PROVISION_PROFILE_BASE64 is a development/ad-hoc profile (it lists devices). Store the App Store distribution profile for dev.peterdsp.lidhra instead."; exit 1
+          fi
+          # Xcode discovers profiles by scanning this dir; also install under its UUID.
+          cp "$PROFILE" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+
+          # 3. App Store Connect API key for altool.
           mkdir -p "$HOME/.appstoreconnect/private_keys"
-          KEY_P8="$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
-          echo "$ASC_API_KEY_P8_BASE64" | base64 -d > "$KEY_P8"
-          export APPLE_API_KEY_PATH="$KEY_P8"
+          echo "$ASC_API_KEY_P8_BASE64" | base64 -d > "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
 
-          # 3. Switch to the App Store flavor and verify. A silent failure here would
+          # 4. Switch to the App Store flavor and verify. A silent failure here would
           #    ship the Ko-fi trial + "Buy on Ko-fi" UI and get rejected under 3.1.1.
           sed -i '' 's/^default = \["kofi"\]/default = ["appstore"]/' app/src-tauri/Cargo.toml
           grep -q '^default = \["appstore"\]' app/src-tauri/Cargo.toml \
             || { echo "::error::appstore feature not enabled - refusing to ship the Ko-fi build to the App Store"; exit 1; }
 
-          # 4. Build with automatic signing. APPLE_API_ISSUER / APPLE_API_KEY /
-          #    APPLE_API_KEY_PATH let Xcode create or download the Apple Distribution
-          #    cert + App Store profile with no logged-in Apple account.
+          # 5. Generate the Xcode project, then select our App Store profile. Tauri
+          #    keeps CODE_SIGN_STYLE=Manual (from IOS_MOBILE_PROVISION) but does not
+          #    pick a profile, so xcodebuild fails with "requires a provisioning
+          #    profile" until we set the specifier on the generated project.
           ( cd app && cargo tauri ios init --ci --skip-targets-install )
+          gem install xcodeproj --no-document --quiet
+          TAURI_PBXPROJ="app/src-tauri/gen/apple/lidhra-desktop.xcodeproj" PROFILE_NAME="$PROFILE_NAME" ruby -e '
+            require "xcodeproj"
+            proj = Xcodeproj::Project.open(ENV["TAURI_PBXPROJ"])
+            proj.targets.each do |t|
+              t.build_configurations.each do |c|
+                bs = c.build_settings
+                bs["CODE_SIGN_STYLE"] = "Manual"
+                bs["DEVELOPMENT_TEAM"] = ENV["TEAMID"]
+                bs["CODE_SIGN_IDENTITY"] = "Apple Distribution"
+                bs["CODE_SIGN_IDENTITY[sdk=iphoneos*]"] = "Apple Distribution"
+                bs["PROVISIONING_PROFILE_SPECIFIER"] = ENV["PROFILE_NAME"]
+              end
+            end
+            proj.save
+            puts "Patched signing (team=#{ENV["TEAMID"]}, profile=#{ENV["PROFILE_NAME"]}) for: #{proj.targets.map(&:name).join(", ")}"
+          '
+
+          # 6. Build the signed IPA.
           ( cd app && APPLE_DEVELOPMENT_TEAM="$TEAMID" cargo tauri ios build --export-method app-store-connect )
 
           IPA=$(ls -t app/src-tauri/gen/apple/build/**/*.ipa 2>/dev/null | head -1)
