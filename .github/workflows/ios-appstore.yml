@@ -80,8 +80,13 @@ jobs:
           mkdir -p "$HOME/.appstoreconnect/private_keys"
           echo "$ASC_API_KEY_P8_BASE64" | base64 -d > "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
 
-          # 4. Build the signed IPA (appstore feature = no self-updater).
+          # 4. Build the signed IPA (appstore feature = no trial, no license UI,
+          #    no self-updater). Verify the swap actually happened: if it silently
+          #    fails, the Ko-fi trial + "Buy on Ko-fi" UI would ship and get
+          #    rejected under guideline 3.1.1, so fail the build instead.
           sed -i '' 's/^default = \["kofi"\]/default = ["appstore"]/' app/src-tauri/Cargo.toml
+          grep -q '^default = \["appstore"\]' app/src-tauri/Cargo.toml \
+            || { echo "::error::appstore feature not enabled - refusing to ship the Ko-fi build to the App Store"; exit 1; }
           ( cd app && cargo tauri ios init --ci --skip-targets-install )
           ( cd app && APPLE_DEVELOPMENT_TEAM="$TEAMID" cargo tauri ios build --export-method app-store-connect )
 

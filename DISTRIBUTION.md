@@ -9,7 +9,7 @@ Lidhra ships in two flavors from one codebase, chosen with a Cargo feature.
 | Trial | **7 days free**, then a license key | none (paid upfront) |
 | License logic | Ed25519 key check (offline) | none (store receipt is the license) |
 | Auto-update | **yes** (built-in updater) | no (the store updates it) |
-| Build | `cargo tauri build` | `cargo tauri build --no-default-features --features appstore -c src-tauri/tauri.appstore.conf.json` |
+| Build | `cargo tauri build` | `cargo tauri build --no-default-features --features appstore` |
 
 The 7-day trial + license engine lives in `crates/lidhra-license` and is verified by tests.
 The App Store build compiles the trial/updater out, so there is no self-update and nothing that
@@ -53,8 +53,16 @@ themselves. Nothing else to host.
 
 ## App Store ($9.99, no self-update)
 
-- Build the `appstore` flavor with a config that has **no** `plugins.updater` block
-  (`src-tauri/tauri.appstore.conf.json`; copy `tauri.conf.json` and delete the updater section).
+- Build the `appstore` flavor. The `appstore` Cargo feature (not a separate config
+  file) is what removes the self-updater, the 7-day trial, and the whole license /
+  "Buy on Ko-fi" UI. Enable it by making it the default before building:
+  `sed -i '' 's/^default = \["kofi"\]/default = ["appstore"]/' app/src-tauri/Cargo.toml`,
+  then `cargo tauri build` (desktop) or `cargo tauri ios build` (iOS).
+- Verify the swap took: `grep '^default' app/src-tauri/Cargo.toml` must show
+  `default = ["appstore"]`. If you archive from Xcode directly you get the default
+  `kofi` flavor, which ships the trial + "Buy on Ko-fi" UI and gets rejected under
+  guideline 3.1.1. The iOS CI (`ios-appstore.yml`) does this swap and fails the build
+  if it did not take.
 - Sign, notarize, and submit through Xcode / Transporter with your Apple Developer account.
 - Set the price tier to $9.99. Apple handles updates.
 

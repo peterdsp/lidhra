@@ -211,6 +211,10 @@ struct Lic {
     state: String,
     days_left: u32,
     owner: Option<String>,
+    /// True when an external store (Apple) handles all purchasing. The UI must
+    /// then never show trial, license-key, or external purchase UI (guideline
+    /// 3.1.1). Only the Ko-fi / direct build sets this false.
+    store: bool,
 }
 
 #[cfg(not(feature = "appstore"))]
@@ -218,9 +222,9 @@ fn lic_dto(dir: &Path) -> Lic {
     let install = lidhra_license::load_or_init_install(dir, now_unix());
     let lic = lidhra_license::load_license(dir);
     match lidhra_license::status(now_unix(), install, lic.as_deref(), lidhra_license::ISSUER_PUBKEY_HEX) {
-        lidhra_license::Status::Licensed { owner } => Lic { state: "licensed".into(), days_left: 0, owner: Some(owner) },
-        lidhra_license::Status::Trial { days_left } => Lic { state: "trial".into(), days_left, owner: None },
-        lidhra_license::Status::Expired => Lic { state: "expired".into(), days_left: 0, owner: None },
+        lidhra_license::Status::Licensed { owner } => Lic { state: "licensed".into(), days_left: 0, owner: Some(owner), store: false },
+        lidhra_license::Status::Trial { days_left } => Lic { state: "trial".into(), days_left, owner: None, store: false },
+        lidhra_license::Status::Expired => Lic { state: "expired".into(), days_left: 0, owner: None, store: false },
     }
 }
 
@@ -264,21 +268,22 @@ async fn license_activate_email(state: tauri::State<'_, AppState>, email: String
     }
 }
 
-// App Store build: paid upfront, always licensed, no trial.
+// App Store build: paid upfront, always licensed, no trial. `store: true` tells
+// the UI to hide every trial / license-key / external purchase element.
 #[cfg(feature = "appstore")]
 #[tauri::command]
 async fn license(_s: tauri::State<'_, AppState>) -> Result<Lic, String> {
-    Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()) })
+    Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()), store: true })
 }
 #[cfg(feature = "appstore")]
 #[tauri::command]
 async fn license_activate(_s: tauri::State<'_, AppState>, _key: String) -> Result<Lic, String> {
-    Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()) })
+    Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()), store: true })
 }
 #[cfg(feature = "appstore")]
 #[tauri::command]
 async fn license_activate_email(_s: tauri::State<'_, AppState>, _email: String) -> Result<Lic, String> {
-    Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()) })
+    Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()), store: true })
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

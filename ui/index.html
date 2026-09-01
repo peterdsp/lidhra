@@ -189,6 +189,10 @@
 
   // ---------- backend (browser -> /api, Tauri -> invoke) ----------
   const TAURI = !!(window.__TAURI__ && window.__TAURI__.core);
+  // iOS ships only through the App Store, where trial / license-key / external
+  // purchase UI violates guideline 3.1.1. Hide that UI on iOS no matter what the
+  // build flags say, so a mis-built binary can never expose it.
+  const IOS = TAURI && /iP(hone|ad|od)/.test(navigator.userAgent || '');
   const ROUTES = {
     providers:['GET','/api/providers'], connect:['POST','/api/connect'],
     add:['POST','/api/add'], fetch:['POST','/api/fetch'],
@@ -298,7 +302,8 @@
   async function refreshLicense(){
     try{
       const l=await api('license'); const el=$('#lic');
-      if(l.state==='licensed'){ el.className='lic'; el.innerHTML=''; return; }
+      // Store-managed (App Store) or iOS: never render trial / license / purchase UI.
+      if(IOS || l.store===true || l.state==='licensed'){ el.className='lic'; el.innerHTML=''; return; }
       if(l.state==='trial'){ el.className='lic trial show';
         el.innerHTML=`<span><b>${l.days_left}</b> ${t('trial_left',l.days_left).replace(/^\S+\s/,'')}</span><a href="https://ko-fi.com/peterdsp" target="_blank">${t('get_license')}</a>`; return; }
       el.className='lic expired show';
