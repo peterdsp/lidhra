@@ -31,6 +31,12 @@ jobs:
       IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
       KEYCHAIN_PASSWORD: ${{ secrets.CI_KEYCHAIN_PASSWORD }}
       TEAMID: ${{ secrets.APPLE_TEAM_ID }}
+      # Names `tauri ios build` reads to do MANUAL signing (from the same secrets).
+      # Without these, Tauri falls back to automatic signing, which needs an Apple
+      # account logged into Xcode and fails on CI with "No Accounts" / "No profiles".
+      IOS_CERTIFICATE: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+      IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DIST_CERT_P12_PASSWORD }}
+      IOS_MOBILE_PROVISION: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
 
