@@ -119,6 +119,13 @@ jobs:
           #    pick a profile, so xcodebuild fails with "requires a provisioning
           #    profile" until we set the specifier on the generated project.
           ( cd app && cargo tauri ios init --ci --skip-targets-install )
+          # `cargo tauri ios init` writes a PLACEHOLDER AppIcon (it does not read
+          # icons/ios/), so CI builds shipped the wrong icon. Overwrite the generated
+          # AppIcon set with our real cloud icons before building.
+          APPICON="$(find app/src-tauri/gen/apple -type d -name '*.appiconset' | head -1)"
+          if [ -z "$APPICON" ]; then echo "::error::AppIcon.appiconset not found - would ship a placeholder icon"; exit 1; fi
+          cp app/src-tauri/icons/ios/*.png "$APPICON"/
+          echo "Installed real AppIcon into $APPICON ($(ls "$APPICON"/AppIcon-*.png 2>/dev/null | wc -l | tr -d ' ') png files)"
           gem install xcodeproj --no-document --quiet
           TAURI_PBXPROJ="app/src-tauri/gen/apple/lidhra-desktop.xcodeproj" PROFILE_NAME="$PROFILE_NAME" ruby -e '
             require "xcodeproj"
