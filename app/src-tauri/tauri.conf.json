@@ -32,7 +32,7 @@
     "targets": "all",
     "createUpdaterArtifacts": true,
     "iOS": {
-      "bundleVersion": "3"
+      "bundleVersion": "4"
     },
     "icon": [
       "icons/32x32.png",
