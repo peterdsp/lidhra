@@ -121,26 +121,44 @@
     flex:0 0 auto;display:flex;align-items:center;gap:12px;
     height:52px;margin:calc(var(--sat) + 8px) calc(var(--mx) + var(--sar)) 0 calc(var(--mx) + var(--sal));
   }
-  .logo{width:36px;height:36px;border-radius:10px;flex:0 0 auto;
-    background:var(--applogo) center/cover no-repeat;
-    box-shadow:0 4px 12px rgba(4,24,48,0.18)}
-  .title{font-size:24px;line-height:29px;font-weight:700;letter-spacing:-0.35px;margin:0;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* In-app wordmark: no icon, monogram, or mark beside the name (production
+     icon assets are untouched and still ship for the Home Screen / store). */
+  .title{font-family:"SF Pro Display",-apple-system,BlinkMacSystemFont,var(--font);
+    font-size:27px;line-height:32px;font-weight:750;letter-spacing:-0.45px;margin:0;
+    color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* keep >=20px between the wordmark and the Add button */
+  .header .title-wrap{margin-right:8px}
   .header .spacer{flex:1}
   .speed{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--text-secondary);white-space:nowrap}
   .speed .d{color:var(--down-ink)}
   .speed:empty{display:none}
   .subtitle{display:none}
 
+  /* ---------- Press physics (shared) ----------
+     Pressed uses a fast 90ms ease-out; release settles with a springy
+     cubic-bezier. The visual surface and its label share one transform so
+     they always move together. A specular highlight tracks the touch point
+     (set via --hlx/--hly in JS); no Material circular ripple. */
+  .add,.btn,.empty .cta,button.card,.seg,.tab{-webkit-tap-highlight-color:transparent}
+
   /* Add button (prominent green glass) */
   .add{
+    position:relative;overflow:hidden;
     width:52px;height:52px;flex:0 0 auto;border-radius:26px;border:1px solid rgba(255,255,255,0.58);
     background:linear-gradient(150deg,#28e39c,#22cd77);
     color:#062c20;font-size:22px;font-weight:700;line-height:1;cursor:pointer;
     display:grid;place-items:center;
     box-shadow:0 10px 24px rgba(20,205,129,0.25), inset 0 1px 0 rgba(255,255,255,0.5);
-    transition:transform .14s ease;
+    transition:transform 300ms cubic-bezier(.16,1.15,.30,1), filter 220ms ease-out, box-shadow 260ms ease-out;
   }
-  .add:active{transform:scale(.94)}
+  .add>*{position:relative;z-index:1}
+  .add::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+    background:radial-gradient(58% 58% at var(--hlx,50%) var(--hly,26%),rgba(255,255,255,.55),transparent 70%);
+    transition:opacity 220ms ease-out}
+  .add.is-pressed{transform:scale(.965);filter:saturate(1.05);
+    box-shadow:0 6px 16px rgba(20,205,129,.16), inset 0 1px 0 rgba(255,255,255,.74);
+    transition:transform 90ms ease-out, filter 90ms ease-out, box-shadow 90ms ease-out}
+  .add.is-pressed::after{opacity:1;transition:opacity 90ms ease-out}
   .add .lbl{display:none}
 
   /* ---------- Filter capsule ---------- */
@@ -151,18 +169,27 @@
   }
   .plate{
     position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 24px)/3);
-    border-radius:24px;pointer-events:none;
+    border-radius:24px;pointer-events:none;transform-origin:center;will-change:transform;
     background:var(--plate-fill);border:1px solid var(--plate-border);
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), 0 4px 14px rgba(6,54,39,0.11);
     transform:translateX(0);
     transition:transform .26s cubic-bezier(0.22,0.78,0.20,1);
   }
+  /* One selection plate that travels and stretches, then settles into the
+     destination capsule (no fade of separate backgrounds, no overshoot). */
+  @keyframes plate-move{
+    0%{transform:translateX(var(--pf,0)) scaleX(1)}
+    48%{transform:translateX(calc((var(--pf,0) + var(--pt,0)) / 2)) scaleX(1.09)}
+    100%{transform:translateX(var(--pt,0)) scaleX(1)}
+  }
+  .plate.morph,.tabplate.morph{transition:none;animation:plate-move .26s cubic-bezier(0.22,0.78,0.20,1)}
   .seg{
     position:relative;z-index:1;border:none;background:transparent;cursor:pointer;border-radius:24px;
     min-height:48px;display:flex;align-items:center;justify-content:center;gap:6px;
     font-size:15px;line-height:20px;font-weight:600;color:var(--seg-inactive);
-    transition:color .16s ease;
+    transition:color .16s ease, transform 300ms cubic-bezier(.16,1.15,.30,1);
   }
+  .seg.is-pressed{transform:scale(.965);transition:transform 90ms ease-out}
   .seg .n{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--seg-inactive);opacity:.8}
   .seg[aria-selected="true"]{color:var(--seg-active)}
   .seg[aria-selected="true"] .n{color:var(--seg-active)}
@@ -173,6 +200,9 @@
     padding:14px calc(var(--mx) + var(--sar)) calc(var(--tabh) + var(--sab) + 28px) calc(var(--mx) + var(--sal));
   }
   .content::-webkit-scrollbar{width:0;height:0}
+  /* Lock background scroll behind an open modal sheet (belt-and-suspenders on
+     WebViews without `inert`; the scrim also intercepts pointer + wheel). */
+  body.sheet-open .content{overflow:hidden}
   .list{display:flex;flex-direction:column;gap:12px}
 
   .card{
@@ -182,8 +212,8 @@
     box-shadow:0 1px 2px var(--card-shadow),0 8px 22px color-mix(in srgb,var(--card-shadow) 70%,transparent);
     transition:transform .16s ease,box-shadow .16s ease;
   }
-  button.card{cursor:pointer}
-  button.card:active{transform:scale(.992)}
+  button.card{cursor:pointer;transition:transform 300ms cubic-bezier(.16,1.15,.30,1), box-shadow 260ms ease-out}
+  button.card.is-pressed{transform:scale(.985);box-shadow:0 1px 2px var(--card-shadow);transition:transform 90ms ease-out, box-shadow 90ms ease-out}
   .card .tile{grid-row:1 / span 2;grid-column:1;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
     color:#fff;font-family:var(--mono);font-size:16px;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px rgba(12,40,30,.14)}
   .card .nm{grid-row:1;grid-column:2;font-size:15px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -207,17 +237,21 @@
   .empty p{margin:8px 0 0;font-size:16px;line-height:22px;font-weight:400;color:var(--text-secondary);max-width:329px}
   .empty .cta{margin-top:28px;min-width:217px;height:52px;padding:0 24px;border-radius:26px;border:1px solid rgba(255,255,255,0.58);
     background:linear-gradient(150deg,#28e39c,#22cd77);color:#062c20;font-size:16px;font-weight:700;cursor:pointer;
-    box-shadow:0 10px 24px rgba(20,205,129,0.25), inset 0 1px 0 rgba(255,255,255,0.5);transition:transform .14s ease}
-  .empty .cta:active{transform:scale(.97)}
+    box-shadow:0 10px 24px rgba(20,205,129,0.25), inset 0 1px 0 rgba(255,255,255,0.5);
+    transition:transform 300ms cubic-bezier(.16,1.15,.30,1), filter 220ms ease-out, box-shadow 260ms ease-out}
+  .empty .cta.is-pressed{transform:scale(.965);filter:saturate(1.05);
+    box-shadow:0 5px 14px rgba(20,205,129,.16), inset 0 1px 0 rgba(255,255,255,.72);
+    transition:transform 90ms ease-out, filter 90ms ease-out, box-shadow 90ms ease-out}
 
   /* ---------- Floating tab bar ---------- */
   .tabbar{
     position:fixed;left:calc(var(--mx) + var(--sal));right:calc(var(--mx) + var(--sar));
     bottom:calc(var(--sab) + 10px);height:var(--tabh);border-radius:34px;z-index:30;
-    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px;
+    display:grid;grid-template-columns:repeat(var(--tabcount,3),1fr);gap:8px;padding:4px;
   }
   .tabplate{
-    position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 24px)/3);border-radius:30px;pointer-events:none;
+    position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - var(--tabcount,3) * 8px)/var(--tabcount,3));border-radius:30px;pointer-events:none;
+    transform-origin:center;will-change:transform;
     background:var(--tabplate-fill);border:1px solid var(--tabplate-border);
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);
     transform:translateX(0);
@@ -225,11 +259,13 @@
   }
   .tab{
     position:relative;z-index:1;border:none;background:transparent;cursor:pointer;border-radius:30px;
+    min-height:60px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-    color:var(--tab-inactive);transition:color .16s ease;
+    color:var(--tab-inactive);transition:color .16s ease, transform 300ms cubic-bezier(.16,1.15,.30,1);
   }
+  .tab.is-pressed{transform:scale(.965);transition:transform 90ms ease-out}
   .tab svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .tab .tl{font-size:11px;line-height:14px;font-weight:600}
+  .tab .tl{font-size:10.5px;line-height:13px;font-weight:600}
   .tab[aria-selected="true"]{color:var(--tab-selected)}
 
   /* license banner (direct build only) */
@@ -243,14 +279,26 @@
   .lic input{flex:1;min-width:150px} .lic a{margin-left:auto;font-weight:600}
   /* KOFI:END */
 
-  /* ---------- Sheets ---------- */
-  .scrim{position:fixed;inset:0;background:rgba(9,20,16,.34);opacity:0;visibility:hidden;transition:opacity .22s ease,visibility .22s ease;z-index:40}
-  .scrim.show{opacity:1;visibility:visible}
-  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;transform:translateY(100%);
-    transition:transform .28s cubic-bezier(.32,.72,0,1);border-radius:26px 26px 0 0;
-    padding:10px calc(18px + var(--sar)) calc(20px + var(--sab)) calc(18px + var(--sal));max-height:86dvh;overflow-y:auto}
-  .sheet.show{transform:translateY(0)}
-  .sheet .grab{width:38px;height:5px;border-radius:100px;background:var(--card-border);margin:2px auto 14px}
+  /* ---------- Floating Liquid Glass bottom sheet ----------
+     A detached, inset card that morphs up from the control that opened it
+     (transform-origin follows the opener via --sheet-ox). Backdrop tints only,
+     no heavy full-app blur. Opens with a soft settle, closes crisply. */
+  .scrim{position:fixed;inset:0;background:rgba(4,16,12,0);visibility:hidden;z-index:40;
+    transition:background .18s ease, visibility 0s linear .18s}
+  .scrim.show{visibility:visible;background:rgba(4,16,12,.22);transition:background .18s ease}
+  .sheet{position:fixed;z-index:50;
+    left:calc(8px + var(--sal));right:calc(8px + var(--sar));bottom:calc(var(--sab) + 8px);
+    width:auto;max-width:620px;margin:0 auto;
+    max-height:min(78dvh,720px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+    border-radius:32px;padding:24px 20px;padding-bottom:max(24px,var(--sab));
+    transform-origin:var(--sheet-ox,50%) 100%;
+    opacity:0;transform:translate3d(0,calc(100% + 24px),0) scale(.98);
+    transition:opacity .26s cubic-bezier(.40,0,1,1), transform .26s cubic-bezier(.40,0,1,1);
+    will-change:transform,opacity}
+  .sheet.show{opacity:1;transform:translate3d(0,0,0) scale(1);
+    transition:opacity .42s cubic-bezier(.16,1,.30,1), transform .42s cubic-bezier(.16,1,.30,1)}
+  .sheet.dragging{transition:none}
+  .sheet .grab{width:36px;height:5px;border-radius:2.5px;background:var(--card-border);margin:10px auto 14px;cursor:grab;touch-action:none}
   .sheet h2{margin:0 0 4px;font-size:20px;font-weight:800;letter-spacing:-.01em}
   .sheet .hint{color:var(--text-secondary);font-size:13.5px;margin:0 0 16px}
   .field{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
@@ -261,15 +309,24 @@
   input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(24,216,143,.22)}
   input.mono{font-family:var(--mono)}
   select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2361766d' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
-  .btn{width:100%;min-height:52px;border:none;border-radius:14px;background:linear-gradient(150deg,#28e39c,#22cd77);color:#062c20;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(20,205,129,.3);transition:transform .14s ease}
-  .btn:active{transform:scale(.98)}
+  .btn{position:relative;overflow:hidden;width:100%;min-height:52px;border:none;border-radius:14px;background:linear-gradient(150deg,#28e39c,#22cd77);color:#062c20;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(20,205,129,.3);
+    transition:transform 300ms cubic-bezier(.16,1.15,.30,1), filter 220ms ease-out, box-shadow 260ms ease-out}
+  .btn>*{position:relative;z-index:1}
+  .btn::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+    background:radial-gradient(72% 120% at var(--hlx,50%) var(--hly,30%),rgba(255,255,255,.5),transparent 72%);transition:opacity 220ms ease-out}
+  .btn.is-pressed{transform:scale(.965);filter:saturate(1.05);transition:transform 90ms ease-out, filter 90ms ease-out, box-shadow 90ms ease-out}
+  .btn.is-pressed::after{opacity:1;transition:opacity 90ms ease-out}
+  .btn:not(.sec).is-pressed{box-shadow:0 2px 9px rgba(20,205,129,.2), inset 0 1px 0 rgba(255,255,255,.6)}
+  .btn.sec.is-pressed{box-shadow:none}
   .btn.sec{background:color-mix(in srgb,var(--card) 88%,var(--text-secondary));color:var(--text-primary);box-shadow:none;border:1px solid var(--card-border)}
   .btn-row{display:flex;gap:10px}.btn-row .btn{flex:1}
   .status-line{display:flex;align-items:center;gap:9px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--card) 70%,transparent);border:1px solid var(--card-border);margin-bottom:14px;font-size:14px}
   .status-line .dot{width:9px;height:9px;border-radius:50%;background:var(--pause);flex:0 0 auto}
   .status-line .dot.on{background:var(--down);box-shadow:0 0 0 3px rgba(22,184,119,.2)}
   .status-line .who{font-weight:600;color:var(--text-primary)}
-  .status-line .act{margin-left:auto;font-weight:700;color:var(--seed-ink);background:none;border:none;cursor:pointer;font-size:14px;min-height:44px;padding:0 6px;margin-right:-6px}
+  .status-line .act{margin-left:auto;font-weight:700;color:var(--seed-ink);background:none;border:none;cursor:pointer;font-size:14px;min-height:44px;padding:0 6px;margin-right:-6px;border-radius:10px;-webkit-tap-highlight-color:transparent;
+    transition:transform 300ms cubic-bezier(.16,1.15,.30,1), opacity 220ms ease-out}
+  .status-line .act.is-pressed{transform:scale(.94);opacity:.7;transition:transform 90ms ease-out, opacity 90ms ease-out}
   .form-msg{font-family:var(--mono);font-size:12px;color:var(--text-secondary);min-height:16px;margin-top:2px}
   .form-msg.err{color:var(--err-ink)} .form-msg.ok{color:var(--down-ink)}
   .add-msg{font-family:var(--mono);font-size:12.5px;color:var(--text-secondary);min-height:16px;margin:4px 2px 0}
@@ -283,11 +340,12 @@
       border-right:1px solid var(--glass-border);
       background:var(--glass-grad), var(--glass-fill);
       -webkit-backdrop-filter:blur(24px) saturate(165%);backdrop-filter:blur(24px) saturate(165%)}
-    .sidebar .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:20px;letter-spacing:-.01em;padding:2px 10px 18px}
-    .sidebar .brand .logo{width:30px;height:30px;border-radius:9px}
+    .sidebar .brand{display:flex;align-items:center;font-weight:800;font-size:20px;letter-spacing:-.01em;padding:2px 10px 18px}
     .grp{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-secondary);font-weight:700;padding:16px 12px 8px}
-    .nav{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:9px 12px;border-radius:12px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;font-size:15px;font-weight:500;text-align:left}
+    .nav{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:9px 12px;border-radius:12px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;font-size:15px;font-weight:500;text-align:left;-webkit-tap-highlight-color:transparent;
+      transition:background .16s ease, color .16s ease, transform 300ms cubic-bezier(.16,1.15,.30,1)}
     .nav:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+    .nav.is-pressed{transform:scale(.985);transition:transform 90ms ease-out}
     .nav[aria-current="true"]{background:var(--plate-fill);color:var(--text-primary);font-weight:700;border:1px solid var(--plate-border)}
     .nav .ic{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--pause)}
     .nav .c{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--text-secondary);font-weight:600}
@@ -297,7 +355,7 @@
     /* main area */
     .screen{max-width:none}
     .header{height:auto;align-items:flex-start;margin:calc(var(--sat) + 22px) calc(28px + var(--sar)) 8px 28px;max-width:788px}
-    .header .logo{display:none}
+    .header .title-wrap{margin-right:0}
     .title-wrap{display:flex;flex-direction:column;min-width:0;flex:1}
     .title{font-size:28px;line-height:1.1;letter-spacing:-.02em}
     .subtitle{display:block;font-family:var(--mono);font-size:12.5px;color:var(--text-secondary);margin-top:3px}
@@ -322,12 +380,20 @@
   @media (prefers-reduced-motion:reduce){
     *{transition:none !important;animation:none !important;scroll-behavior:auto !important}
     .plate,.tabplate{transition:none !important}
+    /* Keep functionality; drop springs, slides and morphs for a short fade. */
+    .sheet{transform:none !important;transition:opacity .1s linear !important}
+    .sheet.show{transform:none !important}
+    .scrim{transition:background .1s linear, visibility 0s linear .1s !important}
+    .scrim.show{transition:background .1s linear !important}
+    .add.is-pressed,.btn.is-pressed,.empty .cta.is-pressed,button.card.is-pressed,.seg.is-pressed,.tab.is-pressed{
+      transform:none !important;opacity:.86;transition:opacity .1s linear !important}
   }
   @media (prefers-reduced-transparency:reduce){
     .glass,.sidebar{background:rgba(244,250,247,0.97) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
     @media (prefers-color-scheme: dark){ .glass,.sidebar{background:rgba(16,28,24,0.97) !important} }
-    .plate{background:rgba(255,255,255,0.95)}
-    .scrim{background:rgba(9,20,16,.6)}
+    .plate,.tabplate{background:rgba(255,255,255,0.95)}
+    @media (prefers-color-scheme: dark){ .plate,.tabplate{background:rgba(255,255,255,0.16)} }
+    .scrim.show{background:rgba(4,16,12,.6)}
   }
   @media (prefers-contrast:more){
     :root{--text-secondary:#3a4d45;--seg-inactive:#2c4137;--down-ink:#0a6e46;--seed-ink:#075f55;--pause-ink:#3f4a58;
@@ -341,7 +407,7 @@
 
   <!-- ============ SIDEBAR (tablet / desktop) ============ -->
   <aside class="sidebar" aria-label="Library">
-    <div class="brand"><span class="logo" aria-hidden="true"></span>Lidhra</div>
+    <div class="brand">Lidhra</div>
     <div class="grp" data-i18n="library">Library</div>
     <nav id="sidenav" aria-label="Filter transfers">
       <button class="nav" data-f="all" aria-current="true"><span class="ic" style="background:var(--accent)"></span><span data-i18n="nav_overview">Overview</span><span class="c" id="sc-all">0</span></button>
@@ -361,7 +427,6 @@
   <!-- ============ MAIN SCREEN ============ -->
   <div class="screen">
     <header class="header">
-      <span class="logo" aria-hidden="true"></span>
       <div class="title-wrap">
         <h1 class="title" id="title">Lidhra</h1>
         <div class="subtitle" id="subtitle"></div>
@@ -619,6 +684,30 @@ const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const S={ connected:false, filter:'active', view:'transfers', tx:[], dl:[], speeds:{}, last:{} };
 const mqDesk = window.matchMedia('(min-width:768px)');
+const reduceMotion=()=>{ try{ return window.matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){ return false; } };
+/* Light for ordinary taps, medium only for important completions. Never per
+   frame. navigator.vibrate is a no-op on iOS WebViews, so this degrades to
+   nothing there (a native haptic bridge would be a Tauri plugin). */
+function haptic(kind){ try{ if(navigator.vibrate) navigator.vibrate(kind==='medium'?[16]:[7]); }catch(e){} }
+
+/* ---- Press physics: fast press-in, springy release, touch-tracked highlight.
+   One transform for surface + label; no Material ripple. Responds on the same
+   frame as pointerdown. ---- */
+const PRESSABLE='.add,.btn,.empty .cta,button.card,.seg,.tab,#sidenav .nav,.status-line .act';
+document.addEventListener('pointerdown',e=>{
+  const el=e.target.closest(PRESSABLE); if(!el||el.classList.contains('is-pressed'))return;
+  const r=el.getBoundingClientRect();
+  if(r.width&&r.height){
+    el.style.setProperty('--hlx',(((e.clientX-r.left)/r.width)*100).toFixed(1)+'%');
+    el.style.setProperty('--hly',(((e.clientY-r.top)/r.height)*100).toFixed(1)+'%');
+  }
+  el.classList.add('is-pressed');
+  let done=false;
+  const up=(ev)=>{ if(done)return; done=true; el.classList.remove('is-pressed');
+    el.removeEventListener('pointerup',up); el.removeEventListener('pointercancel',up); el.removeEventListener('pointerleave',up);
+    if(ev&&ev.type==='pointerup')haptic('light'); };
+  el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('pointerleave',up);
+},{passive:true});
 function updateHeader(){ $('#title').textContent = mqDesk.matches ? (S.view==='seeding'?t('nav_seeding'):t('tab_transfers')) : 'Lidhra'; }
 
 function cls(st){ if(st==='Seeding'||st==='Done')return 'seed'; if(st==='Queued'||st==='Paused')return 'pause'; if(st==='Error')return 'err'; return 'down'; }
@@ -639,7 +728,20 @@ function items(){
 }
 function counts(all){ const c={active:0,seeding:0,done:0}; all.forEach(i=>c[bucket(i.status)]++); return c; }
 
-function movePlate(plate,seg){ if(plate&&seg&&seg.offsetParent) plate.style.transform='translateX('+(seg.offsetLeft-4)+'px)'; }
+/* Selection plate: one element that travels (and, when animating, stretches
+   toward the destination and settles). `animate:false` is used for resize and
+   first paint so there is no layout jump. */
+function setPlate(plate,seg,animate){
+  if(!plate||!seg||!seg.offsetParent)return;
+  const to=seg.offsetLeft-4, from=parseFloat(plate.dataset.x);
+  plate.style.transform='translateX('+to+'px)'; plate.dataset.x=to;
+  if(animate && !reduceMotion() && !isNaN(from) && Math.abs(to-from)>0.5){
+    plate.style.setProperty('--pf',from+'px'); plate.style.setProperty('--pt',to+'px');
+    plate.classList.remove('morph'); void plate.offsetWidth; plate.classList.add('morph');
+    clearTimeout(plate._morphT); plate._morphT=setTimeout(()=>plate.classList.remove('morph'),300);
+  }
+}
+function movePlate(plate,seg){ setPlate(plate,seg,false); }
 function repositionPlates(){
   const fs=[...$$('.filter .seg')].find(b=>b.getAttribute('aria-selected')==='true'); movePlate($('#fplate'),fs);
   const ts=[...$$('.tabbar .tab')].find(b=>b.getAttribute('aria-selected')==='true'); movePlate($('#tplate'),ts);
@@ -658,7 +760,7 @@ function render(){
     $('#empty-p').textContent = S.connected?t('empty_none'):t('empty_connect');
     const cta=$('#empty-cta'); cta.hidden=false;
     cta.textContent = S.connected? t('add_transfer') : t('connect_provider');
-    cta.onclick = ()=> S.connected? openSheet('add') : openSheet('acct');
+    cta.onclick = ()=> S.connected? openSheet('add',cta) : openSheet('acct',cta);
   } else {
     empty.hidden=true;
     wrap.innerHTML=list.map(i=>{
@@ -729,30 +831,113 @@ async function refreshLicense(){
 /* KOFI:END */
 
 /* ================= navigation ================= */
+function syncTabsToView(){
+  $$('.tabbar .tab').forEach(b=>b.setAttribute('aria-selected', b.dataset.view===S.view?'true':'false'));
+  movePlate($('#tplate'), [...$$('.tabbar .tab')].find(b=>b.dataset.view===S.view));
+}
 function setFilter(f,{fromTab}={}){
   S.filter=f;
   $$('#sidenav .nav').forEach(n=>n.setAttribute('aria-current', n.dataset.f===f?'true':'false'));
   $$('.seg').forEach(b=>b.setAttribute('aria-selected', b.dataset.f===f?'true':'false'));
-  movePlate($('#fplate'), [...$$('.filter .seg')].find(b=>b.dataset.f===f));
+  setPlate($('#fplate'), [...$$('.filter .seg')].find(b=>b.dataset.f===f), true);
   if(!fromTab){ const map={active:'transfers',seeding:'seeding',done:'transfers'}; setView(map[f]||'transfers',{silent:true}); }
   render();
 }
 const TI={transfers:0,seeding:1,account:2};
-function setView(v,{silent}={}){
-  if(v==='account'){ $$('.tabbar .tab').forEach(b=>b.setAttribute('aria-selected', b.dataset.view==='account'?'true':'false')); movePlate($('#tplate'), [...$$('.tabbar .tab')].find(b=>b.dataset.view==='account')); openSheet('acct'); return; }
+function setView(v,{silent,opener}={}){
+  if(v==='account'){
+    $$('.tabbar .tab').forEach(b=>b.setAttribute('aria-selected', b.dataset.view==='account'?'true':'false'));
+    setPlate($('#tplate'), [...$$('.tabbar .tab')].find(b=>b.dataset.view==='account'), true);
+    openSheet('acct', opener||[...$$('.tabbar .tab')].find(b=>b.dataset.view==='account')); return;
+  }
   S.view=v; document.querySelector('.app').dataset.view=v;
   $$('.tabbar .tab').forEach(b=>b.setAttribute('aria-selected', b.dataset.view===v?'true':'false'));
-  movePlate($('#tplate'), [...$$('.tabbar .tab')].find(b=>b.dataset.view===v));
+  setPlate($('#tplate'), [...$$('.tabbar .tab')].find(b=>b.dataset.view===v), !silent);
   updateHeader();
   if(!silent){ setFilter(v==='seeding'?'seeding':'active',{fromTab:true}); }
 }
 
-const sheets={ add:{s:'#add-sheet',c:'#add-scrim',focus:'#add-in'}, acct:{s:'#acct-sheet',c:'#acct-scrim',focus:'#token'} };
-let sheetOpen=null;
-function openSheet(k){ const o=sheets[k]; sheetOpen=k; $(o.c).classList.add('show'); const el=$(o.s); el.classList.add('show'); el.setAttribute('aria-hidden','false');
-  setTimeout(()=>{ const f=$(o.focus); if(f)f.focus(); },260); }
-function closeSheet(k){ const o=sheets[k]; if(!o)return; sheetOpen=null; $(o.c).classList.remove('show'); const el=$(o.s); el.classList.remove('show'); el.setAttribute('aria-hidden','true');
-  if(k==='acct'){ $$('.tabbar .tab').forEach(b=>b.setAttribute('aria-selected', b.dataset.view===S.view?'true':'false')); movePlate($('#tplate'), [...$$('.tabbar .tab')].find(b=>b.dataset.view===S.view)); } }
+/* ================= Liquid Glass sheets ================= */
+const sheets={ add:{s:'#add-sheet',c:'#add-scrim',focus:'#add-in',dismissible:true},
+               acct:{s:'#acct-sheet',c:'#acct-scrim',focus:'#token',dismissible:true} };
+let sheetOpen=null, sheetOpener=null;
+const appEl=()=>document.querySelector('.app');
+function focusables(el){
+  return [...el.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
+    .filter(n=>n.offsetParent!==null||n===document.activeElement);
+}
+function openSheet(k,opener){
+  const o=sheets[k]; if(!o)return; const el=$(o.s);
+  sheetOpen=k; sheetOpener=opener||document.activeElement;
+  try{ if(sheetOpener&&sheetOpener.getBoundingClientRect){ const r=sheetOpener.getBoundingClientRect();
+    if(r.width) el.style.setProperty('--sheet-ox',((r.left+r.width/2)/window.innerWidth*100).toFixed(1)+'%'); } }catch(e){}
+  $(o.c).classList.add('show');
+  el.classList.add('show'); el.setAttribute('aria-hidden','false');
+  const app=appEl(); if(app){ try{app.inert=true;}catch(e){} app.setAttribute('aria-hidden','true'); }
+  document.body.classList.add('sheet-open');
+  attachDrag(el,k,o);
+  setTimeout(()=>{ const f=$(o.focus); if(f)f.focus(); }, reduceMotion()?60:300);
+}
+function doCloseState(k,el,o){
+  if(sheetOpen===k)sheetOpen=null;
+  el.classList.remove('show','dragging'); el.setAttribute('aria-hidden','true');
+  el.style.transition=''; el.style.transform=''; el.style.opacity='';
+  $(o.c).classList.remove('show');
+  const app=appEl(); if(app){ try{app.inert=false;}catch(e){} app.removeAttribute('aria-hidden'); }
+  document.body.classList.remove('sheet-open');
+  if(k==='acct') syncTabsToView();
+  const opener=sheetOpener; sheetOpener=null;
+  try{ if(opener&&opener.focus&&opener.offsetParent!==null) opener.focus(); }catch(e){}
+}
+function closeSheet(k){
+  const o=sheets[k]; if(!o)return; const el=$(o.s);
+  el.style.transition=''; el.style.transform=''; el.style.opacity=''; el.classList.remove('dragging');
+  doCloseState(k,el,o);
+}
+/* Drag downward to dismiss: follows the finger, resists past the top, and
+   dismisses on 120px displacement or ~900px/s flick, else springs back. It
+   never starts while the content is scrolled (unless grabbing the handle). */
+function attachDrag(el,k,o){
+  if(el._dragBound)return; el._dragBound=true;
+  let dragging=false,startY=0,lastY=0,lastT=0,vy=0,dy=0;
+  const onDown=e=>{
+    if(e.button&&e.button!==0)return;
+    if(e.target.closest('input,select,textarea,button'))return;
+    if(el.scrollTop>1 && !e.target.closest('.grab'))return;
+    dragging=true; startY=lastY=e.clientY; lastT=e.timeStamp||performance.now(); vy=0; dy=0;
+    el.classList.add('dragging');
+    try{el.setPointerCapture(e.pointerId);}catch(_){}
+  };
+  const onMove=e=>{
+    if(!dragging)return;
+    dy=e.clientY-startY;
+    const now=e.timeStamp||performance.now(), dt=now-lastT;
+    if(dt>0){ vy=(e.clientY-lastY)/dt*1000; }
+    lastY=e.clientY; lastT=now;
+    if(dy<0) dy=-Math.pow(-dy,0.72);            // rubber-band past the top
+    if(dy>0 && el.scrollTop<=1 && e.cancelable) e.preventDefault();
+    el.style.transform='translate3d(0,'+dy+'px,0) scale(1)';
+  };
+  const finish=()=>{
+    if(!dragging)return; dragging=false; el.classList.remove('dragging');
+    if(o.dismissible && (dy>120 || vy>900)){
+      const h=el.getBoundingClientRect().height;
+      el.style.transition='transform .24s cubic-bezier(.4,0,1,1), opacity .24s ease';
+      el.style.opacity='0'; el.style.transform='translate3d(0,'+(h+56)+'px,0) scale(.98)';
+      $(o.c).classList.remove('show');
+      const fin=()=>{ el.removeEventListener('transitionend',fin); doCloseState(k,el,o); };
+      el.addEventListener('transitionend',fin); setTimeout(fin,300);
+    } else {
+      el.style.transition='transform .32s cubic-bezier(.2,.85,.25,1.02)';
+      el.style.transform='translate3d(0,0,0) scale(1)';
+      setTimeout(()=>{ if(el.classList.contains('show')){ el.style.transition=''; el.style.transform=''; } },340);
+    }
+  };
+  el.addEventListener('pointerdown',onDown);
+  el.addEventListener('pointermove',onMove,{passive:false});
+  el.addEventListener('pointerup',finish);
+  el.addEventListener('pointercancel',finish);
+}
 
 /* ================= init ================= */
 async function init(){
@@ -762,13 +947,23 @@ async function init(){
   try{ const p=await api('providers'); $('#provider').innerHTML=p.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.label)+'</option>').join(''); }catch(e){}
   $$('#sidenav .nav').forEach(n=>n.onclick=()=>setFilter(n.dataset.f));
   $$('.seg').forEach(b=>b.onclick=()=>setFilter(b.dataset.f));
-  $$('.tabbar .tab').forEach(b=>b.onclick=()=>setView(b.dataset.view));
-  $('#add-open').onclick=()=>openSheet('add');
+  $$('.tabbar .tab').forEach(b=>b.onclick=()=>setView(b.dataset.view,{opener:b}));
+  $('#add-open').onclick=()=>openSheet('add',$('#add-open'));
   $('#add-cancel').onclick=()=>closeSheet('add'); $('#add-scrim').onclick=()=>closeSheet('add'); $('#add-btn').onclick=doAdd;
   $('#add-in').addEventListener('keydown',e=>{ if(e.key==='Enter')doAdd(); if(e.key==='Escape')closeSheet('add'); });
-  $('#acct-scrim').onclick=()=>closeSheet('acct'); $('#conn-toggle-side').onclick=()=>openSheet('acct'); $('#connect').onclick=doConnect;
+  $('#acct-scrim').onclick=()=>closeSheet('acct'); $('#conn-toggle-side').onclick=()=>openSheet('acct',$('#conn-toggle-side')); $('#connect').onclick=doConnect;
   $('#token').addEventListener('keydown',e=>{ if(e.key==='Enter')doConnect(); });
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&sheetOpen)closeSheet(sheetOpen); });
+  document.addEventListener('keydown',e=>{
+    if(!sheetOpen)return;
+    if(e.key==='Escape'){ if(sheets[sheetOpen].dismissible)closeSheet(sheetOpen); return; }
+    if(e.key==='Tab'){  /* trap focus inside the open modal sheet */
+      const el=$(sheets[sheetOpen].s), f=focusables(el); if(!f.length)return;
+      const first=f[0], last=f[f.length-1];
+      if(!el.contains(document.activeElement)){ e.preventDefault(); first.focus(); }
+      else if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+    }
+  });
   setView('transfers',{silent:true}); setFilter('active',{fromTab:true});
   updateHeader(); mqDesk.addEventListener('change',()=>{updateHeader();repositionPlates();});
   requestAnimationFrame(repositionPlates);
