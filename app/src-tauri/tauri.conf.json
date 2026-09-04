@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Lidhra",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "identifier": "dev.peterdsp.lidhra",
   "build": {
     "frontendDist": "../../ui"
@@ -33,7 +33,7 @@
     "targets": "all",
     "createUpdaterArtifacts": true,
     "iOS": {
-      "bundleVersion": "4",
+      "bundleVersion": "5",
       "minimumSystemVersion": "15.0"
     },
     "icon": [
