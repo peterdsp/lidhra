@@ -57,12 +57,18 @@ themselves. Nothing else to host.
   file) is what removes the self-updater, the 7-day trial, and the whole license /
   "Buy on Ko-fi" UI. Enable it by making it the default before building:
   `sed -i '' 's/^default = \["kofi"\]/default = ["appstore"]/' app/src-tauri/Cargo.toml`,
-  then `cargo tauri build` (desktop) or `cargo tauri ios build` (iOS).
+  then run `scripts/strip-kofi.sh ui/index.html` (removes the Ko-fi banner, email /
+  license-key fields, activation buttons and "Buy on Ko-fi" links from the shared web
+  UI, and fails if any remain), then `cargo tauri build` (desktop) or
+  `cargo tauri ios build` (iOS). Two independent guarantees stack here: the `appstore`
+  feature makes `license()` report `store: true` so the UI hides that block at runtime,
+  and the strip physically removes it from the bundle so it cannot appear even if a
+  runtime check regresses.
 - Verify the swap took: `grep '^default' app/src-tauri/Cargo.toml` must show
   `default = ["appstore"]`. If you archive from Xcode directly you get the default
   `kofi` flavor, which ships the trial + "Buy on Ko-fi" UI and gets rejected under
-  guideline 3.1.1. The iOS CI (`ios-appstore.yml`) does this swap and fails the build
-  if it did not take.
+  guideline 3.1.1. The iOS CI (`ios-appstore.yml`) does this swap, runs the strip, and
+  fails the build if either did not take.
 - Sign, notarize, and submit through Xcode / Transporter with your Apple Developer account.
 - Set the price tier to $9.99. Apple handles updates.
 

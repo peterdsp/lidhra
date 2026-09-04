@@ -113,6 +113,10 @@ jobs:
           sed -i '' 's/^default = \["kofi"\]/default = ["appstore"]/' app/src-tauri/Cargo.toml
           grep -q '^default = \["appstore"\]' app/src-tauri/Cargo.toml \
             || { echo "::error::appstore feature not enabled - refusing to ship the Ko-fi build to the App Store"; exit 1; }
+          # Belt-and-suspenders: physically strip the Ko-fi trial/license/purchase UI
+          # from the shared web UI so it cannot appear in the App Store binary even if
+          # the runtime store-flag check ever regresses. Fails the build if any remains.
+          bash scripts/strip-kofi.sh ui/index.html
 
           # 5. Generate the Xcode project, then select our App Store profile. Tauri
           #    keeps CODE_SIGN_STYLE=Manual (from IOS_MOBILE_PROVISION) but does not
