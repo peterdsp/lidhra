@@ -12,6 +12,8 @@ use std::result::Result; // shadow the prelude's `Result` alias back to std's
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tauri_plugin_lidhra_native::NativeExt;
+use tauri_plugin_opener::OpenerExt;
 use tokio::sync::Mutex;
 
 fn now_unix() -> u64 {
@@ -22,6 +24,10 @@ fn now_unix() -> u64 {
 struct Dl {
     id: String,
     name: String,
+    /// Source URL (kept so the UI can stream / copy it while it downloads).
+    url: String,
+    /// Final on-disk location (the engine writes `<path>.part` until done).
+    path: PathBuf,
     downloaded: AtomicU64,
     total: AtomicU64,
     done: AtomicBool,
@@ -74,6 +80,8 @@ struct DlDto {
     progress: f32,
     done: bool,
     error: Option<String>,
+    path: String,
+    url: String,
 }
 fn to_dl(d: &Dl) -> DlDto {
     let total = d.total.load(Ordering::Relaxed);
@@ -86,6 +94,8 @@ fn to_dl(d: &Dl) -> DlDto {
         progress: if total > 0 { (downloaded as f32 / total as f32).clamp(0.0, 1.0) } else { 0.0 },
         done: d.done.load(Ordering::Relaxed),
         error: d.error.lock().unwrap().clone(),
+        path: d.path.to_string_lossy().into_owned(),
+        url: d.url.clone(),
     }
 }
 
@@ -101,9 +111,12 @@ fn name_from_url(url: &str) -> String {
 
 /// Register a download and spawn its background task. Caller holds the state lock.
 fn start_download(inner: &mut Inner, url: String, name: String) -> Arc<Dl> {
+    let out = inner.out_dir.clone().unwrap_or_else(|| PathBuf::from("."));
     let dl = Arc::new(Dl {
         id: format!("d{}", inner.next_id),
+        path: out.join(&name),
         name,
+        url: url.clone(),
         downloaded: AtomicU64::new(0),
         total: AtomicU64::new(0),
         done: AtomicBool::new(false),
@@ -111,10 +124,9 @@ fn start_download(inner: &mut Inner, url: String, name: String) -> Arc<Dl> {
     });
     inner.next_id += 1;
     inner.downloads.push(dl.clone());
-    let out = inner.out_dir.clone().unwrap_or_else(|| PathBuf::from("."));
     let handle = dl.clone();
     tauri::async_runtime::spawn(async move {
-        let dest = out.join(&handle.name);
+        let dest = handle.path.clone();
         std::fs::create_dir_all(&out).ok();
         let cb = handle.clone();
         let on_progress = move |p: Progress| {
@@ -206,6 +218,93 @@ async fn downloads(state: tauri::State<'_, AppState>) -> Result<Vec<DlDto>, Stri
     Ok(g.downloads.iter().map(|d| to_dl(d)).collect())
 }
 
+/// One file inside a ready transfer, already unrestricted to a direct URL.
+#[derive(Serialize)]
+struct FileLink {
+    url: String,
+    filename: String,
+    size: u64,
+    mime: Option<String>,
+}
+
+/// Resolve every file of a transfer to a direct HTTPS link (for the file sheet:
+/// stream it, hand it to VLC, download just that one, copy the link).
+#[tauri::command]
+async fn links(state: tauri::State<'_, AppState>, id: String) -> Result<Vec<FileLink>, String> {
+    let g = state.0.lock().await;
+    let p = g.provider.as_ref().ok_or("connect a provider first")?;
+    let t = p.transfer(&TransferId(id)).await.map_err(|e| e.to_string())?;
+    let mut out = Vec::with_capacity(t.links.len());
+    for l in &t.links {
+        let d = p.unrestrict(l).await.map_err(|e| e.to_string())?;
+        out.push(FileLink { url: d.url, filename: sanitize(&d.filename), size: d.size, mime: d.mime });
+    }
+    Ok(out)
+}
+
+/// Download a single already-unrestricted file (as opposed to `download`,
+/// which fetches every file of a transfer).
+#[tauri::command]
+async fn download_link(state: tauri::State<'_, AppState>, url: String, filename: String) -> Result<DlDto, String> {
+    if !(url.starts_with("http://") || url.starts_with("https://")) {
+        return Err("not an http(s) URL".into());
+    }
+    let name = sanitize(&filename);
+    let mut g = state.0.lock().await;
+    let dl = start_download(&mut g, url, name);
+    Ok(to_dl(&dl))
+}
+
+// ---- file actions (the "tap a file" sheet) ----------------------------------
+//
+// Desktop: the opener plugin (default app, a named app such as VLC, reveal in
+// the file manager). iOS: the native bridge (share sheet, open-in menu,
+// AVPlayer). Every command runs on the async runtime, never the main thread,
+// because the iOS bridge presents UI on the main thread and waits for it.
+
+fn is_http(s: &str) -> bool {
+    s.starts_with("http://") || s.starts_with("https://")
+}
+
+/// Open a local path or a URL with the default handler, or with a named app
+/// (`with: "VLC"`) when the platform supports it.
+#[tauri::command]
+async fn open_with(app: tauri::AppHandle, target: String, with: Option<String>) -> Result<(), String> {
+    let o = app.opener();
+    let r = if is_http(&target) { o.open_url(target, with) } else { o.open_path(target, with) };
+    r.map_err(|e| e.to_string())
+}
+
+/// Reveal a downloaded file in Finder / Explorer / the file manager.
+#[tauri::command]
+async fn reveal(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    app.opener().reveal_item_in_dir(path).map_err(|e| e.to_string())
+}
+
+/// iOS share sheet for a downloaded file (includes "Save to Files").
+#[tauri::command]
+async fn file_share(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    app.native().share(&path)
+}
+
+/// iOS "Open in…" menu for a downloaded file (VLC, Infuse, …).
+#[tauri::command]
+async fn file_open_in(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    app.native().open_in(&path)
+}
+
+/// iOS native player for a local path or an http(s) URL.
+#[tauri::command]
+async fn file_play(app: tauri::AppHandle, url: String, title: Option<String>) -> Result<(), String> {
+    app.native().play(&url, title.as_deref())
+}
+
+/// Whether an app handles this URL scheme on this device (iOS only; false elsewhere).
+#[tauri::command]
+async fn native_can_open(app: tauri::AppHandle, url: String) -> Result<bool, String> {
+    app.native().can_open(&url)
+}
+
 #[derive(Serialize)]
 struct Lic {
     state: String,
@@ -288,7 +387,15 @@ async fn license_activate_email(_s: tauri::State<'_, AppState>, _email: String) 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let out_dir = std::env::var("HOME").ok().map(|h| PathBuf::from(h).join("Downloads"));
+    // reqwest 0.13 (Tauri's mobile dev-server proxy, the updater) refuses to
+    // build a client until a rustls crypto provider is installed process-wide;
+    // without this the app aborts at launch under `tauri ios dev`. Idempotent.
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
+    // iOS: the app's Documents folder, which Info.ios.plist exposes in the
+    // Files app ("On My iPhone > Lidhra"). Elsewhere: ~/Downloads.
+    let downloads_folder = if cfg!(target_os = "ios") { "Documents" } else { "Downloads" };
+    let out_dir = std::env::var("HOME").ok().map(|h| PathBuf::from(h).join(downloads_folder));
     let config_dir = std::env::var("HOME")
         .ok()
         .map(|h| PathBuf::from(h).join(".config").join("lidhra"))
@@ -296,6 +403,8 @@ pub fn run() {
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_lidhra_native::init())
         .manage(AppState(Mutex::new(Inner { out_dir, config_dir, ..Default::default() })));
 
     // Auto-update only in the Ko-fi / direct build; the App Store handles updates itself.
@@ -317,7 +426,8 @@ pub fn run() {
 
     builder
         .invoke_handler(tauri::generate_handler![
-            providers, connect, add, fetch, transfers, download, downloads, license, license_activate,
+            providers, connect, add, fetch, transfers, download, downloads, links, download_link, open_with,
+            reveal, file_share, file_open_in, file_play, native_can_open, license, license_activate,
             license_activate_email
         ])
         .run(tauri::generate_context!())

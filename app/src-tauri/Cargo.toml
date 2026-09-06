@@ -30,12 +30,16 @@ kofi = ["dep:tauri-plugin-updater"]
 appstore = []
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-updater = { version = "2", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["rt-multi-thread"] }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+# Only to install the process-wide crypto provider (see `run`); already in the tree via reqwest.
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 lidhra-debrid = { path = "../../crates/lidhra-debrid" }
 lidhra-transfer = { path = "../../crates/lidhra-transfer" }
 lidhra-license = { path = "../../crates/lidhra-license" }
+tauri-plugin-opener = "2"
+tauri-plugin-lidhra-native = { path = "plugins/native" }

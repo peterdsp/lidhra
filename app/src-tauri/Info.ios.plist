@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Merged into the generated iOS Info.plist by `tauri ios init`. -->
+<plist version="1.0">
+<dict>
+	<!-- Downloads land in the app's Documents folder; these two keys make that
+	     folder show up in the Files app under "On My iPhone > Lidhra". -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<!-- Needed for canOpenURL() so the file sheet can offer "Open in VLC". -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>vlc-x-callback</string>
+		<string>vlc</string>
+	</array>
+</dict>
+</plist>
