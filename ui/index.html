@@ -112,9 +112,12 @@
   }
 
   /* ================= App shell ================= */
-  .app{display:grid;grid-template-columns:1fr;height:100dvh;height:100vh}
+  /* The single row must be explicitly bounded: WebKit does not resolve the
+     screen's percentage height against an implicit auto row, so the content
+     column grew past the viewport and the list could not scroll on iOS. */
+  .app{display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr);height:100dvh;height:100vh}
   .sidebar{display:none}
-  .screen{position:relative;display:flex;flex-direction:column;min-width:0;height:100%}
+  .screen{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;height:100%}
 
   /* ---------- Header (no enclosing rectangle) ---------- */
   .header{
@@ -332,6 +335,34 @@
   .add-msg{font-family:var(--mono);font-size:12.5px;color:var(--text-secondary);min-height:16px;margin:4px 2px 0}
   .add-msg.err{color:var(--err-ink)} .add-msg.ok{color:var(--down-ink)}
 
+  /* ---------- File sheet (tap a card) ---------- */
+  .sheet .hint.mono{font-family:var(--mono);font-size:12.5px}
+  .files{display:flex;flex-direction:column;gap:4px;margin:0 0 14px;max-height:34dvh;max-height:34vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+    padding:4px;border-radius:14px;background:color-mix(in srgb,var(--card) 70%,transparent);border:1px solid var(--card-border)}
+  .files[hidden]{display:none}
+  .frow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;min-height:46px;padding:8px 12px;border-radius:11px;border:1px solid transparent;
+    background:transparent;cursor:pointer;font:inherit;color:var(--text-primary);-webkit-tap-highlight-color:transparent;
+    transition:transform 300ms cubic-bezier(.16,1.15,.30,1), background .16s ease}
+  .frow.is-pressed{transform:scale(.985);transition:transform 90ms ease-out}
+  .frow[aria-selected="true"]{background:var(--plate-fill);border-color:var(--plate-border)}
+  .frow .fn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14.5px;font-weight:600}
+  .frow .fz{font-family:var(--mono);font-size:12px;color:var(--text-secondary);white-space:nowrap}
+  .acts{display:flex;flex-direction:column;gap:8px}
+  .acts:empty{display:none}
+  .acts .btn{display:flex;align-items:center;justify-content:flex-start;gap:12px;padding:0 16px;text-align:left;font-weight:700}
+  .acts .btn svg{width:20px;height:20px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .acts .btn span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .acts .btn:disabled{opacity:.55;cursor:default}
+  #file-msg{margin-top:10px}
+
+  /* ---------- In-app player (desktop / browser; iOS uses the native player) ---------- */
+  #player{position:fixed;inset:0;z-index:300;background:#000;color:#fff;display:flex;flex-direction:column}
+  #player[hidden]{display:none}
+  #player .pbar{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:calc(var(--sat) + 10px) 16px 10px}
+  #player .ptitle{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:15px}
+  #player .pclose{width:40px;height:40px;border-radius:20px;border:none;background:rgba(255,255,255,.14);color:#fff;font-size:18px;cursor:pointer;display:grid;place-items:center;-webkit-tap-highlight-color:transparent}
+  #player video{flex:1;min-height:0;width:100%;background:#000;outline:none}
+
   /* ================= Tablet / desktop (>=768): sidebar layout ================= */
   @media (min-width:768px){
     .app{grid-template-columns:280px 1fr}
@@ -400,9 +431,134 @@
       --glass-border:rgba(12,40,30,0.3);--card-border:rgba(12,40,30,0.28)}
     .card{border-width:1.5px}
   }
+
+  /* ================= First-launch welcome (Wabi × Corner × Liquid Glass) =================
+     Warm, quiet, editorial. Self-contained: system serif (New York on Apple),
+     no web fonts, so first launch stays private and offline. */
+  #welcome{
+    --paper:#f4ede1; --paper-2:#eee2d2; --paper-3:#e7d9c6;
+    --wink:#2a251f; --wink-soft:#5b5147; --wmuted:#8c7f6e;
+    --clay:#c07a4e; --clay-soft:#dcae86; --wmoss:#6f8d64; --wsage:#93ad86;
+    --wliving:#1fbf74; --wliving-deep:#0c7a4a;
+    --wline:rgba(42,37,31,0.12); --wrim:rgba(255,255,255,0.72); --wrim-soft:rgba(255,255,255,0.34);
+    --wglass:rgba(255,255,255,0.14); --wshadow:rgba(58,42,24,0.20);
+    --wserif:ui-serif,"New York",Georgia,"Times New Roman",serif;
+    --wease:cubic-bezier(0.16,1,0.30,1);
+    position:fixed;inset:0;z-index:200;overflow:hidden;isolation:isolate;color:var(--wink);
+    background:
+      radial-gradient(120% 90% at 12% -10%, var(--paper-3) 0%, transparent 55%),
+      radial-gradient(120% 80% at 108% 8%, var(--paper-2) 0%, transparent 52%),
+      linear-gradient(174deg, var(--paper) 0%, var(--paper-2) 100%);
+    transition:opacity .5s var(--wease), transform .5s var(--wease), filter .5s ease;
+  }
+  #welcome[hidden]{display:none}
+  #welcome.leaving{opacity:0;transform:scale(1.04);filter:blur(3px);pointer-events:none}
+  @media (prefers-color-scheme:dark){
+    #welcome{
+      --paper:#16130e; --paper-2:#1c1811; --paper-3:#231d14;
+      --wink:#f1e9db; --wink-soft:#cdbfa9; --wmuted:#9a8c78;
+      --clay:#d79a6a; --clay-soft:#8a5c3a; --wmoss:#7ea172; --wsage:#5f7a55;
+      --wliving:#2fd587; --wliving-deep:#093e28;
+      --wline:rgba(255,255,255,0.12); --wrim:rgba(255,255,255,0.30); --wrim-soft:rgba(255,255,255,0.12);
+      --wglass:rgba(255,255,255,0.06); --wshadow:rgba(0,0,0,0.5);
+    }
+  }
+  #welcome .blob{position:absolute;border-radius:50%;filter:blur(26px);opacity:.9;will-change:transform;mix-blend-mode:multiply}
+  @media (prefers-color-scheme:dark){ #welcome .blob{mix-blend-mode:screen;opacity:.55} }
+  #welcome .blob-a{width:66vmin;height:66vmin;left:-8vmin;top:34vh;background:radial-gradient(circle at 38% 34%, var(--wsage), var(--wmoss) 46%, transparent 72%);animation:wl-driftA 26s var(--wease) infinite alternate}
+  #welcome .blob-b{width:52vmin;height:52vmin;right:-6vmin;top:6vh;opacity:.6;background:radial-gradient(circle at 60% 40%, var(--clay-soft), var(--clay) 52%, transparent 74%);animation:wl-driftB 32s var(--wease) infinite alternate}
+  #welcome .blob-c{width:38vmin;height:38vmin;left:40%;bottom:-8vmin;opacity:.42;background:radial-gradient(circle at 50% 40%, var(--wliving), var(--wliving-deep) 60%, transparent 76%);animation:wl-driftC 22s var(--wease) infinite alternate}
+  @keyframes wl-driftA{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(7vmin,-5vmin,0) scale(1.08)}}
+  @keyframes wl-driftB{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-6vmin,6vmin,0) scale(1.12)}}
+  @keyframes wl-driftC{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-8vmin,-4vmin,0) scale(1.1)}}
+  #welcome .grain{position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:soft-light;z-index:5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='wn'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23wn)' opacity='0.6'/%3E%3C/svg%3E")}
+  #welcome .wl{position:relative;z-index:6;height:100%;display:flex;flex-direction:column;justify-content:flex-end;max-width:560px;margin:0 auto;padding:calc(var(--sat) + 40px) 30px calc(var(--sab) + 34px)}
+  #welcome .mark{display:flex;align-items:center;gap:9px;margin-bottom:auto;font-family:var(--wserif);font-weight:600;font-size:19px;letter-spacing:-.01em;color:var(--wink);animation:wl-fade 1s var(--wease) .05s both}
+  #welcome .mark .seed{width:9px;height:9px;border-radius:50%;background:var(--wliving);box-shadow:0 0 0 4px color-mix(in srgb,var(--wliving) 22%,transparent)}
+  #welcome .eyebrow{margin:0 0 18px;font-size:12px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--clay);animation-delay:.12s}
+  #welcome .display{font-family:var(--wserif);margin:0;font-weight:500;font-size:clamp(50px,15vw,78px);line-height:.98;letter-spacing:-.025em;color:var(--wink);animation-delay:.22s}
+  #welcome .display em{font-style:italic;font-weight:500;color:var(--wmoss)}
+  #welcome .lede{margin:22px 0 0;max-width:34ch;font-size:16.5px;line-height:1.55;color:var(--wink-soft);font-weight:400;animation-delay:.40s}
+  #welcome .values{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 0;animation-delay:.52s}
+  #welcome .chip{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:100px;font-size:13px;font-weight:600;color:var(--wink-soft);background:color-mix(in srgb,var(--paper) 60%,transparent);border:1px solid var(--wline);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  #welcome .chip .d{width:6px;height:6px;border-radius:50%;background:var(--wmoss)}
+  #welcome .chip:nth-child(2) .d{background:var(--clay)}
+  #welcome .chip:nth-child(3) .d{background:var(--wliving)}
+  #welcome .actions{display:flex;flex-direction:column;gap:14px;margin-top:34px;animation-delay:.64s}
+  #welcome .cta{position:relative;isolation:isolate;overflow:hidden;height:64px;border-radius:32px;border:none;cursor:pointer;display:grid;place-items:center;font-family:var(--wserif);font-size:19px;font-weight:600;letter-spacing:.005em;color:var(--wink);background:var(--wglass);-webkit-tap-highlight-color:transparent;
+    box-shadow:0 1px 0 var(--wrim) inset,0 -10px 22px -14px rgba(0,0,0,.35) inset,0 18px 40px -18px var(--wshadow);
+    transition:transform 320ms var(--wease),box-shadow 320ms var(--wease)}
+  #welcome .cta::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;-webkit-backdrop-filter:blur(2px) saturate(1.6) brightness(1.04) url(#liquid);backdrop-filter:blur(2px) saturate(1.6) brightness(1.04) url(#liquid)}
+  #welcome .cta::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;border:1px solid var(--wrim);background:radial-gradient(120% 80% at var(--hlx,30%) -10%, rgba(255,255,255,.55), transparent 46%),linear-gradient(180deg, rgba(255,255,255,.10), transparent 34%)}
+  #welcome .cta .lbl{position:relative;z-index:1;display:inline-flex;align-items:center;gap:10px}
+  #welcome .cta .arrow{transition:transform 320ms var(--wease)}
+  #welcome .cta:hover .arrow{transform:translateX(3px)}
+  #welcome .cta.is-pressed{transform:scale(.965);box-shadow:0 1px 0 var(--wrim-soft) inset,0 -6px 16px -12px rgba(0,0,0,.3) inset,0 8px 20px -14px var(--wshadow);transition:transform 90ms ease-out,box-shadow 90ms ease-out}
+  #welcome .ghost{height:50px;border-radius:26px;border:1px solid var(--wline);background:transparent;cursor:pointer;font-family:var(--font);font-size:15px;font-weight:600;color:var(--wink-soft);-webkit-tap-highlight-color:transparent;transition:transform 300ms var(--wease),background 200ms ease,color 200ms ease}
+  #welcome .ghost:hover{background:color-mix(in srgb,var(--wink) 5%,transparent);color:var(--wink)}
+  #welcome .ghost.is-pressed{transform:scale(.97);transition:transform 90ms ease-out}
+  #welcome .rise{opacity:0;transform:translateY(16px);animation:wl-rise .9s var(--wease) forwards}
+  @keyframes wl-rise{to{opacity:1;transform:translateY(0)}}
+  @keyframes wl-fade{from{opacity:0}to{opacity:1}}
+  @media (min-width:760px){
+    #welcome .wl{justify-content:center}
+    #welcome .display{font-size:clamp(72px,9vw,104px)}
+    #welcome .lede{font-size:18px}
+    #welcome .actions{flex-direction:row;align-items:center}
+    #welcome .cta{min-width:230px;padding:0 34px}
+    #welcome .ghost{padding:0 24px;height:64px;border-radius:32px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    #welcome .blob{animation:none !important}
+    #welcome .rise,#welcome .mark{animation:none !important;opacity:1 !important;transform:none !important}
+    #welcome{transition:opacity .1s linear !important}
+    #welcome.leaving{transform:none !important;filter:none !important}
+  }
+  @media (prefers-reduced-transparency:reduce){
+    #welcome .cta::before{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+    #welcome .cta{background:color-mix(in srgb,var(--paper) 82%,var(--wmoss))}
+    #welcome .chip{background:var(--paper-2)}
+    #welcome .grain{display:none}
+  }
+  @media (prefers-contrast:more){
+    #welcome{--wink-soft:#3f382e;--wmuted:#5b5142;--wline:rgba(42,37,31,0.32)}
+    #welcome .cta{box-shadow:0 0 0 1.5px var(--wink) inset,0 18px 40px -18px var(--wshadow)}
+  }
 </style>
 </head>
 <body>
+
+<!-- ============ FIRST-LAUNCH WELCOME ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="liquid" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.011 0.016" numOctaves="2" seed="11" result="n"/>
+    <feGaussianBlur in="n" stdDeviation="1.3" result="nb"/>
+    <feDisplacementMap in="SourceGraphic" in2="nb" scale="46" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<section id="welcome" role="dialog" aria-modal="true" aria-label="Welcome to Lidhra" hidden>
+  <span class="blob blob-a" aria-hidden="true"></span>
+  <span class="blob blob-b" aria-hidden="true"></span>
+  <span class="blob blob-c" aria-hidden="true"></span>
+  <span class="grain" aria-hidden="true"></span>
+  <div class="wl">
+    <div class="mark"><span class="seed" aria-hidden="true"></span>Lidhra</div>
+    <p class="eyebrow rise" data-i18n="wl_eyebrow">A quieter way to move files</p>
+    <h1 class="display rise" id="wl-title">Move <em>what</em> matters.</h1>
+    <p class="lede rise" data-i18n="wl_lede">Fast, private file transfers. No account, no cloud looking over your shoulder, nothing to tidy up after.</p>
+    <div class="values rise" aria-hidden="true">
+      <span class="chip"><span class="d"></span><span data-i18n="wl_private">Private</span></span>
+      <span class="chip"><span class="d"></span><span data-i18n="wl_fast">Fast</span></span>
+      <span class="chip"><span class="d"></span><span data-i18n="wl_yours">Yours</span></span>
+    </div>
+    <div class="actions rise">
+      <button class="cta" id="wl-begin"><span class="lbl"><span data-i18n="wl_begin">Begin</span><span class="arrow" aria-hidden="true">→</span></span></button>
+      <button class="ghost" id="wl-look" data-i18n="wl_look">Look around first</button>
+    </div>
+  </div>
+</section>
+
 <div class="app" data-view="transfers">
 
   <!-- ============ SIDEBAR (tablet / desktop) ============ -->
@@ -507,6 +663,23 @@
   <div class="field" style="margin-top:18px"><label for="lang" data-i18n="lbl_language">Language</label><select id="lang" aria-label="Language"></select></div>
 </div>
 
+<!-- ============ FILE SHEET (tap a card) ============ -->
+<div class="scrim" id="file-scrim"></div>
+<div class="sheet glass" id="file-sheet" role="dialog" aria-modal="true" aria-labelledby="file-title" aria-hidden="true">
+  <div class="grab"></div>
+  <h2 id="file-title"></h2>
+  <p class="hint mono" id="file-hint"></p>
+  <div class="files" id="file-list" role="listbox" hidden></div>
+  <div class="acts" id="file-acts"></div>
+  <div class="form-msg" id="file-msg" aria-live="polite"></div>
+</div>
+
+<!-- ============ IN-APP PLAYER ============ -->
+<div id="player" hidden>
+  <div class="pbar"><span class="ptitle" id="player-title"></span><button class="pclose" id="player-close" aria-label="Close">&#x2715;</button></div>
+  <video id="player-video" controls playsinline></video>
+</div>
+
 <script>
 /* ================= i18n: en, el, sq, it, es, zh-Hans, ru ================= */
 const I18N = {
@@ -521,12 +694,14 @@ const I18N = {
     empty_none_t:"Nothing here", empty_none:"Transfers you add will show up here.",
     connect_provider:"Connect Provider", add_transfer:"Add Transfer",
     st_downloading:"downloading", st_seeding:"seeding", st_ready:"ready", st_done:"done", st_queued:"queued", st_error:"error", st_paused:"paused",
-    meta_direct:"direct link", meta_files:"{0} files", meta_file:"1 file", tap_download:"Tap to download",
+    meta_direct:"direct link", meta_files:"{0} files", meta_file:"1 file", tap_more:"Tap for options",
     trial_left:"day(s) left in your free trial", get_license:"Get a license",
     trial_ended:"Your free trial ended.", act_email:"Activate with Ko-fi email", email_ph:"your Ko-fi email", activate:"Activate", buy_kofi:"Buy on Ko-fi",
     m_connecting:"connecting...", m_adding:"adding...", m_starting:"starting download...", m_added:"added",
     m_need_connect:"connect a provider to add magnets", m_enter_token:"enter your API token", m_invalid:"invalid key",
     sub_counts:"{a} active · {s} seeding · {d} done", premium:"premium",
+    wl_eyebrow:"A quieter way to move files", wl_title:"Move what matters.", wl_lede:"Fast, private file transfers. No account, no cloud looking over your shoulder, nothing to tidy up after.", wl_private:"Private", wl_fast:"Fast", wl_yours:"Yours", wl_begin:"Begin", wl_look:"Look around first",
+    fs_loading:"Loading files…", fs_err:"Couldn't load the files.", act_play:"Play in Lidhra", act_vlc:"Open in VLC", act_open_in:"Open in another app…", act_open:"Open with default app", act_download:"Download", act_download_all:"Download all ({0})", act_share:"Save to Files or share…", act_copy:"Copy link", act_copied:"Link copied", act_reveal:"Show in folder", act_fail:"That didn't work: {0}",
     u_sec:"sec", u_min:"min", u_hr:"h" },
   el:{ __locale:'el', __name:'Ελληνικά', library:"Βιβλιοθήκη", nav_overview:"Επισκόπηση", nav_active:"Ενεργά", nav_seeding:"Διαμοιρασμός", nav_done:"Ολοκληρωμένα",
     seg_active:"Ενεργά", tab_transfers:"Μεταφορές", tab_account:"Λογαριασμός",
@@ -539,12 +714,14 @@ const I18N = {
     empty_none_t:"Τίποτα εδώ", empty_none:"Οι μεταφορές που προσθέτεις θα εμφανίζονται εδώ.",
     connect_provider:"Σύνδεση παρόχου", add_transfer:"Προσθήκη μεταφοράς",
     st_downloading:"λήψη", st_seeding:"διαμοιρασμός", st_ready:"έτοιμο", st_done:"ολοκληρώθηκε", st_queued:"σε αναμονή", st_error:"σφάλμα", st_paused:"σε παύση",
-    meta_direct:"απευθείας", meta_files:"{0} αρχεία", meta_file:"1 αρχείο", tap_download:"Πάτησε για λήψη",
+    meta_direct:"απευθείας", meta_files:"{0} αρχεία", meta_file:"1 αρχείο", tap_more:"Πάτησε για επιλογές",
     trial_left:"ημέρα(ες) στη δωρεάν δοκιμή", get_license:"Απόκτησε άδεια",
     trial_ended:"Η δωρεάν δοκιμή έληξε.", act_email:"Ενεργοποίηση με email Ko-fi", email_ph:"email Ko-fi", activate:"Ενεργοποίηση", buy_kofi:"Αγορά στο Ko-fi",
     m_connecting:"σύνδεση...", m_adding:"προσθήκη...", m_starting:"έναρξη λήψης...", m_added:"προστέθηκε",
     m_need_connect:"σύνδεσε πάροχο για magnet", m_enter_token:"εισήγαγε διακριτικό API", m_invalid:"μη έγκυρο κλειδί",
     sub_counts:"{a} ενεργά · {s} διαμοιρασμός · {d} έτοιμα", premium:"premium",
+    wl_eyebrow:"Ένας πιο ήσυχος τρόπος να μεταφέρεις αρχεία", wl_title:"Μετακίνησε ό,τι έχει σημασία.", wl_lede:"Γρήγορες, ιδιωτικές μεταφορές αρχείων. Χωρίς λογαριασμό, χωρίς cloud από πάνω σου, τίποτα να τακτοποιήσεις μετά.", wl_private:"Ιδιωτικό", wl_fast:"Γρήγορο", wl_yours:"Δικό σου", wl_begin:"Ξεκίνα", wl_look:"Ρίξε πρώτα μια ματιά",
+    fs_loading:"Φόρτωση αρχείων…", fs_err:"Δεν ήταν δυνατή η φόρτωση των αρχείων.", act_play:"Αναπαραγωγή στο Lidhra", act_vlc:"Άνοιγμα στο VLC", act_open_in:"Άνοιγμα σε άλλη εφαρμογή…", act_open:"Άνοιγμα με προεπιλεγμένη εφαρμογή", act_download:"Λήψη", act_download_all:"Λήψη όλων ({0})", act_share:"Αποθήκευση στα Αρχεία ή κοινοποίηση…", act_copy:"Αντιγραφή συνδέσμου", act_copied:"Ο σύνδεσμος αντιγράφηκε", act_reveal:"Εμφάνιση στον φάκελο", act_fail:"Κάτι πήγε στραβά: {0}",
     u_sec:"δευτ", u_min:"λεπτά", u_hr:"ώρ" },
   sq:{ __locale:'sq', __name:'Shqip', library:"Biblioteka", nav_overview:"Përmbledhje", nav_active:"Aktive", nav_seeding:"Shpërndarje", nav_done:"Përfunduar",
     seg_active:"Aktive", tab_transfers:"Transferime", tab_account:"Llogaria",
@@ -557,12 +734,14 @@ const I18N = {
     empty_none_t:"Asgjë këtu", empty_none:"Transferimet që shton do të shfaqen këtu.",
     connect_provider:"Lidh ofruesin", add_transfer:"Shto transferim",
     st_downloading:"duke shkarkuar", st_seeding:"shpërndarje", st_ready:"gati", st_done:"përfunduar", st_queued:"në radhë", st_error:"gabim", st_paused:"në pauzë",
-    meta_direct:"lidhje direkte", meta_files:"{0} skedarë", meta_file:"1 skedar", tap_download:"Prek për të shkarkuar",
+    meta_direct:"lidhje direkte", meta_files:"{0} skedarë", meta_file:"1 skedar", tap_more:"Prek për opsione",
     trial_left:"ditë të mbetura në provën falas", get_license:"Merr licencë",
     trial_ended:"Prova falas mbaroi.", act_email:"Aktivizo me email Ko-fi", email_ph:"email-i yt Ko-fi", activate:"Aktivizo", buy_kofi:"Blej në Ko-fi",
     m_connecting:"duke u lidhur...", m_adding:"duke shtuar...", m_starting:"duke nisur...", m_added:"u shtua",
     m_need_connect:"lidh një ofrues për magnet", m_enter_token:"fut token-in API", m_invalid:"çelës i pavlefshëm",
     sub_counts:"{a} aktive · {s} shpërndarje · {d} përfunduar", premium:"premium",
+    wl_eyebrow:"Një mënyrë më e qetë për të lëvizur skedarë", wl_title:"Lëviz atë që ka rëndësi.", wl_lede:"Transferime skedarësh të shpejta e private. Pa llogari, pa cloud që të shikon, asgjë për të rregulluar pas.", wl_private:"Privat", wl_fast:"I shpejtë", wl_yours:"I yti", wl_begin:"Fillo", wl_look:"Hidh një sy më parë",
+    fs_loading:"Po ngarkohen skedarët…", fs_err:"Skedarët nuk u ngarkuan dot.", act_play:"Luaj në Lidhra", act_vlc:"Hap në VLC", act_open_in:"Hap në një aplikacion tjetër…", act_open:"Hap me aplikacionin e parazgjedhur", act_download:"Shkarko", act_download_all:"Shkarko të gjitha ({0})", act_share:"Ruaj te Files ose ndaj…", act_copy:"Kopjo lidhjen", act_copied:"Lidhja u kopjua", act_reveal:"Shfaq në dosje", act_fail:"Nuk funksionoi: {0}",
     u_sec:"sek", u_min:"min", u_hr:"orë" },
   it:{ __locale:'it', __name:'Italiano', library:"Libreria", nav_overview:"Panoramica", nav_active:"Attivi", nav_seeding:"Condivisione", nav_done:"Completati",
     seg_active:"Attivi", tab_transfers:"Trasferimenti", tab_account:"Account",
@@ -575,12 +754,14 @@ const I18N = {
     empty_none_t:"Niente qui", empty_none:"I trasferimenti che aggiungi appariranno qui.",
     connect_provider:"Connetti provider", add_transfer:"Aggiungi trasferimento",
     st_downloading:"in download", st_seeding:"in condivisione", st_ready:"pronto", st_done:"completato", st_queued:"in coda", st_error:"errore", st_paused:"in pausa",
-    meta_direct:"link diretto", meta_files:"{0} file", meta_file:"1 file", tap_download:"Tocca per scaricare",
+    meta_direct:"link diretto", meta_files:"{0} file", meta_file:"1 file", tap_more:"Tocca per le opzioni",
     trial_left:"giorni rimasti nella prova gratuita", get_license:"Ottieni una licenza",
     trial_ended:"La tua prova gratuita è terminata.", act_email:"Attiva con l'email Ko-fi", email_ph:"la tua email Ko-fi", activate:"Attiva", buy_kofi:"Acquista su Ko-fi",
     m_connecting:"connessione...", m_adding:"aggiunta...", m_starting:"avvio del download...", m_added:"aggiunto",
     m_need_connect:"connetti un provider per aggiungere magnet", m_enter_token:"inserisci il tuo token API", m_invalid:"chiave non valida",
     sub_counts:"{a} attivi · {s} in condivisione · {d} completati", premium:"premium",
+    wl_eyebrow:"Un modo più tranquillo di spostare i file", wl_title:"Sposta ciò che conta.", wl_lede:"Trasferimenti di file veloci e privati. Nessun account, nessun cloud che ti osserva, niente da riordinare dopo.", wl_private:"Privato", wl_fast:"Veloce", wl_yours:"Tuo", wl_begin:"Inizia", wl_look:"Prima dai un'occhiata",
+    fs_loading:"Caricamento file…", fs_err:"Impossibile caricare i file.", act_play:"Riproduci in Lidhra", act_vlc:"Apri in VLC", act_open_in:"Apri in un'altra app…", act_open:"Apri con l'app predefinita", act_download:"Scarica", act_download_all:"Scarica tutto ({0})", act_share:"Salva su File o condividi…", act_copy:"Copia link", act_copied:"Link copiato", act_reveal:"Mostra nella cartella", act_fail:"Non ha funzionato: {0}",
     u_sec:"sec", u_min:"min", u_hr:"h" },
   es:{ __locale:'es', __name:'Español', library:"Biblioteca", nav_overview:"Resumen", nav_active:"Activos", nav_seeding:"Compartiendo", nav_done:"Completados",
     seg_active:"Activos", tab_transfers:"Transferencias", tab_account:"Cuenta",
@@ -593,12 +774,14 @@ const I18N = {
     empty_none_t:"Nada por aquí", empty_none:"Las transferencias que añadas aparecerán aquí.",
     connect_provider:"Conectar proveedor", add_transfer:"Añadir transferencia",
     st_downloading:"descargando", st_seeding:"compartiendo", st_ready:"listo", st_done:"completado", st_queued:"en cola", st_error:"error", st_paused:"en pausa",
-    meta_direct:"enlace directo", meta_files:"{0} archivos", meta_file:"1 archivo", tap_download:"Toca para descargar",
+    meta_direct:"enlace directo", meta_files:"{0} archivos", meta_file:"1 archivo", tap_more:"Toca para ver opciones",
     trial_left:"días restantes de tu prueba gratuita", get_license:"Obtener licencia",
     trial_ended:"Tu prueba gratuita ha terminado.", act_email:"Activar con tu email de Ko-fi", email_ph:"tu email de Ko-fi", activate:"Activar", buy_kofi:"Comprar en Ko-fi",
     m_connecting:"conectando...", m_adding:"añadiendo...", m_starting:"iniciando descarga...", m_added:"añadido",
     m_need_connect:"conecta un proveedor para añadir magnets", m_enter_token:"introduce tu token de API", m_invalid:"clave no válida",
     sub_counts:"{a} activos · {s} compartiendo · {d} completados", premium:"premium",
+    wl_eyebrow:"Una forma más tranquila de mover archivos", wl_title:"Mueve lo que importa.", wl_lede:"Transferencias de archivos rápidas y privadas. Sin cuenta, sin nube vigilándote, nada que ordenar después.", wl_private:"Privado", wl_fast:"Rápido", wl_yours:"Tuyo", wl_begin:"Empezar", wl_look:"Echa un vistazo primero",
+    fs_loading:"Cargando archivos…", fs_err:"No se pudieron cargar los archivos.", act_play:"Reproducir en Lidhra", act_vlc:"Abrir en VLC", act_open_in:"Abrir en otra app…", act_open:"Abrir con la app predeterminada", act_download:"Descargar", act_download_all:"Descargar todo ({0})", act_share:"Guardar en Archivos o compartir…", act_copy:"Copiar enlace", act_copied:"Enlace copiado", act_reveal:"Mostrar en la carpeta", act_fail:"No funcionó: {0}",
     u_sec:"s", u_min:"min", u_hr:"h" },
   'zh-Hans':{ __locale:'zh-Hans', __name:'简体中文', library:"资源库", nav_overview:"概览", nav_active:"进行中", nav_seeding:"做种", nav_done:"已完成",
     seg_active:"进行中", tab_transfers:"传输", tab_account:"账户",
@@ -611,12 +794,14 @@ const I18N = {
     empty_none_t:"这里空空如也", empty_none:"你添加的传输会显示在这里。",
     connect_provider:"连接服务商", add_transfer:"添加传输",
     st_downloading:"下载中", st_seeding:"做种中", st_ready:"就绪", st_done:"已完成", st_queued:"排队中", st_error:"错误", st_paused:"已暂停",
-    meta_direct:"直链", meta_files:"{0} 个文件", meta_file:"1 个文件", tap_download:"点按以下载",
+    meta_direct:"直链", meta_files:"{0} 个文件", meta_file:"1 个文件", tap_more:"点按查看选项",
     trial_left:"天试用期剩余", get_license:"获取许可证",
     trial_ended:"免费试用已结束。", act_email:"用 Ko-fi 邮箱激活", email_ph:"你的 Ko-fi 邮箱", activate:"激活", buy_kofi:"在 Ko-fi 购买",
     m_connecting:"连接中...", m_adding:"添加中...", m_starting:"开始下载...", m_added:"已添加",
     m_need_connect:"请先连接服务商再添加磁力链接", m_enter_token:"请输入你的 API 令牌", m_invalid:"无效的密钥",
     sub_counts:"{a} 进行中 · {s} 做种 · {d} 已完成", premium:"高级会员",
+    wl_eyebrow:"更安静地传输文件", wl_title:"传输真正重要的文件。", wl_lede:"快速、私密的文件传输。无需账户，没有云端窥探，事后无需清理。", wl_private:"私密", wl_fast:"快速", wl_yours:"属于你", wl_begin:"开始", wl_look:"先四处看看",
+    fs_loading:"正在加载文件…", fs_err:"无法加载文件。", act_play:"在 Lidhra 中播放", act_vlc:"用 VLC 打开", act_open_in:"用其他应用打开…", act_open:"用默认应用打开", act_download:"下载", act_download_all:"全部下载（{0}）", act_share:"存储到“文件”或分享…", act_copy:"复制链接", act_copied:"链接已复制", act_reveal:"在文件夹中显示", act_fail:"操作失败：{0}",
     u_sec:"秒", u_min:"分", u_hr:"小时" },
   ru:{ __locale:'ru', __name:'Русский', library:"Библиотека", nav_overview:"Обзор", nav_active:"Активные", nav_seeding:"Раздача", nav_done:"Готово",
     seg_active:"Активные", tab_transfers:"Передачи", tab_account:"Аккаунт",
@@ -629,12 +814,14 @@ const I18N = {
     empty_none_t:"Здесь пусто", empty_none:"Добавленные передачи появятся здесь.",
     connect_provider:"Подключить провайдера", add_transfer:"Добавить передачу",
     st_downloading:"загрузка", st_seeding:"раздача", st_ready:"готово", st_done:"завершено", st_queued:"в очереди", st_error:"ошибка", st_paused:"пауза",
-    meta_direct:"прямая ссылка", meta_files:"{0} файлов", meta_file:"1 файл", tap_download:"Нажмите, чтобы скачать",
+    meta_direct:"прямая ссылка", meta_files:"{0} файлов", meta_file:"1 файл", tap_more:"Нажмите для действий",
     trial_left:"дн. осталось в пробном периоде", get_license:"Получить лицензию",
     trial_ended:"Пробный период закончился.", act_email:"Активировать по почте Ko-fi", email_ph:"ваша почта Ko-fi", activate:"Активировать", buy_kofi:"Купить на Ko-fi",
     m_connecting:"подключение...", m_adding:"добавление...", m_starting:"запуск загрузки...", m_added:"добавлено",
     m_need_connect:"подключите провайдера, чтобы добавлять magnet", m_enter_token:"введите ваш API-токен", m_invalid:"неверный ключ",
     sub_counts:"{a} активных · {s} раздача · {d} готово", premium:"премиум",
+    wl_eyebrow:"Более спокойный способ передавать файлы", wl_title:"Перемещайте то, что важно.", wl_lede:"Быстрые, приватные передачи файлов. Без аккаунта, без облака, следящего за вами, и без уборки потом.", wl_private:"Приватно", wl_fast:"Быстро", wl_yours:"Ваше", wl_begin:"Начать", wl_look:"Сначала осмотреться",
+    fs_loading:"Загрузка файлов…", fs_err:"Не удалось загрузить файлы.", act_play:"Воспроизвести в Lidhra", act_vlc:"Открыть в VLC", act_open_in:"Открыть в другом приложении…", act_open:"Открыть в приложении по умолчанию", act_download:"Скачать", act_download_all:"Скачать все ({0})", act_share:"Сохранить в Файлы или поделиться…", act_copy:"Копировать ссылку", act_copied:"Ссылка скопирована", act_reveal:"Показать в папке", act_fail:"Не сработало: {0}",
     u_sec:"с", u_min:"мин", u_hr:"ч" },
 };
 function pickLang(){
@@ -682,7 +869,7 @@ async function api(name,args){
 /* ================= state + helpers ================= */
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const S={ connected:false, filter:'active', view:'transfers', tx:[], dl:[], speeds:{}, last:{} };
+const S={ connected:false, filter:'active', view:'transfers', tx:[], dl:[], speeds:{}, last:{}, items:{}, vlc:false };
 const mqDesk = window.matchMedia('(min-width:768px)');
 const reduceMotion=()=>{ try{ return window.matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){ return false; } };
 /* Light for ordinary taps, medium only for important completions. Never per
@@ -693,7 +880,7 @@ function haptic(kind){ try{ if(navigator.vibrate) navigator.vibrate(kind==='medi
 /* ---- Press physics: fast press-in, springy release, touch-tracked highlight.
    One transform for surface + label; no Material ripple. Responds on the same
    frame as pointerdown. ---- */
-const PRESSABLE='.add,.btn,.empty .cta,button.card,.seg,.tab,#sidenav .nav,.status-line .act';
+const PRESSABLE='.add,.btn,.empty .cta,button.card,.frow,.seg,.tab,#sidenav .nav,.status-line .act,#welcome .cta,#welcome .ghost';
 document.addEventListener('pointerdown',e=>{
   const el=e.target.closest(PRESSABLE); if(!el||el.classList.contains('is-pressed'))return;
   const r=el.getBoundingClientRect();
@@ -715,15 +902,19 @@ function glyph(st){ return {Downloading:'↓',Seeding:'↑',Ready:'↓',Done:'�
 function bucket(st){ if(st==='Seeding')return 'seeding'; if(st==='Done')return 'done'; return 'active'; }
 function stKey(st){ return {Downloading:'st_downloading',Seeding:'st_seeding',Ready:'st_ready',Done:'st_done',Queued:'st_queued',Paused:'st_paused',Error:'st_error'}[st]||'st_downloading'; }
 
+/* `tap` marks cards that open the file sheet: ready cloud transfers and every
+   local download (a finished one offers the local file, an in-flight one
+   its source link). */
 function items(){
   const out=[];
-  S.tx.forEach(x=>{ const st=x.status; out.push({ id:'t'+x.id, key:x.id, name:x.name||x.id, status:st, pct:Math.round((x.progress||0)*100),
-    metaExtra:x.links?(x.links===1?t('meta_file'):t('meta_files',x.links)):'', canDownload:st==='Ready' }); });
+  S.tx.forEach(x=>{ const st=x.status; out.push({ id:'t'+x.id, key:x.id, kind:'t', name:x.name||x.id, status:st, pct:Math.round((x.progress||0)*100),
+    links:x.links||0, metaExtra:x.links?(x.links===1?t('meta_file'):t('meta_files',x.links)):'', tap:st==='Ready' }); });
   S.dl.forEach(d=>{ const st=d.error?'Error':(d.done?'Done':'Downloading'); const pct=d.done&&!d.error?100:Math.round((d.progress||0)*100);
     const bps=S.speeds[d.id]||0; const size=d.total?human(d.total):(d.downloaded?human(d.downloaded):'');
     let meta=[]; if(d.error)meta=[d.error]; else{ if(size)meta.push(size); if(!d.done&&pct)meta.push(pctS(pct)); if(d.done)meta.push(t('st_done')); }
-    out.push({ id:'d'+d.id, name:d.name, status:st, pct, rate:(!d.done&&!d.error)?rate(bps):null,
-      eta:(!d.done&&!d.error&&d.total)?eta(d.total-d.downloaded,bps):null, metaExtra:meta.join(' · ') }); });
+    out.push({ id:'d'+d.id, key:d.id, kind:'d', name:d.name, status:st, pct, rate:(!d.done&&!d.error)?rate(bps):null,
+      eta:(!d.done&&!d.error&&d.total)?eta(d.total-d.downloaded,bps):null, metaExtra:meta.join(' · '),
+      path:d.path||'', url:d.url||'', size:d.total||0, local:!!(d.done&&!d.error&&d.path), tap:!!(d.path||d.url) }); });
   return out;
 }
 function counts(all){ const c={active:0,seeding:0,done:0}; all.forEach(i=>c[bucket(i.status)]++); return c; }
@@ -754,6 +945,7 @@ function render(){
 
   const f=S.filter, list=f==='all'?all:all.filter(i=>bucket(i.status)===f);
   const wrap=$('#list'), empty=$('#empty');
+  S.items={}; all.forEach(i=>S.items[i.id]=i);
   if(!list.length){
     wrap.innerHTML=''; empty.hidden=false;
     $('#empty-t').textContent = S.connected?t('empty_none_t'):t('empty_connect_t');
@@ -763,27 +955,50 @@ function render(){
     cta.onclick = ()=> S.connected? openSheet('add',cta) : openSheet('acct',cta);
   } else {
     empty.hidden=true;
-    wrap.innerHTML=list.map(i=>{
-      const k=cls(i.status), stLabel=t(stKey(i.status));
-      const rightTop='<span class="rate '+k+'">'+esc(i.rate||stLabel)+'</span>';
-      const rightBot=i.eta?'<span class="eta">'+esc(i.eta)+'</span>':(i.canDownload?'<span class="eta">'+esc(t('tap_download'))+'</span>':'<span class="eta">'+((i.status==='Done'||i.status==='Ready')?'':pctS(i.pct))+'</span>');
-      const tag=i.canDownload?'button':'div';
-      const aria=esc(i.name)+', '+stLabel+(i.pct?', '+pctS(i.pct):'')+(i.canDownload?', '+t('tap_download'):'');
-      return '<'+tag+' class="card"'+(i.canDownload?' data-dl="'+esc(i.key)+'"':'')+' aria-label="'+aria+'">'
-        +'<span class="tile '+k+'" aria-hidden="true">'+glyph(i.status)+'</span>'
-        +'<span class="nm">'+esc(i.name)+'</span>'+rightTop
-        +'<span class="meta">'+(i.metaExtra?esc(i.metaExtra):'')+'</span>'+rightBot
-        +'<span class="bar" role="progressbar" aria-valuenow="'+i.pct+'" aria-valuemin="0" aria-valuemax="100"><i class="'+k+'" style="width:'+i.pct+'%"></i></span></'+tag+'>';
-    }).join('');
-    wrap.querySelectorAll('[data-dl]').forEach(el=>el.onclick=()=>doDownload(el.dataset.dl,el));
+    reconcile(wrap,list);
   }
   let bps=0; for(const k in S.speeds) bps+=S.speeds[k]||0;
   const r=rate(bps); $('#speed').innerHTML=r?'<span class="d">↓ '+esc(r)+'</span>':'';
 }
 
+/* Cards are keyed by item id and updated in place. Rebuilding the list with
+   innerHTML on every poll (every 1.5 s) tore the DOM out from under the
+   finger on iOS, which cancels the touch and kills the scroll. */
+function cardParts(i){
+  const k=cls(i.status), stLabel=t(stKey(i.status)), idle=i.status==='Done'||i.status==='Ready';
+  const rightBot=i.eta?i.eta:(idle?(i.tap?t('tap_more'):''):pctS(i.pct));
+  const aria=i.name+', '+stLabel+(i.pct?', '+pctS(i.pct):'')+(i.tap?', '+t('tap_more'):'');
+  return {k, rightTop:i.rate||stLabel, rightBot, aria};
+}
+function buildCard(i){
+  const el=document.createElement(i.tap?'button':'div'); el.className='card'; el.dataset.key=i.id; if(i.tap)el.type='button';
+  el.innerHTML='<span class="tile" aria-hidden="true"></span><span class="nm"></span><span class="rate"></span><span class="meta"></span><span class="eta"></span>'
+    +'<span class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i></i></span>';
+  updateCard(el,i); return el;
+}
+function updateCard(el,i){
+  const p=cardParts(i);
+  const txt=(sel,v)=>{ const n=el.querySelector(sel); if(n.textContent!==v)n.textContent=v; };
+  const cl=(sel,v)=>{ const n=el.querySelector(sel); if(n.className!==v)n.className=v; };
+  cl('.tile','tile '+p.k); txt('.tile',glyph(i.status)); txt('.nm',i.name);
+  cl('.rate','rate '+p.k); txt('.rate',p.rightTop); txt('.meta',i.metaExtra||''); txt('.eta',p.rightBot);
+  const bar=el.querySelector('.bar'); cl('.bar>i',p.k);
+  if(bar.getAttribute('aria-valuenow')!==String(i.pct)){ bar.setAttribute('aria-valuenow',i.pct); bar.firstElementChild.style.width=i.pct+'%'; }
+  if(el.getAttribute('aria-label')!==p.aria) el.setAttribute('aria-label',p.aria);
+}
+function reconcile(wrap,list){
+  const have=new Map(); wrap.querySelectorAll(':scope>.card').forEach(el=>have.set(el.dataset.key,el));
+  const next=list.map(i=>{ let el=have.get(i.id); const tag=i.tap?'BUTTON':'DIV';
+    if(el&&el.tagName!==tag){ el.remove(); have.delete(i.id); el=null; }
+    if(el){ updateCard(el,i); have.delete(i.id); } else el=buildCard(i);
+    return el; });
+  have.forEach(el=>el.remove());
+  let cur=wrap.firstElementChild, inOrder=true;
+  for(const el of next){ if(cur!==el){inOrder=false;break;} cur=cur.nextElementSibling; }
+  if(!inOrder||cur) next.forEach(el=>wrap.appendChild(el));
+}
+
 /* ================= actions ================= */
-async function doDownload(id,el){ if(el){el.style.opacity=.6;el.disabled=true;} try{ await api('download',{id}); refreshDownloads(); }catch(e){}
-  setTimeout(()=>{ if(el){el.style.opacity='';el.disabled=false;} },400); }
 async function doConnect(){
   const provider=$('#provider').value, token=$('#token').value.trim(), cm=$('#cmsg');
   if(!token){ cm.textContent=t('m_enter_token'); cm.className='form-msg err'; return; }
@@ -805,6 +1020,92 @@ async function doAdd(){
     inp.value=''; m.textContent=t('m_added'); m.className='add-msg ok'; setTimeout(()=>closeSheet('add'),500);
   }catch(e){ m.textContent=e.message; m.className='add-msg err'; }
 }
+
+/* ================= file sheet: tap a card ================= */
+const FS={ item:null, files:[], sel:0 };
+const MEDIA_RE=/\.(mp4|m4v|mov|mp3|m4a|aac|wav|flac|aiff?|m3u8|webm|ogg|oga)$/i;
+const IC={
+  play:'<svg viewBox="0 0 24 24"><path d="M7 4l12 8-12 8z"/></svg>',
+  vlc:'<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></svg>',
+  open:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg>',
+  down:'<svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>',
+  share:'<svg viewBox="0 0 24 24"><path d="M12 3v12m0-12L8 7m4-4l4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>',
+  folder:'<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
+  link:'<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>' };
+function openFile(it,opener){
+  FS.item=it; FS.files=[]; FS.sel=0;
+  $('#file-title').textContent=it.name; fileMsg('');
+  const list=$('#file-list'); list.hidden=true; list.innerHTML=''; $('#file-acts').innerHTML='';
+  openSheet('file',opener);
+  if(it.kind==='d'){
+    FS.files=[{ name:it.name, url:it.url, path:it.path, size:it.size, local:it.local, busy:it.status==='Downloading' }];
+    $('#file-hint').textContent=it.metaExtra||''; renderFileSheet(); return;
+  }
+  /* Ready cloud transfer: resolve each file to a direct link first (Tauri
+     only; the browser build just downloads the whole transfer). */
+  if(!TAURI){ $('#file-hint').textContent=it.metaExtra||''; renderFileSheet(); return; }
+  $('#file-hint').textContent=t('fs_loading');
+  api('links',{id:it.key}).then(ls=>{ if(FS.item!==it)return;
+    FS.files=ls.map(l=>({ name:l.filename, url:l.url, path:'', size:l.size||0, local:false, busy:false }));
+    $('#file-hint').textContent=FS.files.length===1?human(FS.files[0].size):t('meta_files',FS.files.length);
+    renderFileSheet();
+  }).catch(()=>{ if(FS.item!==it)return; $('#file-hint').textContent=t('fs_err'); renderFileSheet(); });
+}
+function renderFileSheet(){
+  const it=FS.item, list=$('#file-list'), acts=$('#file-acts');
+  if(FS.files.length>1){
+    list.hidden=false;
+    list.innerHTML=FS.files.map((f,n)=>'<button type="button" class="frow" role="option" aria-selected="'+(n===FS.sel)+'" data-n="'+n+'">'
+      +'<span class="fn">'+esc(f.name)+'</span><span class="fz">'+(f.size?esc(human(f.size)):'')+'</span></button>').join('');
+    list.querySelectorAll('.frow').forEach(b=>b.onclick=()=>{ FS.sel=+b.dataset.n; renderFileSheet(); });
+  } else list.hidden=true;
+  const f=FS.files[FS.sel], A=[];
+  const add=(key,icon,fn,label)=>A.push({ label:label||t(key), icon, fn });
+  if(f){
+    const src=f.local?f.path:f.url;
+    if(src&&MEDIA_RE.test(f.name)) add('act_play',IC.play,()=>playFile(f));
+    if(IOS){
+      /* A local file goes to other apps through the system "Open in" menu (VLC
+         shows up there); a cloud link can stream straight into VLC. */
+      if(f.local) add('act_open_in',IC.open,()=>api('file_open_in',{path:f.path}));
+      else if(S.vlc&&f.url) add('act_vlc',IC.vlc,()=>api('open_with',{target:'vlc-x-callback://x-callback-url/stream?url='+encodeURIComponent(f.url)}));
+    } else if(TAURI){
+      if(src) add('act_vlc',IC.vlc,()=>api('open_with',{target:src,with:'VLC'}));
+      if(f.local) add('act_open',IC.open,()=>api('open_with',{target:f.path}));
+    }
+    if(TAURI&&f.url&&!f.local&&!f.busy) add('act_download',IC.down,()=>api('download_link',{url:f.url,filename:f.name}).then(refreshDownloads));
+    if(it.kind==='t'&&FS.files.length>1) add('act_download_all',IC.down,()=>api('download',{id:it.key}).then(refreshDownloads),t('act_download_all',FS.files.length));
+    if(IOS&&f.local) add('act_share',IC.share,()=>api('file_share',{path:f.path}));
+    if(TAURI&&!IOS&&f.local) add('act_reveal',IC.folder,()=>api('reveal',{path:f.path}));
+    if(f.url) add('act_copy',IC.link,()=>copyText(f.url).then(()=>{ fileMsg(t('act_copied'),'ok'); return 'stay'; }));
+  } else if(it.kind==='t'&&!TAURI){
+    add('act_download',IC.down,()=>api('download',{id:it.key}).then(refreshDownloads));
+  }
+  acts.innerHTML=A.map((a,n)=>'<button type="button" class="btn sec" data-n="'+n+'">'+a.icon+'<span>'+esc(a.label)+'</span></button>').join('');
+  acts.querySelectorAll('.btn').forEach(b=>b.onclick=()=>runAct(A[+b.dataset.n],b));
+}
+function fileMsg(s,k){ const m=$('#file-msg'); m.textContent=s; m.className='form-msg'+(k?' '+k:''); }
+async function runAct(a,btn){
+  btn.disabled=true; fileMsg('');
+  try{ const r=await a.fn(); if(r==='stay')btn.disabled=false; else setTimeout(()=>closeSheet('file'),120); }
+  catch(e){ fileMsg(t('act_fail',(e&&e.message)||String(e)),'err'); btn.disabled=false; }
+}
+async function copyText(s){
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ await navigator.clipboard.writeText(s); return; } }catch(e){}
+  const ta=document.createElement('textarea'); ta.value=s; ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;top:-1000px;opacity:0';
+  document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,s.length);
+  const ok=document.execCommand&&document.execCommand('copy'); ta.remove(); if(!ok) throw new Error('clipboard unavailable');
+}
+/* iOS: native AVPlayer (AirPlay, PiP). Elsewhere: the in-app <video> overlay. */
+function playFile(f){
+  const src=f.local?f.path:f.url;
+  if(IOS) return api('file_play',{url:src,title:f.name});
+  const url=f.local?window.__TAURI__.core.convertFileSrc(f.path):f.url;
+  const p=$('#player'), v=$('#player-video'); $('#player-title').textContent=f.name; v.src=url; p.hidden=false;
+  const pr=v.play(); if(pr&&pr.catch)pr.catch(()=>{});
+  return Promise.resolve();
+}
+function closePlayer(){ const p=$('#player'), v=$('#player-video'); if(p.hidden)return; try{v.pause();}catch(e){} v.removeAttribute('src'); v.load(); p.hidden=true; }
 
 /* ================= polling ================= */
 let tpoll=null;
@@ -859,8 +1160,11 @@ function setView(v,{silent,opener}={}){
 
 /* ================= Liquid Glass sheets ================= */
 const sheets={ add:{s:'#add-sheet',c:'#add-scrim',focus:'#add-in',dismissible:true},
-               acct:{s:'#acct-sheet',c:'#acct-scrim',focus:'#token',dismissible:true} };
-let sheetOpen=null, sheetOpener=null;
+               acct:{s:'#acct-sheet',c:'#acct-scrim',focus:'#token',dismissible:true},
+               file:{s:'#file-sheet',c:'#file-scrim',focus:null,dismissible:true} };
+let sheetOpen=null, sheetOpener=null, keyboardNav=false;
+document.addEventListener('keydown',e=>{ if(e.key==='Tab')keyboardNav=true; });
+document.addEventListener('pointerdown',()=>{ keyboardNav=false; },{passive:true});
 const appEl=()=>document.querySelector('.app');
 function focusables(el){
   return [...el.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
@@ -876,7 +1180,7 @@ function openSheet(k,opener){
   const app=appEl(); if(app){ try{app.inert=true;}catch(e){} app.setAttribute('aria-hidden','true'); }
   document.body.classList.add('sheet-open');
   attachDrag(el,k,o);
-  setTimeout(()=>{ const f=$(o.focus); if(f)f.focus(); }, reduceMotion()?60:300);
+  setTimeout(()=>{ const f=o.focus&&$(o.focus); if(f)f.focus(); }, reduceMotion()?60:300);
 }
 function doCloseState(k,el,o){
   if(sheetOpen===k)sheetOpen=null;
@@ -887,7 +1191,8 @@ function doCloseState(k,el,o){
   document.body.classList.remove('sheet-open');
   if(k==='acct') syncTabsToView();
   const opener=sheetOpener; sheetOpener=null;
-  try{ if(opener&&opener.focus&&opener.offsetParent!==null) opener.focus(); }catch(e){}
+  /* Return focus to the opener, except onto a tapped card (that only paints a focus ring). */
+  try{ if(opener&&opener.focus&&opener.offsetParent!==null&&(keyboardNav||!opener.classList.contains('card'))) opener.focus(); }catch(e){}
 }
 function closeSheet(k){
   const o=sheets[k]; if(!o)return; const el=$(o.s);
@@ -940,8 +1245,39 @@ function attachDrag(el,k,o){
 }
 
 /* ================= init ================= */
+/* ================= First-launch welcome ================= */
+function wlSetHeadline(){ const el=document.getElementById('wl-title'); if(!el)return;
+  if(lang==='en'){ el.innerHTML='Move <em>what</em> matters.'; } else { el.textContent=t('wl_title'); } }
+function initWelcome(){
+  const wl=document.getElementById('welcome'); if(!wl)return;
+  let seen=false; try{ seen=localStorage.getItem('lidhra_welcomed')==='1'; }catch(e){}
+  if(seen){ wl.remove(); return; }
+  wl.hidden=false; wlSetHeadline();
+  const app=document.querySelector('.app');
+  if(app){ try{app.inert=true;}catch(e){} app.setAttribute('aria-hidden','true'); }
+  const dismiss=()=>{
+    try{ localStorage.setItem('lidhra_welcomed','1'); }catch(e){}
+    if(app){ try{app.inert=false;}catch(e){} app.removeAttribute('aria-hidden'); }
+    const done=()=>{ if(wl.parentNode)wl.remove(); const a=$('#add-open'); if(a&&a.offsetParent!==null){ try{a.focus();}catch(e){} } };
+    if(reduceMotion()){ wl.hidden=true; done(); return; }
+    wl.classList.add('leaving');
+    wl.addEventListener('transitionend',ev=>{ if(ev.target===wl&&ev.propertyName==='opacity')done(); },{once:true});
+    setTimeout(done,640);
+  };
+  $('#wl-begin').addEventListener('click',dismiss);
+  $('#wl-look').addEventListener('click',dismiss);
+  wl.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){ dismiss(); return; }
+    if(e.key==='Tab'){ const f=[...wl.querySelectorAll('button')]; if(!f.length)return;
+      const first=f[0], last=f[f.length-1];
+      if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); } }
+  });
+  setTimeout(()=>{ const b=$('#wl-begin'); if(b)b.focus(); }, reduceMotion()?60:420);
+}
+
 async function init(){
-  fillLangSelects(); applyI18n();
+  fillLangSelects(); applyI18n(); initWelcome();
   const onLang=v=>{ lang=v; localStorage.setItem('lidhra_lang',lang); fillLangSelects(); applyI18n(); setView(S.view,{silent:true}); render(); if(typeof refreshLicense==='function')refreshLicense(); };
   $('#lang').onchange=e=>onLang(e.target.value); $('#lang-side').onchange=e=>onLang(e.target.value);
   try{ const p=await api('providers'); $('#provider').innerHTML=p.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.label)+'</option>').join(''); }catch(e){}
@@ -953,7 +1289,11 @@ async function init(){
   $('#add-in').addEventListener('keydown',e=>{ if(e.key==='Enter')doAdd(); if(e.key==='Escape')closeSheet('add'); });
   $('#acct-scrim').onclick=()=>closeSheet('acct'); $('#conn-toggle-side').onclick=()=>openSheet('acct',$('#conn-toggle-side')); $('#connect').onclick=doConnect;
   $('#token').addEventListener('keydown',e=>{ if(e.key==='Enter')doConnect(); });
+  $('#file-scrim').onclick=()=>closeSheet('file'); $('#player-close').onclick=closePlayer;
+  $('#list').addEventListener('click',e=>{ const el=e.target.closest('button.card'); if(!el)return; const it=S.items[el.dataset.key]; if(it)openFile(it,el); });
+  if(IOS){ api('native_can_open',{url:'vlc-x-callback://x-callback-url/stream'}).then(ok=>{ S.vlc=!!ok; }).catch(()=>{}); }
   document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&!$('#player').hidden){ closePlayer(); return; }
     if(!sheetOpen)return;
     if(e.key==='Escape'){ if(sheets[sheetOpen].dismissible)closeSheet(sheetOpen); return; }
     if(e.key==='Tab'){  /* trap focus inside the open modal sheet */

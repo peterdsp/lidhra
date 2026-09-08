@@ -3,6 +3,11 @@ name: Release
 # Push a tag like v0.1.0 to build installers for macOS, Windows, and Linux,
 # sign them, and publish a GitHub Release. The signed artifacts + latest.json
 # are what the in-app auto-updater (Ko-fi / direct build) reads.
+#
+# macOS is best-effort: it needs a Developer ID cert + notarization that the
+# other platforms don't, so its leg is allowed to fail (continue-on-error below)
+# without blocking the Windows/Linux release. The App Store iOS build is a
+# separate workflow (ios-appstore.yml).
 
 on:
   push:
@@ -25,6 +30,9 @@ jobs:
           - platform: windows-latest
             args: ""
     runs-on: ${{ matrix.platform }}
+    # Don't let a macOS signing/notarization failure fail the whole release;
+    # Windows and Linux still block on their own errors.
+    continue-on-error: ${{ matrix.platform == 'macos-latest' }}
     steps:
       - uses: actions/checkout@v4
 

@@ -1,0 +1,19 @@
+[package]
+name = "tauri-plugin-lidhra-native"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Lidhra's small native bridge: iOS share sheet, open-in menu and native video player."
+# Required by tauri-plugin so the iOS Swift package gets linked into the app.
+links = "tauri-plugin-lidhra-native"
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }
+
+[dependencies]
+tauri = { version = "2", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(target_os = "ios")'.dependencies]
+tauri = { version = "2", default-features = false, features = ["wry"] }
