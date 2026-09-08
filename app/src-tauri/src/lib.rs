@@ -2,7 +2,9 @@
 //!
 //! The same `ui/index.html` the server serves runs here too; when it detects a
 //! Tauri window it calls these `#[tauri::command]`s via `invoke` instead of HTTP.
-//! Commands drive the `lidhra-debrid` + `lidhra-transfer` crates directly.
+//! Commands drive the `lidhra-debrid` + `lidhra-transfer` crates directly, and,
+//! with the `p2p` feature, the on-device `lidhra-torrent` engine for magnets
+//! added without a debrid account.
 
 use lidhra_debrid::prelude::*;
 use lidhra_transfer::{download as fetch_file, DownloadConfig, Progress};
@@ -15,6 +17,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tauri_plugin_lidhra_native::NativeExt;
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::Mutex;
+
+#[cfg(feature = "p2p")]
+use lidhra_torrent::{Engine as TorrentEngine, EngineConfig as TorrentConfig, State as TorrentState, Torrent};
 
 fn now_unix() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
@@ -44,6 +49,10 @@ struct Inner {
     /// Where the provider login is remembered (inside the app's own data
     /// directory, so it survives restarts and app updates). Set in `setup`.
     session_path: Option<PathBuf>,
+    /// The on-device BitTorrent engine. `None` until it has started (a second
+    /// or so after launch) or when the build has no `p2p` feature.
+    #[cfg(feature = "p2p")]
+    torrent: Option<Arc<TorrentEngine>>,
 }
 struct AppState(Mutex<Inner>);
 
@@ -87,6 +96,10 @@ struct Acct {
     /// The provider key the account was connected with (so the UI can preselect it).
     provider: String,
 }
+
+/// One transfer in the list: a debrid cloud transfer (`source: "debrid"`) or a
+/// torrent running on this device (`source: "local"`). The P2P fields are zero
+/// for debrid transfers.
 #[derive(Serialize)]
 struct Tx {
     id: String,
@@ -94,6 +107,18 @@ struct Tx {
     status: String,
     progress: f32,
     links: usize,
+    source: &'static str,
+    downloaded: u64,
+    total: u64,
+    down_bps: u64,
+    up_bps: u64,
+    peers: u32,
+    known_peers: u32,
+    eta: Option<u64>,
+    error: Option<String>,
+    pause_reason: Option<String>,
+    path: String,
+    magnet: Option<String>,
 }
 fn to_tx(t: &RemoteTransfer) -> Tx {
     Tx {
@@ -102,6 +127,49 @@ fn to_tx(t: &RemoteTransfer) -> Tx {
         status: format!("{:?}", t.status),
         progress: t.progress,
         links: t.links.len(),
+        source: "debrid",
+        downloaded: 0,
+        total: 0,
+        down_bps: 0,
+        up_bps: 0,
+        peers: 0,
+        known_peers: 0,
+        eta: None,
+        error: None,
+        pause_reason: None,
+        path: String::new(),
+        magnet: None,
+    }
+}
+#[cfg(feature = "p2p")]
+fn torrent_tx(t: &Torrent) -> Tx {
+    let status = match t.state {
+        TorrentState::Resolving => "Resolving",
+        TorrentState::Checking => "Checking",
+        TorrentState::Downloading => "Downloading",
+        TorrentState::Seeding => "Seeding",
+        TorrentState::Paused => "Paused",
+        TorrentState::Done => "Done",
+        TorrentState::Error => "Error",
+    };
+    Tx {
+        id: t.id.clone(),
+        name: t.name.clone(),
+        status: status.to_string(),
+        progress: t.progress,
+        links: t.files,
+        source: "local",
+        downloaded: t.downloaded,
+        total: t.total,
+        down_bps: t.down_bps,
+        up_bps: t.up_bps,
+        peers: t.peers,
+        known_peers: t.known_peers,
+        eta: t.eta_secs,
+        error: t.error.clone(),
+        pause_reason: t.pause_reason.map(|r| format!("{r:?}").to_lowercase()),
+        path: t.output_folder.to_string_lossy().into_owned(),
+        magnet: Some(t.magnet.clone()),
     }
 }
 #[derive(Serialize)]
@@ -227,13 +295,31 @@ async fn disconnect(state: tauri::State<'_, AppState>) -> Result<(), String> {
     Ok(())
 }
 
+/// Add a magnet. With a provider connected it goes to the debrid cloud unless
+/// `direct` is set; without one it downloads on this device (P2P). The UI never
+/// gets switched silently: `direct` is an explicit choice in the add sheet.
 #[tauri::command]
-async fn add(state: tauri::State<'_, AppState>, magnet: String) -> Result<Tx, String> {
-    let m = Magnet::parse(&magnet).map_err(|e| e.to_string())?;
+async fn add(state: tauri::State<'_, AppState>, magnet: String, direct: Option<bool>) -> Result<Tx, String> {
     let g = state.0.lock().await;
-    let p = g.provider.as_ref().ok_or("connect a provider first")?;
-    let t = p.add_magnet(&m).await.map_err(|e| e.to_string())?;
-    Ok(to_tx(&t))
+    let use_debrid = g.provider.is_some() && !direct.unwrap_or(false);
+    if use_debrid {
+        let m = Magnet::parse(&magnet).map_err(|e| e.to_string())?;
+        let p = g.provider.as_ref().ok_or("connect a provider first")?;
+        let t = p.add_magnet(&m).await.map_err(|e| e.to_string())?;
+        return Ok(to_tx(&t));
+    }
+    #[cfg(feature = "p2p")]
+    {
+        let engine = g.torrent.clone().ok_or("direct downloads are still starting, try again in a moment")?;
+        drop(g);
+        let t = engine.add_magnet(&magnet).await.map_err(|e| e.to_string())?;
+        Ok(torrent_tx(&t))
+    }
+    #[cfg(not(feature = "p2p"))]
+    {
+        drop(g);
+        Err("connect a provider first".into())
+    }
 }
 
 #[tauri::command]
@@ -247,12 +333,26 @@ async fn fetch(state: tauri::State<'_, AppState>, url: String) -> Result<DlDto, 
     Ok(to_dl(&dl))
 }
 
+/// Every transfer: the debrid cloud list (when connected) followed by the
+/// torrents running on this device. A debrid error is returned as before so
+/// the UI keeps its last list instead of blanking it.
 #[tauri::command]
 async fn transfers(state: tauri::State<'_, AppState>) -> Result<Vec<Tx>, String> {
     let g = state.0.lock().await;
-    let p = g.provider.as_ref().ok_or("connect a provider first")?;
-    let list = p.list_transfers().await.map_err(|e| e.to_string())?;
-    Ok(list.iter().map(to_tx).collect())
+    let mut out = Vec::new();
+    if let Some(p) = g.provider.as_ref() {
+        let list = p.list_transfers().await.map_err(|e| e.to_string())?;
+        out.extend(list.iter().map(to_tx));
+    }
+    #[cfg(feature = "p2p")]
+    {
+        let engine = g.torrent.clone();
+        drop(g);
+        if let Some(e) = engine {
+            out.extend(e.list().await.iter().map(torrent_tx));
+        }
+    }
+    Ok(out)
 }
 
 #[tauri::command]
@@ -318,6 +418,218 @@ async fn download_link(state: tauri::State<'_, AppState>, url: String, filename:
     let mut g = state.0.lock().await;
     let dl = start_download(&mut g, url, name);
     Ok(to_dl(&dl))
+}
+
+// ---- on-device torrents (the `p2p` feature) ----------------------------------
+
+/// One file of a local torrent, for the file sheet.
+#[derive(Serialize)]
+struct TFile {
+    index: usize,
+    filename: String,
+    size: u64,
+    downloaded: u64,
+    path: String,
+    done: bool,
+    included: bool,
+}
+
+/// What the UI needs to show the P2P settings block (and whether to show it at all).
+#[derive(Serialize)]
+struct P2pDto {
+    /// False in a build without the `p2p` feature, or until the engine has started.
+    available: bool,
+    seed: bool,
+    wifi_only: bool,
+    max_connections: usize,
+    /// True on iOS, where the Wi-Fi only toggle and the background limits apply.
+    mobile: bool,
+}
+
+#[cfg(feature = "p2p")]
+async fn engine(state: &tauri::State<'_, AppState>) -> Result<Arc<TorrentEngine>, String> {
+    state.0.lock().await.torrent.clone().ok_or_else(|| "direct downloads are not available".to_string())
+}
+
+#[cfg(feature = "p2p")]
+#[tauri::command]
+async fn torrent_files(state: tauri::State<'_, AppState>, id: String) -> Result<Vec<TFile>, String> {
+    let e = engine(&state).await?;
+    let files = e.files(&id).await.map_err(|e| e.to_string())?;
+    Ok(files
+        .into_iter()
+        .map(|f| TFile {
+            index: f.index,
+            filename: f.name,
+            size: f.size,
+            downloaded: f.downloaded,
+            path: f.path.to_string_lossy().into_owned(),
+            done: f.done,
+            included: f.included,
+        })
+        .collect())
+}
+
+#[cfg(feature = "p2p")]
+#[tauri::command]
+async fn torrent_pause(state: tauri::State<'_, AppState>, id: String) -> Result<(), String> {
+    engine(&state).await?.pause(&id).await.map_err(|e| e.to_string())
+}
+
+#[cfg(feature = "p2p")]
+#[tauri::command]
+async fn torrent_resume(state: tauri::State<'_, AppState>, id: String) -> Result<(), String> {
+    engine(&state).await?.resume(&id).await.map_err(|e| e.to_string())
+}
+
+#[cfg(feature = "p2p")]
+#[tauri::command(rename_all = "snake_case")]
+async fn torrent_remove(state: tauri::State<'_, AppState>, id: String, delete_files: Option<bool>) -> Result<(), String> {
+    engine(&state).await?.remove(&id, delete_files.unwrap_or(false)).await.map_err(|e| e.to_string())
+}
+
+#[cfg(feature = "p2p")]
+#[tauri::command]
+async fn p2p_settings(state: tauri::State<'_, AppState>) -> Result<P2pDto, String> {
+    let Some(e) = state.0.lock().await.torrent.clone() else {
+        return Ok(P2pDto { available: false, seed: false, wifi_only: true, max_connections: 50, mobile: cfg!(target_os = "ios") });
+    };
+    let s = e.settings().await;
+    Ok(P2pDto { available: true, seed: s.seed, wifi_only: s.wifi_only, max_connections: s.max_connections, mobile: cfg!(target_os = "ios") })
+}
+
+#[cfg(feature = "p2p")]
+#[tauri::command(rename_all = "snake_case")]
+async fn p2p_set_settings(
+    state: tauri::State<'_, AppState>,
+    seed: bool,
+    wifi_only: bool,
+    max_connections: usize,
+) -> Result<P2pDto, String> {
+    let e = engine(&state).await?;
+    let s = lidhra_torrent::Settings { seed, wifi_only, max_connections: max_connections.clamp(2, 200) };
+    e.set_settings(s).await.map_err(|e| e.to_string())?;
+    p2p_settings(state).await
+}
+
+// Builds without the engine keep the command surface so the UI needs no
+// feature detection beyond `available: false`.
+#[cfg(not(feature = "p2p"))]
+#[tauri::command]
+async fn torrent_files(_s: tauri::State<'_, AppState>, _id: String) -> Result<Vec<TFile>, String> {
+    Err("direct downloads are not included in this build".into())
+}
+#[cfg(not(feature = "p2p"))]
+#[tauri::command]
+async fn torrent_pause(_s: tauri::State<'_, AppState>, _id: String) -> Result<(), String> {
+    Err("direct downloads are not included in this build".into())
+}
+#[cfg(not(feature = "p2p"))]
+#[tauri::command]
+async fn torrent_resume(_s: tauri::State<'_, AppState>, _id: String) -> Result<(), String> {
+    Err("direct downloads are not included in this build".into())
+}
+#[cfg(not(feature = "p2p"))]
+#[tauri::command(rename_all = "snake_case")]
+async fn torrent_remove(_s: tauri::State<'_, AppState>, _id: String, _delete_files: Option<bool>) -> Result<(), String> {
+    Err("direct downloads are not included in this build".into())
+}
+#[cfg(not(feature = "p2p"))]
+#[tauri::command]
+async fn p2p_settings(_s: tauri::State<'_, AppState>) -> Result<P2pDto, String> {
+    Ok(P2pDto { available: false, seed: false, wifi_only: true, max_connections: 50, mobile: cfg!(target_os = "ios") })
+}
+#[cfg(not(feature = "p2p"))]
+#[tauri::command(rename_all = "snake_case")]
+async fn p2p_set_settings(
+    _s: tauri::State<'_, AppState>,
+    _seed: bool,
+    _wifi_only: bool,
+    _max_connections: usize,
+) -> Result<P2pDto, String> {
+    Err("direct downloads are not included in this build".into())
+}
+
+// ---- iOS lifecycle bridge -----------------------------------------------------
+//
+// The Swift plugin calls `lidhra_native_event` (plain C ABI, resolved by the
+// linker from this static library) when the app is about to be suspended,
+// comes back to the foreground, changes network, or toggles Low Power Mode.
+// The call only queues an event; a task on the async runtime applies it to the
+// engine. "Suspending" waits (briefly) for the engine to pause and save, since
+// the process is frozen right after the call returns.
+
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(not(feature = "p2p"), allow(dead_code))]
+enum NativeEvent {
+    /// App state: 0 = suspending (background time is up, or terminating),
+    /// 1 = foreground, 2 = entered background (grace period, keep going).
+    App(i32),
+    /// Network: 0 = Wi-Fi or wired, 1 = cellular or otherwise expensive, 2 = offline.
+    Network(i32),
+    /// Low Power Mode: 0 = off, 1 = on.
+    LowPower(i32),
+}
+
+struct QueuedEvent {
+    event: NativeEvent,
+    ack: Option<std::sync::mpsc::SyncSender<()>>,
+}
+
+static NATIVE_EVENTS: std::sync::OnceLock<tokio::sync::mpsc::UnboundedSender<QueuedEvent>> = std::sync::OnceLock::new();
+
+/// Entry point for the Swift side. Safe to call from any thread, before the
+/// engine exists (events are dropped until the queue is up).
+#[no_mangle]
+pub extern "C" fn lidhra_native_event(kind: i32, value: i32) {
+    let event = match kind {
+        1 => NativeEvent::App(value),
+        2 => NativeEvent::Network(value),
+        3 => NativeEvent::LowPower(value),
+        _ => return,
+    };
+    let Some(tx) = NATIVE_EVENTS.get() else { return };
+    let wait = matches!(event, NativeEvent::App(0));
+    let (ack_tx, ack_rx) = std::sync::mpsc::sync_channel::<()>(1);
+    if tx.send(QueuedEvent { event, ack: wait.then_some(ack_tx) }).is_err() {
+        return;
+    }
+    if wait {
+        // iOS gives an expiration handler a few seconds; keep well inside that.
+        let _ = ack_rx.recv_timeout(std::time::Duration::from_millis(2500));
+    }
+}
+
+fn start_native_event_loop(app: tauri::AppHandle) {
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<QueuedEvent>();
+    if NATIVE_EVENTS.set(tx).is_err() {
+        return;
+    }
+    tauri::async_runtime::spawn(async move {
+        while let Some(q) = rx.recv().await {
+            #[cfg(feature = "p2p")]
+            {
+                use tauri::Manager;
+                let engine = app.state::<AppState>().0.lock().await.torrent.clone();
+                if let Some(e) = engine {
+                    match q.event {
+                        NativeEvent::App(0) => e.set_suspended(true).await,
+                        NativeEvent::App(1) => e.set_suspended(false).await,
+                        NativeEvent::App(_) => {}
+                        NativeEvent::Network(n) => e.set_cellular(n == 1).await,
+                        NativeEvent::LowPower(n) => e.set_low_power(n == 1).await,
+                    }
+                }
+            }
+            #[cfg(not(feature = "p2p"))]
+            {
+                let _ = (&app, q.event);
+            }
+            if let Some(a) = q.ack {
+                let _ = a.try_send(());
+            }
+        }
+    });
 }
 
 // ---- file actions (the "tap a file" sheet) ----------------------------------
@@ -450,6 +762,23 @@ async fn license_activate_email(_s: tauri::State<'_, AppState>, _email: String) 
     Ok(Lic { state: "licensed".into(), days_left: 0, owner: Some("App Store".into()), store: true })
 }
 
+/// Start the on-device torrent engine in the background and hand it to the
+/// app state once it is up. Files land next to the HTTPS downloads; the
+/// session file, settings and DHT table live in the app's data directory.
+#[cfg(feature = "p2p")]
+fn start_torrent_engine(app: &tauri::AppHandle, out_dir: Option<PathBuf>, data_dir: PathBuf) {
+    use tauri::Manager;
+    let handle = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let out = out_dir.unwrap_or_else(|| PathBuf::from("."));
+        let cfg = TorrentConfig::new(out, data_dir.join("torrents"));
+        match TorrentEngine::start(cfg).await {
+            Ok(e) => handle.state::<AppState>().0.lock().await.torrent = Some(e),
+            Err(err) => eprintln!("lidhra: direct downloads unavailable: {err}"),
+        }
+    });
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // reqwest 0.13 (Tauri's mobile dev-server proxy, the updater) refuses to
@@ -474,9 +803,19 @@ pub fn run() {
         .setup(|app| {
             use tauri::Manager;
             // Remember the provider login in the app's data directory.
-            if let Ok(dir) = app.path().app_data_dir() {
+            let data_dir = app.path().app_data_dir().ok();
+            if let Some(dir) = &data_dir {
                 let state = app.state::<AppState>();
                 state.0.blocking_lock().session_path = Some(dir.join("session.json"));
+            }
+
+            start_native_event_loop(app.handle().clone());
+
+            #[cfg(feature = "p2p")]
+            {
+                let out = app.state::<AppState>().0.blocking_lock().out_dir.clone();
+                let data = data_dir.clone().unwrap_or_else(|| PathBuf::from(".lidhra"));
+                start_torrent_engine(app.handle(), out, data);
             }
 
             // Auto-update only in the Ko-fi / direct build; the App Store handles updates itself.
@@ -504,7 +843,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             providers, connect, restore, disconnect, add, fetch, transfers, download, downloads, links, download_link, open_with,
             reveal, file_share, file_open_in, file_play, native_can_open, license, license_activate,
-            license_activate_email
+            license_activate_email, torrent_files, torrent_pause, torrent_resume, torrent_remove, p2p_settings,
+            p2p_set_settings
         ])
         .run(tauri::generate_context!())
         .expect("error while running Lidhra");

@@ -24,10 +24,14 @@ tauri-build = { version = "2", features = [] }
 
 [features]
 # Ko-fi / direct build: 7-day trial + license + auto-update.
-default = ["kofi"]
+default = ["kofi", "p2p"]
 kofi = ["dep:tauri-plugin-updater"]
 # App Store build: paid upfront, no trial and no self-update (store handles both).
 appstore = []
+# On-device BitTorrent: magnets download directly when no debrid account is
+# connected. Independent of the store flavor; remove it from `default` (the CI
+# sed keeps it) to ship a debrid-only binary.
+p2p = ["dep:lidhra-torrent"]
 
 [dependencies]
 tauri = { version = "2", features = ["protocol-asset"] }
@@ -41,5 +45,10 @@ rustls = { version = "0.23", default-features = false, features = ["ring"] }
 lidhra-debrid = { path = "../../crates/lidhra-debrid" }
 lidhra-transfer = { path = "../../crates/lidhra-transfer" }
 lidhra-license = { path = "../../crates/lidhra-license" }
+lidhra-torrent = { path = "../../crates/lidhra-torrent", optional = true }
 tauri-plugin-opener = "2"
 tauri-plugin-lidhra-native = { path = "plugins/native" }
+
+# See crates/vendor/README.md: one cfg fix so librqbit builds for iOS.
+[patch.crates-io]
+librqbit-dualstack-sockets = { path = "../../crates/vendor/librqbit-dualstack-sockets" }
