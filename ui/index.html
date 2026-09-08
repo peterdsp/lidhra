@@ -306,10 +306,10 @@
   .sheet .hint{color:var(--text-secondary);font-size:13.5px;margin:0 0 16px}
   .field{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
   .field label{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-secondary)}
-  input,select{width:100%;background:var(--card);border:1px solid var(--card-border);border-radius:12px;color:var(--text-primary);
+  input:not([type="checkbox"]),select{width:100%;background:var(--card);border:1px solid var(--card-border);border-radius:12px;color:var(--text-primary);
     font:inherit;font-size:16px;padding:13px 14px;min-height:44px;outline:none;-webkit-appearance:none;appearance:none}
   input::placeholder{color:var(--text-secondary)}
-  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(24,216,143,.22)}
+  input:not([type="checkbox"]):focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(24,216,143,.22)}
   input.mono{font-family:var(--mono)}
   select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2361766d' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
   .btn{position:relative;overflow:hidden;width:100%;min-height:52px;border:none;border-radius:14px;background:linear-gradient(150deg,#28e39c,#22cd77);color:#062c20;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(20,205,129,.3);
@@ -525,6 +525,17 @@
     #welcome{--wink-soft:#3f382e;--wmuted:#5b5142;--wline:rgba(42,37,31,0.32)}
     #welcome .cta{box-shadow:0 0 0 1.5px var(--wink) inset,0 18px 40px -18px var(--wshadow)}
   }
+  /* ---------- Direct (P2P) downloads ---------- */
+  .opt{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 2px;font-size:14px;color:var(--text-primary);cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .opt input{width:22px;height:22px;margin:0;flex:0 0 auto;accent-color:var(--down)}
+  .opt input:focus-visible{outline:3px solid rgba(24,216,143,.35);outline-offset:2px}
+  .opt[hidden]{display:none}
+  .sheet .hint.small{font-size:12.5px;margin:6px 0 12px}
+  .p2p{margin-top:18px;padding-top:14px;border-top:1px solid var(--card-border)}
+  .p2p h3{margin:0 0 4px;font-size:15px;font-weight:700;color:var(--text-primary)}
+  .p2p[hidden]{display:none}
+  .card .nm .badge{display:inline-block;vertical-align:1px;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--seed-ink);background:color-mix(in srgb,var(--seed) 18%,transparent)}
+  .card .nm .badge[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -642,6 +653,8 @@
     <input id="add-in" class="mono" data-i18n-ph="ph_add" placeholder="magnet:?xt=... or https://..." autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
     <div class="add-msg" id="add-msg" aria-live="polite"></div>
   </div>
+  <label class="opt" id="add-direct-row" hidden><input type="checkbox" id="add-direct"><span data-i18n="add_direct">Download directly on this device</span></label>
+  <p class="hint small" id="add-p2p-hint" hidden data-i18n="add_p2p_hint">Runs on this device over peer-to-peer while Lidhra is open. Other peers can see your IP address.</p>
   <div class="btn-row">
     <button class="btn sec" id="add-cancel" data-i18n="cancel">Cancel</button>
     <button class="btn" id="add-btn" data-i18n="btn_add">Add</button>
@@ -660,6 +673,13 @@
     <input id="token" type="password" data-i18n-ph="ph_token" placeholder="API token" autocomplete="off">
     <div class="form-msg" id="cmsg" aria-live="polite"></div></div>
   <div class="btn-row"><button class="btn sec" id="disconnect" data-i18n="btn_disconnect" hidden>Disconnect</button><button class="btn" id="connect" data-i18n="btn_connect_account">Connect account</button></div>
+  <div class="p2p" id="p2p" hidden>
+    <h3 data-i18n="p2p_title">Direct downloads</h3>
+    <p class="hint small" data-i18n="p2p_hint">Magnets added without a provider download on this device while Lidhra is open.</p>
+    <label class="opt"><input type="checkbox" id="p2p-seed"><span data-i18n="p2p_seed">Keep sharing finished downloads (up to ratio 1.0)</span></label>
+    <label class="opt" id="p2p-wifi-row" hidden><input type="checkbox" id="p2p-wifi"><span data-i18n="p2p_wifi">Wi-Fi only</span></label>
+    <div class="field"><label for="p2p-conn" data-i18n="p2p_conn">Connections per download</label><select id="p2p-conn"><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></div>
+  </div>
   <div class="field" style="margin-top:18px"><label for="lang" data-i18n="lbl_language">Language</label><select id="lang" aria-label="Language"></select></div>
 </div>
 
@@ -832,6 +852,60 @@ function pickLang(){
     const two=l.slice(0,2); if(I18N[two])return two; }
   return 'en';
 }
+/* Direct (P2P) download strings, merged into the table above per language. */
+const I18N_P2P = {
+  en:{ add_direct:"Download directly on this device", add_p2p_hint:"Runs on this device over peer-to-peer while Lidhra is open. Other peers can see your IP address.",
+    btn_download:"Download", empty_p2p_t:"No transfers yet", empty_p2p:"Add a magnet or link. Connect a debrid provider for faster cloud downloads.",
+    st_resolving:"finding peers", st_checking:"checking files", meta_peers:"{0} peers", badge_direct:"Direct",
+    pr_network:"waiting for Wi-Fi", pr_background:"paused in background", pr_disk:"not enough space", m_starting_p2p:"starting direct download...",
+    p2p_title:"Direct downloads", p2p_hint:"Magnets added without a provider download on this device while Lidhra is open.",
+    p2p_seed:"Keep sharing finished downloads (up to ratio 1.0)", p2p_wifi:"Wi-Fi only", p2p_conn:"Connections per download",
+    act_pause:"Pause", act_resume:"Resume", act_remove:"Remove from list", act_remove_files:"Delete files…", act_confirm_delete:"Tap again to delete the files", act_copy_magnet:"Copy magnet link" },
+  el:{ add_direct:"Λήψη απευθείας σε αυτή τη συσκευή", add_p2p_hint:"Τρέχει σε αυτή τη συσκευή μέσω peer-to-peer όσο το Lidhra είναι ανοιχτό. Οι άλλοι peers βλέπουν τη διεύθυνση IP σας.",
+    btn_download:"Λήψη", empty_p2p_t:"Καμία μεταφορά ακόμη", empty_p2p:"Προσθέστε ένα magnet ή σύνδεσμο. Συνδέστε έναν πάροχο debrid για ταχύτερες λήψεις από το cloud.",
+    st_resolving:"αναζήτηση peers", st_checking:"έλεγχος αρχείων", meta_peers:"{0} peers", badge_direct:"Απευθείας",
+    pr_network:"αναμονή για Wi-Fi", pr_background:"σε παύση στο παρασκήνιο", pr_disk:"ανεπαρκής χώρος", m_starting_p2p:"έναρξη απευθείας λήψης...",
+    p2p_title:"Απευθείας λήψεις", p2p_hint:"Τα magnet που προστίθενται χωρίς πάροχο κατεβαίνουν σε αυτή τη συσκευή όσο το Lidhra είναι ανοιχτό.",
+    p2p_seed:"Συνέχιση διαμοιρασμού ολοκληρωμένων λήψεων (έως αναλογία 1.0)", p2p_wifi:"Μόνο Wi-Fi", p2p_conn:"Συνδέσεις ανά λήψη",
+    act_pause:"Παύση", act_resume:"Συνέχιση", act_remove:"Αφαίρεση από τη λίστα", act_remove_files:"Διαγραφή αρχείων…", act_confirm_delete:"Πατήστε ξανά για διαγραφή των αρχείων", act_copy_magnet:"Αντιγραφή συνδέσμου magnet" },
+  sq:{ add_direct:"Shkarko drejtpërdrejt në këtë pajisje", add_p2p_hint:"Ekzekutohet në këtë pajisje përmes peer-to-peer sa kohë Lidhra është e hapur. Peer-at e tjerë e shohin adresën tënde IP.",
+    btn_download:"Shkarko", empty_p2p_t:"Ende asnjë transferim", empty_p2p:"Shto një magnet ose lidhje. Lidh një ofrues debrid për shkarkime më të shpejta nga cloud.",
+    st_resolving:"po kërkon peer-a", st_checking:"po kontrollon skedarët", meta_peers:"{0} peer-a", badge_direct:"Direkt",
+    pr_network:"në pritje të Wi-Fi", pr_background:"në pauzë në sfond", pr_disk:"hapësirë e pamjaftueshme", m_starting_p2p:"po nis shkarkimin direkt...",
+    p2p_title:"Shkarkime direkte", p2p_hint:"Magnet-et e shtuara pa ofrues shkarkohen në këtë pajisje sa kohë Lidhra është e hapur.",
+    p2p_seed:"Vazhdo ndarjen e shkarkimeve të përfunduara (deri në raport 1.0)", p2p_wifi:"Vetëm Wi-Fi", p2p_conn:"Lidhje për shkarkim",
+    act_pause:"Pauzë", act_resume:"Vazhdo", act_remove:"Hiqe nga lista", act_remove_files:"Fshi skedarët…", act_confirm_delete:"Prek sërish për të fshirë skedarët", act_copy_magnet:"Kopjo lidhjen magnet" },
+  it:{ add_direct:"Scarica direttamente su questo dispositivo", add_p2p_hint:"Viene eseguito su questo dispositivo via peer-to-peer mentre Lidhra è aperta. Gli altri peer vedono il tuo indirizzo IP.",
+    btn_download:"Scarica", empty_p2p_t:"Ancora nessun trasferimento", empty_p2p:"Aggiungi un magnet o un link. Connetti un provider debrid per download più veloci dal cloud.",
+    st_resolving:"ricerca peer", st_checking:"verifica file", meta_peers:"{0} peer", badge_direct:"Diretto",
+    pr_network:"in attesa del Wi-Fi", pr_background:"in pausa in background", pr_disk:"spazio insufficiente", m_starting_p2p:"avvio download diretto...",
+    p2p_title:"Download diretti", p2p_hint:"I magnet aggiunti senza provider vengono scaricati su questo dispositivo mentre Lidhra è aperta.",
+    p2p_seed:"Continua a condividere i download completati (fino a ratio 1.0)", p2p_wifi:"Solo Wi-Fi", p2p_conn:"Connessioni per download",
+    act_pause:"Pausa", act_resume:"Riprendi", act_remove:"Rimuovi dall'elenco", act_remove_files:"Elimina file…", act_confirm_delete:"Tocca di nuovo per eliminare i file", act_copy_magnet:"Copia link magnet" },
+  es:{ add_direct:"Descargar directamente en este dispositivo", add_p2p_hint:"Se ejecuta en este dispositivo por peer-to-peer mientras Lidhra está abierta. Otros peers pueden ver tu dirección IP.",
+    btn_download:"Descargar", empty_p2p_t:"Aún no hay transferencias", empty_p2p:"Añade un magnet o un enlace. Conecta un proveedor debrid para descargas más rápidas desde la nube.",
+    st_resolving:"buscando peers", st_checking:"comprobando archivos", meta_peers:"{0} peers", badge_direct:"Directo",
+    pr_network:"esperando Wi-Fi", pr_background:"en pausa en segundo plano", pr_disk:"espacio insuficiente", m_starting_p2p:"iniciando descarga directa...",
+    p2p_title:"Descargas directas", p2p_hint:"Los magnets añadidos sin proveedor se descargan en este dispositivo mientras Lidhra está abierta.",
+    p2p_seed:"Seguir compartiendo las descargas terminadas (hasta ratio 1.0)", p2p_wifi:"Solo Wi-Fi", p2p_conn:"Conexiones por descarga",
+    act_pause:"Pausar", act_resume:"Reanudar", act_remove:"Quitar de la lista", act_remove_files:"Eliminar archivos…", act_confirm_delete:"Toca de nuevo para eliminar los archivos", act_copy_magnet:"Copiar enlace magnet" },
+  zh:{ add_direct:"直接在此设备上下载", add_p2p_hint:"在 Lidhra 打开期间通过点对点在此设备上运行。其他节点可以看到你的 IP 地址。",
+    btn_download:"下载", empty_p2p_t:"还没有传输", empty_p2p:"添加磁力链接或链接。连接 debrid 服务商可获得更快的云端下载。",
+    st_resolving:"正在寻找节点", st_checking:"正在校验文件", meta_peers:"{0} 个节点", badge_direct:"直连",
+    pr_network:"等待 Wi-Fi", pr_background:"后台已暂停", pr_disk:"空间不足", m_starting_p2p:"正在开始直接下载...",
+    p2p_title:"直接下载", p2p_hint:"未连接服务商时添加的磁力链接会在 Lidhra 打开期间于此设备上下载。",
+    p2p_seed:"继续分享已完成的下载（分享率最高 1.0）", p2p_wifi:"仅限 Wi-Fi", p2p_conn:"每个下载的连接数",
+    act_pause:"暂停", act_resume:"继续", act_remove:"从列表移除", act_remove_files:"删除文件…", act_confirm_delete:"再次点按以删除文件", act_copy_magnet:"复制磁力链接" },
+  ru:{ add_direct:"Скачать напрямую на это устройство", add_p2p_hint:"Работает на этом устройстве по peer-to-peer, пока Lidhra открыта. Другие пиры видят ваш IP-адрес.",
+    btn_download:"Скачать", empty_p2p_t:"Передач пока нет", empty_p2p:"Добавьте magnet или ссылку. Подключите debrid-провайдера для более быстрых загрузок из облака.",
+    st_resolving:"поиск пиров", st_checking:"проверка файлов", meta_peers:"{0} пиров", badge_direct:"Напрямую",
+    pr_network:"ожидание Wi-Fi", pr_background:"пауза в фоне", pr_disk:"недостаточно места", m_starting_p2p:"запуск прямой загрузки...",
+    p2p_title:"Прямые загрузки", p2p_hint:"Magnet-ссылки, добавленные без провайдера, скачиваются на это устройство, пока Lidhra открыта.",
+    p2p_seed:"Продолжать раздавать завершённые загрузки (до рейтинга 1.0)", p2p_wifi:"Только Wi-Fi", p2p_conn:"Соединений на загрузку",
+    act_pause:"Пауза", act_resume:"Продолжить", act_remove:"Убрать из списка", act_remove_files:"Удалить файлы…", act_confirm_delete:"Нажмите ещё раз, чтобы удалить файлы", act_copy_magnet:"Копировать magnet-ссылку" }
+};
+Object.keys(I18N_P2P).forEach(k=>{ if(I18N[k]) Object.assign(I18N[k], I18N_P2P[k]); });
+
 let lang=pickLang();
 function t(key,a){ let s=(I18N[lang]&&I18N[lang][key])||I18N.en[key]||key; return a!==undefined?String(s).replace('{0}',a):s; }
 function loc(){ return (I18N[lang]&&I18N[lang].__locale)||'en-US'; }
@@ -849,8 +923,8 @@ function fillLangSelects(){
 function nf(min,max){ try{ return new Intl.NumberFormat(loc(),{minimumFractionDigits:min,maximumFractionDigits:max}); }catch(e){ return {format:x=>String(x)}; } }
 function human(b){ b=+b||0; const u=['B','KB','MB','GB','TB']; let i=0; while(b>=1024&&i<u.length-1){b/=1024;i++;} return nf(0, i===0?0:1).format(i===0?Math.round(b):b)+' '+u[i]; }
 function rate(bps){ if(!bps||bps<1)return null; let v=bps,u='B/s'; if(v>=1024){v/=1024;u='KB/s';} if(v>=1024){v/=1024;u='MB/s';} return nf(0,1).format(v)+' '+u; }
-function eta(rem,bps){ if(!bps||bps<1||rem<=0)return null; let s=Math.round(rem/bps);
-  if(s<60)return nf(0,0).format(s)+' '+t('u_sec'); if(s<3600)return nf(0,0).format(Math.round(s/60))+' '+t('u_min'); return nf(0,0).format(Math.round(s/3600))+' '+t('u_hr'); }
+function etaFmt(s){ if(s<60)return nf(0,0).format(s)+' '+t('u_sec'); if(s<3600)return nf(0,0).format(Math.round(s/60))+' '+t('u_min'); return nf(0,0).format(Math.round(s/3600))+' '+t('u_hr'); }
+function eta(rem,bps){ if(!bps||bps<1||rem<=0)return null; return etaFmt(Math.round(rem/bps)); }
 function pctS(p){ return nf(0,0).format(p)+'%'; }
 
 /* ================= backend (browser -> /api, Tauri -> invoke) ================= */
@@ -858,7 +932,9 @@ const TAURI = !!(window.__TAURI__ && window.__TAURI__.core);
 const IOS = TAURI && /iP(hone|ad|od)/.test(navigator.userAgent||'');
 const ROUTES = { providers:['GET','/api/providers'], connect:['POST','/api/connect'], restore:['GET','/api/restore'], disconnect:['POST','/api/disconnect'], add:['POST','/api/add'], fetch:['POST','/api/fetch'],
   transfers:['GET','/api/transfers'], download:['POST','/api/download'], downloads:['GET','/api/downloads'],
-  license:['GET','/api/license'], license_activate:['POST','/api/license'], license_activate_email:['POST','/api/license/email'] };
+  license:['GET','/api/license'], license_activate:['POST','/api/license'], license_activate_email:['POST','/api/license/email'],
+  torrent_files:['POST','/api/torrent/files'], torrent_pause:['POST','/api/torrent/pause'], torrent_resume:['POST','/api/torrent/resume'], torrent_remove:['POST','/api/torrent/remove'],
+  p2p_settings:['GET','/api/p2p'], p2p_set_settings:['POST','/api/p2p'] };
 async function api(name,args){
   if(TAURI) return window.__TAURI__.core.invoke(name,args||{});
   const [m,u]=ROUTES[name];
@@ -869,7 +945,9 @@ async function api(name,args){
 /* ================= state + helpers ================= */
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const S={ connected:false, filter:'active', view:'transfers', tx:[], dl:[], speeds:{}, last:{}, items:{}, vlc:false };
+const S={ connected:false, filter:'active', view:'transfers', tx:[], dl:[], speeds:{}, last:{}, items:{}, vlc:false,
+  /* Direct (P2P) downloads: filled from `p2p_settings`; `available` is false in a build without the engine. */
+  p2p:{ available:false, seed:false, wifi_only:true, max_connections:50, mobile:false } };
 const mqDesk = window.matchMedia('(min-width:768px)');
 const reduceMotion=()=>{ try{ return window.matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){ return false; } };
 /* Light for ordinary taps, medium only for important completions. Never per
@@ -898,16 +976,28 @@ document.addEventListener('pointerdown',e=>{
 function updateHeader(){ $('#title').textContent = mqDesk.matches ? (S.view==='seeding'?t('nav_seeding'):t('tab_transfers')) : 'Lidhra'; }
 
 function cls(st){ if(st==='Seeding'||st==='Done')return 'seed'; if(st==='Queued'||st==='Paused')return 'pause'; if(st==='Error')return 'err'; return 'down'; }
-function glyph(st){ return {Downloading:'↓',Seeding:'↑',Ready:'↓',Done:'✓',Queued:'‖',Paused:'‖',Error:'!'}[st]||'↓'; }
+function glyph(st){ return {Downloading:'↓',Seeding:'↑',Ready:'↓',Done:'✓',Queued:'‖',Paused:'‖',Error:'!',Resolving:'…',Checking:'⟳'}[st]||'↓'; }
 function bucket(st){ if(st==='Seeding')return 'seeding'; if(st==='Done')return 'done'; return 'active'; }
-function stKey(st){ return {Downloading:'st_downloading',Seeding:'st_seeding',Ready:'st_ready',Done:'st_done',Queued:'st_queued',Paused:'st_paused',Error:'st_error'}[st]||'st_downloading'; }
+function stKey(st){ return {Downloading:'st_downloading',Seeding:'st_seeding',Ready:'st_ready',Done:'st_done',Queued:'st_queued',Paused:'st_paused',Error:'st_error',Resolving:'st_resolving',Checking:'st_checking'}[st]||'st_downloading'; }
 
 /* `tap` marks cards that open the file sheet: ready cloud transfers and every
    local download (a finished one offers the local file, an in-flight one
    its source link). */
 function items(){
   const out=[];
-  S.tx.forEach(x=>{ const st=x.status; out.push({ id:'t'+x.id, key:x.id, kind:'t', name:x.name||x.id, status:st, pct:Math.round((x.progress||0)*100),
+  S.tx.forEach(x=>{ const st=x.status;
+    if(x.source==='local'){
+      /* A torrent running on this device: peers, speed and ETA come from the engine. */
+      const pct=Math.round((x.progress||0)*100), busy=st==='Downloading'||st==='Seeding';
+      let meta=[]; if(x.error)meta=[x.error]; else { if(x.total)meta.push(human(x.total)); if(busy)meta.push(t('meta_peers',nf(0,0).format(x.peers||0)));
+        if(x.pause_reason&&x.pause_reason!=='user')meta.push(t('pr_'+x.pause_reason)); }
+      const up=st==='Seeding'?rate(x.up_bps):null;
+      out.push({ id:'t'+x.id, key:x.id, kind:'l', name:x.name||x.id, status:st, pct, links:x.links||0, local:true,
+        rate:st==='Downloading'?rate(x.down_bps):(up?'↑ '+up:null), eta:(st==='Downloading'&&x.eta)?etaFmt(x.eta):null,
+        metaExtra:meta.join(' · '), path:x.path||'', magnet:x.magnet||'', size:x.total||0, tap:true });
+      return;
+    }
+    out.push({ id:'t'+x.id, key:x.id, kind:'t', name:x.name||x.id, status:st, pct:Math.round((x.progress||0)*100),
     links:x.links||0, metaExtra:x.links?(x.links===1?t('meta_file'):t('meta_files',x.links)):'', tap:st==='Ready' }); });
   S.dl.forEach(d=>{ const st=d.error?'Error':(d.done?'Done':'Downloading'); const pct=d.done&&!d.error?100:Math.round((d.progress||0)*100);
     const bps=S.speeds[d.id]||0; const size=d.total?human(d.total):(d.downloaded?human(d.downloaded):'');
@@ -948,16 +1038,19 @@ function render(){
   S.items={}; all.forEach(i=>S.items[i.id]=i);
   if(!list.length){
     wrap.innerHTML=''; empty.hidden=false;
-    $('#empty-t').textContent = S.connected?t('empty_none_t'):t('empty_connect_t');
-    $('#empty-p').textContent = S.connected?t('empty_none'):t('empty_connect');
+    /* Without a provider the app still downloads magnets itself when the P2P engine is available. */
+    const canAdd=S.connected||S.p2p.available;
+    $('#empty-t').textContent = S.connected?t('empty_none_t'):(S.p2p.available?t('empty_p2p_t'):t('empty_connect_t'));
+    $('#empty-p').textContent = S.connected?t('empty_none'):(S.p2p.available?t('empty_p2p'):t('empty_connect'));
     const cta=$('#empty-cta'); cta.hidden=false;
-    cta.textContent = S.connected? t('add_transfer') : t('connect_provider');
-    cta.onclick = ()=> S.connected? openSheet('add',cta) : openSheet('acct',cta);
+    cta.textContent = canAdd? t('add_transfer') : t('connect_provider');
+    cta.onclick = ()=> canAdd? openSheet('add',cta) : openSheet('acct',cta);
   } else {
     empty.hidden=true;
     reconcile(wrap,list);
   }
   let bps=0; for(const k in S.speeds) bps+=S.speeds[k]||0;
+  S.tx.forEach(x=>{ if(x.source==='local'&&x.status==='Downloading') bps+=x.down_bps||0; });
   const r=rate(bps); $('#speed').innerHTML=r?'<span class="d">↓ '+esc(r)+'</span>':'';
 }
 
@@ -972,7 +1065,7 @@ function cardParts(i){
 }
 function buildCard(i){
   const el=document.createElement(i.tap?'button':'div'); el.className='card'; el.dataset.key=i.id; if(i.tap)el.type='button';
-  el.innerHTML='<span class="tile" aria-hidden="true"></span><span class="nm"></span><span class="rate"></span><span class="meta"></span><span class="eta"></span>'
+  el.innerHTML='<span class="tile" aria-hidden="true"></span><span class="nm"><span class="nmt"></span><span class="badge" hidden></span></span><span class="rate"></span><span class="meta"></span><span class="eta"></span>'
     +'<span class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i></i></span>';
   updateCard(el,i); return el;
 }
@@ -980,7 +1073,8 @@ function updateCard(el,i){
   const p=cardParts(i);
   const txt=(sel,v)=>{ const n=el.querySelector(sel); if(n.textContent!==v)n.textContent=v; };
   const cl=(sel,v)=>{ const n=el.querySelector(sel); if(n.className!==v)n.className=v; };
-  cl('.tile','tile '+p.k); txt('.tile',glyph(i.status)); txt('.nm',i.name);
+  cl('.tile','tile '+p.k); txt('.tile',glyph(i.status)); txt('.nmt',i.name);
+  const bd=el.querySelector('.badge'); if(i.local){ bd.hidden=false; txt('.badge',t('badge_direct')); } else bd.hidden=true;
   cl('.rate','rate '+p.k); txt('.rate',p.rightTop); txt('.meta',i.metaExtra||''); txt('.eta',p.rightBot);
   const bar=el.querySelector('.bar'); cl('.bar>i',p.k);
   if(bar.getAttribute('aria-valuenow')!==String(i.pct)){ bar.setAttribute('aria-valuenow',i.pct); bar.firstElementChild.style.width=i.pct+'%'; }
@@ -1007,8 +1101,9 @@ async function restoreSession(){
 }
 async function doDisconnect(){
   try{ await api('disconnect'); }catch(e){}
-  if(tpoll){ clearInterval(tpoll); tpoll=null; }
-  S.connected=false; S.tx=[]; setConn(null); $('#token').value=''; $('#cmsg').textContent=''; render();
+  S.connected=false; S.tx=S.tx.filter(x=>x.source==='local'); setConn(null); $('#token').value=''; $('#cmsg').textContent='';
+  if(!S.p2p.available && tpoll){ clearInterval(tpoll); tpoll=null; }
+  render();
 }
 async function doConnect(){
   const provider=$('#provider').value, token=$('#token').value.trim(), cm=$('#cmsg');
@@ -1022,12 +1117,21 @@ function setConn(who){ const on=!!who;
   $('#dot').classList.toggle('on',on); $('#dot-side').classList.toggle('on',on); $('#disconnect').hidden=!on;
   $('#who').textContent=on?who:t('conn_not'); $('#who-side').textContent=on?who:t('conn_not');
   $('#conn-toggle-side').textContent=on?t('conn_change'):t('conn_connect'); }
+/* Where a magnet goes: the debrid cloud when a provider is connected, this
+   device when not (or when the user ticks "download directly"). */
+function addDirect(){ return S.p2p.available && (!S.connected || $('#add-direct').checked); }
+function syncAddSheet(){
+  $('#add-direct-row').hidden = !(S.connected && S.p2p.available);
+  const d=addDirect(); $('#add-p2p-hint').hidden=!d;
+  $('#add-btn').textContent = d ? t('btn_download') : t('btn_add');
+}
 async function doAdd(){
   const inp=$('#add-in'), v=inp.value.trim(), m=$('#add-msg'); if(!v)return;
   const isUrl=/^https?:\/\//i.test(v);
-  if(!isUrl && !S.connected){ m.textContent=t('m_need_connect'); m.className='add-msg err'; return; }
-  m.textContent=isUrl?t('m_starting'):t('m_adding'); m.className='add-msg';
-  try{ if(isUrl){ await api('fetch',{url:v}); refreshDownloads(); } else { await api('add',{magnet:v}); refreshTransfers(); }
+  if(!isUrl && !S.connected && !S.p2p.available){ m.textContent=t('m_need_connect'); m.className='add-msg err'; return; }
+  const direct=!isUrl && addDirect();
+  m.textContent=isUrl?t('m_starting'):(direct?t('m_starting_p2p'):t('m_adding')); m.className='add-msg';
+  try{ if(isUrl){ await api('fetch',{url:v}); refreshDownloads(); } else { await api('add',{magnet:v,direct}); refreshTransfers(); }
     inp.value=''; m.textContent=t('m_added'); m.className='add-msg ok'; setTimeout(()=>closeSheet('add'),500);
   }catch(e){ m.textContent=e.message; m.className='add-msg err'; }
 }
@@ -1042,7 +1146,9 @@ const IC={
   down:'<svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>',
   share:'<svg viewBox="0 0 24 24"><path d="M12 3v12m0-12L8 7m4-4l4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>',
   folder:'<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
-  link:'<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>' };
+  link:'<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>',
+  pause:'<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>',
+  trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>' };
 function openFile(it,opener){
   FS.item=it; FS.files=[]; FS.sel=0;
   $('#file-title').textContent=it.name; fileMsg('');
@@ -1051,6 +1157,17 @@ function openFile(it,opener){
   if(it.kind==='d'){
     FS.files=[{ name:it.name, url:it.url, path:it.path, size:it.size, local:it.local, busy:it.status==='Downloading' }];
     $('#file-hint').textContent=it.metaExtra||''; renderFileSheet(); return;
+  }
+  /* A torrent on this device: its files are on disk (finished ones open like
+     any local download) plus pause / resume / remove for the torrent itself. */
+  if(it.kind==='l'){
+    FS.confirmDelete=false; $('#file-hint').textContent=it.metaExtra||''; renderFileSheet();
+    api('torrent_files',{id:it.key}).then(fs=>{ if(FS.item!==it)return;
+      FS.files=fs.filter(f=>f.included).map(f=>({ name:f.filename, url:'', path:f.path, size:f.size||0, local:!!f.done, busy:!f.done }));
+      if(FS.files.length>1) $('#file-hint').textContent=t('meta_files',FS.files.length)+(it.metaExtra?' · '+it.metaExtra:'');
+      renderFileSheet();
+    }).catch(()=>{});
+    return;
   }
   /* Ready cloud transfer: resolve each file to a direct link first (Tauri
      only; the browser build just downloads the whole transfer). */
@@ -1092,6 +1209,17 @@ function renderFileSheet(){
   } else if(it.kind==='t'&&!TAURI){
     add('act_download',IC.down,()=>api('download',{id:it.key}).then(refreshDownloads));
   }
+  if(it.kind==='l'){
+    const st=it.status, after=()=>refreshTransfers();
+    if(st==='Paused'||st==='Error') add('act_resume',IC.play,()=>api('torrent_resume',{id:it.key}).then(after));
+    else if(st!=='Done') add('act_pause',IC.pause,()=>api('torrent_pause',{id:it.key}).then(after));
+    if(it.magnet) add('act_copy_magnet',IC.link,()=>copyText(it.magnet).then(()=>{ fileMsg(t('act_copied'),'ok'); return 'stay'; }));
+    add('act_remove',IC.trash,()=>api('torrent_remove',{id:it.key,delete_files:false}).then(after));
+    /* Deleting files is a two-tap action: the first tap only re-labels the button. */
+    add(FS.confirmDelete?'act_confirm_delete':'act_remove_files',IC.trash,()=>{
+      if(!FS.confirmDelete){ FS.confirmDelete=true; renderFileSheet(); return Promise.resolve('stay'); }
+      return api('torrent_remove',{id:it.key,delete_files:true}).then(after); });
+  }
   acts.innerHTML=A.map((a,n)=>'<button type="button" class="btn sec" data-n="'+n+'">'+a.icon+'<span>'+esc(a.label)+'</span></button>').join('');
   acts.querySelectorAll('.btn').forEach(b=>b.onclick=()=>runAct(A[+b.dataset.n],b));
 }
@@ -1121,7 +1249,25 @@ function closePlayer(){ const p=$('#player'), v=$('#player-video'); if(p.hidden)
 /* ================= polling ================= */
 let tpoll=null;
 function startTransfers(){ if(tpoll)clearInterval(tpoll); refreshTransfers(); tpoll=setInterval(refreshTransfers,2500); }
-async function refreshTransfers(){ if(!S.connected)return; try{ S.tx=await api('transfers'); render(); }catch(e){} }
+async function refreshTransfers(){ if(!S.connected&&!S.p2p.available)return; try{ S.tx=await api('transfers'); render(); }catch(e){} }
+
+/* ================= direct (P2P) settings ================= */
+async function loadP2p(){
+  try{ const p=await api('p2p_settings'); S.p2p=Object.assign(S.p2p,p); }catch(e){ S.p2p.available=false; }
+  const box=$('#p2p'); box.hidden=!S.p2p.available;
+  $('#p2p-wifi-row').hidden=!S.p2p.mobile;
+  $('#p2p-seed').checked=!!S.p2p.seed; $('#p2p-wifi').checked=!!S.p2p.wifi_only;
+  /* A persisted value outside the preset list gets its own option so the select never shows blank. */
+  const conn=$('#p2p-conn'), cv=String(S.p2p.max_connections||50);
+  if(![...conn.options].some(o=>o.value===cv)){ const o=document.createElement('option'); o.value=cv; o.textContent=cv; conn.appendChild(o); }
+  conn.value=cv;
+  if(S.p2p.available && !tpoll) startTransfers();
+  render();
+}
+async function saveP2p(){
+  const body={ seed:$('#p2p-seed').checked, wifi_only:$('#p2p-wifi').checked, max_connections:+$('#p2p-conn').value||50 };
+  try{ const p=await api('p2p_set_settings',body); S.p2p=Object.assign(S.p2p,p); }catch(e){}
+}
 async function refreshDownloads(){ try{ const arr=await api('downloads'); const now=Date.now();
   arr.forEach(d=>{ const prev=S.last[d.id]; if(prev&&now>prev.t){ const db=d.downloaded-prev.b, dt=(now-prev.t)/1000; if(dt>0) S.speeds[d.id]=d.done?0:Math.max(0,db/dt); }
     S.last[d.id]={b:d.downloaded,t:now}; if(d.done||d.error) S.speeds[d.id]=0; });
@@ -1183,6 +1329,7 @@ function focusables(el){
 }
 function openSheet(k,opener){
   const o=sheets[k]; if(!o)return; const el=$(o.s);
+  if(k==='add') syncAddSheet();
   sheetOpen=k; sheetOpener=opener||document.activeElement;
   try{ if(sheetOpener&&sheetOpener.getBoundingClientRect){ const r=sheetOpener.getBoundingClientRect();
     if(r.width) el.style.setProperty('--sheet-ox',((r.left+r.width/2)/window.innerWidth*100).toFixed(1)+'%'); } }catch(e){}
@@ -1289,7 +1436,7 @@ function initWelcome(){
 
 async function init(){
   fillLangSelects(); applyI18n(); initWelcome();
-  const onLang=v=>{ lang=v; localStorage.setItem('lidhra_lang',lang); fillLangSelects(); applyI18n(); setView(S.view,{silent:true}); render(); if(typeof refreshLicense==='function')refreshLicense(); };
+  const onLang=v=>{ lang=v; localStorage.setItem('lidhra_lang',lang); fillLangSelects(); applyI18n(); setView(S.view,{silent:true}); render(); syncAddSheet(); if(typeof refreshLicense==='function')refreshLicense(); };
   $('#lang').onchange=e=>onLang(e.target.value); $('#lang-side').onchange=e=>onLang(e.target.value);
   try{ const p=await api('providers'); $('#provider').innerHTML=p.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.label)+'</option>').join(''); }catch(e){}
   restoreSession();
@@ -1297,6 +1444,8 @@ async function init(){
   $$('.seg').forEach(b=>b.onclick=()=>setFilter(b.dataset.f));
   $$('.tabbar .tab').forEach(b=>b.onclick=()=>setView(b.dataset.view,{opener:b}));
   $('#add-open').onclick=()=>openSheet('add',$('#add-open'));
+  $('#add-direct').onchange=syncAddSheet;
+  ['#p2p-seed','#p2p-wifi','#p2p-conn'].forEach(s=>$(s).onchange=saveP2p);
   $('#add-cancel').onclick=()=>closeSheet('add'); $('#add-scrim').onclick=()=>closeSheet('add'); $('#add-btn').onclick=doAdd;
   $('#add-in').addEventListener('keydown',e=>{ if(e.key==='Enter')doAdd(); if(e.key==='Escape')closeSheet('add'); });
   $('#acct-scrim').onclick=()=>closeSheet('acct'); $('#conn-toggle-side').onclick=()=>openSheet('acct',$('#conn-toggle-side')); $('#connect').onclick=doConnect; $('#disconnect').onclick=doDisconnect;
@@ -1321,6 +1470,7 @@ async function init(){
   requestAnimationFrame(repositionPlates);
   window.addEventListener('resize',repositionPlates); window.addEventListener('orientationchange',repositionPlates);
   render();
+  loadP2p();
   refreshDownloads(); setInterval(refreshDownloads,1500);
   if(typeof refreshLicense==='function'){ refreshLicense(); setInterval(refreshLicense,30000); }
 }

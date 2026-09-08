@@ -6,12 +6,16 @@
 //! UI and calls the crates directly instead of HTTP.
 //!
 //! Run:  cargo run -p lidhra-server   (then open http://127.0.0.1:8787)
-//! Env:  PORT (default 8787), LIDHRA_OUT (download dir, default ./downloads)
+//! Env:  PORT (default 8787), LIDHRA_OUT (download dir, default ./downloads),
+//!       LIDHRA_CONFIG (license + engine state, default ~/.config/lidhra/server),
+//!       LIDHRA_P2P=0 to run without the on-device torrent engine,
+//!       LIDHRA_ALLOW_ANY_HOST=1 to skip the loopback Host header check (reverse proxies)
 
 use axum::{
-    extract::State,
+    extract::{Request, State},
     http::StatusCode,
-    response::Html,
+    middleware::{self, Next},
+    response::{Html, Response},
     routing::{get, post},
     Json, Router,
 };
@@ -21,9 +25,13 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::result::Result; // shadow the prelude's `Result` alias back to std's
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use axum::response::IntoResponse;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
+
+#[cfg(feature = "p2p")]
+use lidhra_torrent::{Engine as TorrentEngine, EngineConfig as TorrentConfig, State as TorrentState, Torrent};
 
 fn now_unix() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
@@ -53,6 +61,9 @@ struct AppState {
     next_id: u64,
     config_dir: PathBuf,
     pubkey: String,
+    /// On-device torrents for magnets added without a provider.
+    #[cfg(feature = "p2p")]
+    torrent: Option<Arc<TorrentEngine>>,
 }
 type Shared = Arc<Mutex<AppState>>;
 
@@ -61,9 +72,28 @@ async fn main() {
     let out_dir = std::env::var("LIDHRA_OUT")
         .map(PathBuf::from)
         .unwrap_or_else(|_| std::env::current_dir().unwrap_or_default().join("downloads"));
-    let config_dir = std::env::var("LIDHRA_CONFIG").map(PathBuf::from).unwrap_or_else(|_| out_dir.clone());
+    // Never inside the download folder: peers pick file names there, and the
+    // torrent engine keeps its session file under this directory.
+    let config_dir = std::env::var("LIDHRA_CONFIG").map(PathBuf::from).unwrap_or_else(|_| {
+        std::env::var("HOME")
+            .map(|h| PathBuf::from(h).join(".config").join("lidhra").join("server"))
+            .unwrap_or_else(|_| out_dir.join(".lidhra-server"))
+    });
+    let _ = std::fs::create_dir_all(&config_dir);
     let pubkey = std::env::var("LIDHRA_PUBKEY").unwrap_or_else(|_| lidhra_license::ISSUER_PUBKEY_HEX.to_string());
     lidhra_license::load_or_init_install(&config_dir, now_unix());
+    #[cfg(feature = "p2p")]
+    let torrent = if std::env::var("LIDHRA_P2P").map(|v| v == "0").unwrap_or(false) {
+        None
+    } else {
+        match TorrentEngine::start(TorrentConfig::new(out_dir.clone(), config_dir.join("torrents"))).await {
+            Ok(e) => Some(e),
+            Err(e) => {
+                eprintln!("lidhra: direct downloads unavailable: {e}");
+                None
+            }
+        }
+    };
     let state: Shared = Arc::new(Mutex::new(AppState {
         provider: None,
         out_dir: out_dir.clone(),
@@ -71,6 +101,8 @@ async fn main() {
         next_id: 0,
         config_dir,
         pubkey,
+        #[cfg(feature = "p2p")]
+        torrent,
     }));
 
     let app = Router::new()
@@ -84,6 +116,12 @@ async fn main() {
         .route("/api/downloads", get(downloads))
         .route("/api/license", get(license).post(activate))
         .route("/api/license/email", post(activate_email))
+        .route("/api/torrent/files", post(torrent_files))
+        .route("/api/torrent/pause", post(torrent_pause))
+        .route("/api/torrent/resume", post(torrent_resume))
+        .route("/api/torrent/remove", post(torrent_remove))
+        .route("/api/p2p", get(p2p_settings).post(p2p_set_settings))
+        .layer(middleware::from_fn(require_loopback_host))
         .with_state(state);
 
     let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(8787);
@@ -94,6 +132,49 @@ async fn main() {
 }
 
 // ---------- helpers ----------
+
+/// The server only listens on loopback, so a legitimate request always carries a
+/// loopback `Host`. Rejecting anything else defeats DNS rebinding, where a page on
+/// `attacker.example` (resolving to 127.0.0.1) drives the API same-origin.
+async fn require_loopback_host(req: Request, next: Next) -> Response {
+    if std::env::var("LIDHRA_ALLOW_ANY_HOST").map(|v| v == "1").unwrap_or(false) {
+        return next.run(req).await;
+    }
+    let host = req.headers().get("host").and_then(|h| h.to_str().ok()).unwrap_or("");
+    if host_is_loopback(host) {
+        next.run(req).await
+    } else {
+        (StatusCode::FORBIDDEN, "Lidhra only answers requests addressed to localhost").into_response()
+    }
+}
+
+/// `Host` header values that name this machine's loopback interface, with or without a port.
+fn host_is_loopback(host: &str) -> bool {
+    let name = match host.strip_prefix('[') {
+        Some(v6) => v6.split(']').next().unwrap_or(""),
+        None => host.split(':').next().unwrap_or(""),
+    };
+    matches!(name.to_ascii_lowercase().as_str(), "127.0.0.1" | "localhost" | "::1")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::host_is_loopback;
+
+    #[test]
+    fn loopback_hosts_pass() {
+        for h in ["127.0.0.1:8787", "127.0.0.1", "localhost:8787", "LOCALHOST", "[::1]:8787", "[::1]"] {
+            assert!(host_is_loopback(h), "{h}");
+        }
+    }
+
+    #[test]
+    fn rebinding_hosts_fail() {
+        for h in ["attacker.example:8787", "127.0.0.1.attacker.example", "192.168.1.5:8787", "", "localhost.evil"] {
+            assert!(!host_is_loopback(h), "{h}");
+        }
+    }
+}
 
 type ApiErr = (StatusCode, Json<serde_json::Value>);
 fn err(code: StatusCode, msg: impl ToString) -> ApiErr {
@@ -157,6 +238,8 @@ struct Acct {
     username: String,
     premium: bool,
 }
+/// One transfer: a debrid cloud transfer (`source: "debrid"`) or a torrent
+/// running on this machine (`source: "local"`). P2P fields are zero for debrid.
 #[derive(Serialize)]
 struct Tx {
     id: String,
@@ -164,6 +247,18 @@ struct Tx {
     status: String,
     progress: f32,
     links: usize,
+    source: &'static str,
+    downloaded: u64,
+    total: u64,
+    down_bps: u64,
+    up_bps: u64,
+    peers: u32,
+    known_peers: u32,
+    eta: Option<u64>,
+    error: Option<String>,
+    pause_reason: Option<String>,
+    path: String,
+    magnet: Option<String>,
 }
 fn to_tx(t: &RemoteTransfer) -> Tx {
     Tx {
@@ -172,6 +267,49 @@ fn to_tx(t: &RemoteTransfer) -> Tx {
         status: format!("{:?}", t.status),
         progress: t.progress,
         links: t.links.len(),
+        source: "debrid",
+        downloaded: 0,
+        total: 0,
+        down_bps: 0,
+        up_bps: 0,
+        peers: 0,
+        known_peers: 0,
+        eta: None,
+        error: None,
+        pause_reason: None,
+        path: String::new(),
+        magnet: None,
+    }
+}
+#[cfg(feature = "p2p")]
+fn torrent_tx(t: &Torrent) -> Tx {
+    let status = match t.state {
+        TorrentState::Resolving => "Resolving",
+        TorrentState::Checking => "Checking",
+        TorrentState::Downloading => "Downloading",
+        TorrentState::Seeding => "Seeding",
+        TorrentState::Paused => "Paused",
+        TorrentState::Done => "Done",
+        TorrentState::Error => "Error",
+    };
+    Tx {
+        id: t.id.clone(),
+        name: t.name.clone(),
+        status: status.to_string(),
+        progress: t.progress,
+        links: t.files,
+        source: "local",
+        downloaded: t.downloaded,
+        total: t.total,
+        down_bps: t.down_bps,
+        up_bps: t.up_bps,
+        peers: t.peers,
+        known_peers: t.known_peers,
+        eta: t.eta_secs,
+        error: t.error.clone(),
+        pause_reason: t.pause_reason.map(|r| format!("{r:?}").to_lowercase()),
+        path: t.output_folder.to_string_lossy().into_owned(),
+        magnet: Some(t.magnet.clone()),
     }
 }
 #[derive(Serialize)]
@@ -226,13 +364,33 @@ async fn connect(State(s): State<Shared>, Json(req): Json<ConnectReq>) -> Result
 #[derive(Deserialize)]
 struct AddReq {
     magnet: String,
+    /// Download on this machine even though a provider is connected.
+    #[serde(default)]
+    direct: bool,
 }
+/// Add a magnet: to the debrid cloud when a provider is connected (unless
+/// `direct`), otherwise to the on-device torrent engine.
 async fn add(State(s): State<Shared>, Json(req): Json<AddReq>) -> Result<Json<Tx>, ApiErr> {
-    let m = Magnet::parse(&req.magnet).map_err(|e| err(StatusCode::BAD_REQUEST, e))?;
     let st = s.lock().await;
-    let p = st.provider.as_ref().ok_or_else(|| err(StatusCode::BAD_REQUEST, "connect a provider first"))?;
-    let t = p.add_magnet(&m).await.map_err(|e| err(StatusCode::BAD_GATEWAY, e))?;
-    Ok(Json(to_tx(&t)))
+    if st.provider.is_some() && !req.direct {
+        let m = Magnet::parse(&req.magnet).map_err(|e| err(StatusCode::BAD_REQUEST, e))?;
+        let p = st.provider.as_ref().ok_or_else(|| err(StatusCode::BAD_REQUEST, "connect a provider first"))?;
+        let t = p.add_magnet(&m).await.map_err(|e| err(StatusCode::BAD_GATEWAY, e))?;
+        return Ok(Json(to_tx(&t)));
+    }
+    #[cfg(feature = "p2p")]
+    {
+        let why = if st.provider.is_some() { "direct downloads are not available" } else { "connect a provider first" };
+        let e = st.torrent.clone().ok_or_else(|| err(StatusCode::BAD_REQUEST, why))?;
+        drop(st);
+        let t = e.add_magnet(&req.magnet).await.map_err(|e| err(StatusCode::BAD_REQUEST, e))?;
+        Ok(Json(torrent_tx(&t)))
+    }
+    #[cfg(not(feature = "p2p"))]
+    {
+        drop(st);
+        Err(err(StatusCode::BAD_REQUEST, "connect a provider first"))
+    }
 }
 
 #[derive(Deserialize)]
@@ -250,11 +408,141 @@ async fn fetch_url(State(s): State<Shared>, Json(req): Json<FetchReq>) -> Result
     Ok(Json(to_dl(&dl)))
 }
 
+/// The debrid list (when connected) followed by the torrents on this machine.
 async fn transfers(State(s): State<Shared>) -> Result<Json<Vec<Tx>>, ApiErr> {
     let st = s.lock().await;
-    let p = st.provider.as_ref().ok_or_else(|| err(StatusCode::BAD_REQUEST, "connect a provider first"))?;
-    let list = p.list_transfers().await.map_err(|e| err(StatusCode::BAD_GATEWAY, e))?;
-    Ok(Json(list.iter().map(to_tx).collect()))
+    let mut out = Vec::new();
+    if let Some(p) = st.provider.as_ref() {
+        let list = p.list_transfers().await.map_err(|e| err(StatusCode::BAD_GATEWAY, e))?;
+        out.extend(list.iter().map(to_tx));
+    }
+    #[cfg(feature = "p2p")]
+    {
+        let e = st.torrent.clone();
+        drop(st);
+        if let Some(e) = e {
+            out.extend(e.list().await.iter().map(torrent_tx));
+        }
+    }
+    Ok(Json(out))
+}
+
+// ---------- on-device torrents ----------
+
+#[derive(Deserialize)]
+struct TorrentReq {
+    id: String,
+    #[serde(default)]
+    delete_files: bool,
+}
+#[derive(Serialize)]
+struct TFile {
+    index: usize,
+    filename: String,
+    size: u64,
+    downloaded: u64,
+    path: String,
+    done: bool,
+    included: bool,
+}
+#[derive(Serialize)]
+struct P2pDto {
+    available: bool,
+    seed: bool,
+    wifi_only: bool,
+    max_connections: usize,
+    mobile: bool,
+}
+#[derive(Deserialize)]
+struct P2pReq {
+    seed: bool,
+    wifi_only: bool,
+    max_connections: usize,
+}
+
+#[cfg(feature = "p2p")]
+async fn engine(s: &Shared) -> Result<Arc<TorrentEngine>, ApiErr> {
+    s.lock().await.torrent.clone().ok_or_else(|| err(StatusCode::BAD_REQUEST, "direct downloads are not available"))
+}
+#[cfg(feature = "p2p")]
+async fn torrent_files(State(s): State<Shared>, Json(req): Json<TorrentReq>) -> Result<Json<Vec<TFile>>, ApiErr> {
+    let files = engine(&s).await?.files(&req.id).await.map_err(|e| err(StatusCode::NOT_FOUND, e))?;
+    Ok(Json(
+        files
+            .into_iter()
+            .map(|f| TFile {
+                index: f.index,
+                filename: f.name,
+                size: f.size,
+                downloaded: f.downloaded,
+                path: f.path.to_string_lossy().into_owned(),
+                done: f.done,
+                included: f.included,
+            })
+            .collect(),
+    ))
+}
+#[cfg(feature = "p2p")]
+async fn torrent_pause(State(s): State<Shared>, Json(req): Json<TorrentReq>) -> Result<Json<()>, ApiErr> {
+    engine(&s).await?.pause(&req.id).await.map_err(|e| err(StatusCode::NOT_FOUND, e))?;
+    Ok(Json(()))
+}
+#[cfg(feature = "p2p")]
+async fn torrent_resume(State(s): State<Shared>, Json(req): Json<TorrentReq>) -> Result<Json<()>, ApiErr> {
+    engine(&s).await?.resume(&req.id).await.map_err(|e| err(StatusCode::NOT_FOUND, e))?;
+    Ok(Json(()))
+}
+#[cfg(feature = "p2p")]
+async fn torrent_remove(State(s): State<Shared>, Json(req): Json<TorrentReq>) -> Result<Json<()>, ApiErr> {
+    engine(&s).await?.remove(&req.id, req.delete_files).await.map_err(|e| err(StatusCode::NOT_FOUND, e))?;
+    Ok(Json(()))
+}
+#[cfg(feature = "p2p")]
+async fn p2p_settings(State(s): State<Shared>) -> Json<P2pDto> {
+    let e = s.lock().await.torrent.clone();
+    let Some(e) = e else {
+        return Json(P2pDto { available: false, seed: false, wifi_only: true, max_connections: 50, mobile: false });
+    };
+    let st = e.settings().await;
+    Json(P2pDto { available: true, seed: st.seed, wifi_only: st.wifi_only, max_connections: st.max_connections, mobile: false })
+}
+#[cfg(feature = "p2p")]
+async fn p2p_set_settings(State(s): State<Shared>, Json(req): Json<P2pReq>) -> Result<Json<P2pDto>, ApiErr> {
+    let e = engine(&s).await?;
+    let settings = lidhra_torrent::Settings {
+        seed: req.seed,
+        wifi_only: req.wifi_only,
+        max_connections: req.max_connections.clamp(2, 200),
+    };
+    e.set_settings(settings).await.map_err(|e| err(StatusCode::INTERNAL_SERVER_ERROR, e))?;
+    Ok(p2p_settings(State(s)).await)
+}
+
+#[cfg(not(feature = "p2p"))]
+const NO_P2P: &str = "direct downloads are not included in this build";
+#[cfg(not(feature = "p2p"))]
+async fn torrent_files(State(_s): State<Shared>, Json(_r): Json<TorrentReq>) -> Result<Json<Vec<TFile>>, ApiErr> {
+    Err(err(StatusCode::NOT_IMPLEMENTED, NO_P2P))
+}
+#[cfg(not(feature = "p2p"))]
+async fn torrent_pause(State(_s): State<Shared>, Json(_r): Json<TorrentReq>) -> Result<Json<()>, ApiErr> {
+    Err(err(StatusCode::NOT_IMPLEMENTED, NO_P2P))
+}
+#[cfg(not(feature = "p2p"))]
+async fn torrent_resume(State(_s): State<Shared>, Json(_r): Json<TorrentReq>) -> Result<Json<()>, ApiErr> {
+    Err(err(StatusCode::NOT_IMPLEMENTED, NO_P2P))
+}
+#[cfg(not(feature = "p2p"))]
+async fn torrent_remove(State(_s): State<Shared>, Json(_r): Json<TorrentReq>) -> Result<Json<()>, ApiErr> {
+    Err(err(StatusCode::NOT_IMPLEMENTED, NO_P2P))
+}
+#[cfg(not(feature = "p2p"))]
+async fn p2p_settings(State(_s): State<Shared>) -> Json<P2pDto> {
+    Json(P2pDto { available: false, seed: false, wifi_only: true, max_connections: 50, mobile: false })
+}
+#[cfg(not(feature = "p2p"))]
+async fn p2p_set_settings(State(_s): State<Shared>, Json(_r): Json<P2pReq>) -> Result<Json<P2pDto>, ApiErr> {
+    Err(err(StatusCode::NOT_IMPLEMENTED, NO_P2P))
 }
 
 #[derive(Deserialize)]

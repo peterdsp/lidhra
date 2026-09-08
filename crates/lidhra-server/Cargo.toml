@@ -17,4 +17,10 @@ serde_json = "1"
 lidhra-debrid = { path = "../lidhra-debrid" }
 lidhra-transfer = { path = "../lidhra-transfer" }
 lidhra-license = { path = "../lidhra-license" }
+lidhra-torrent = { path = "../lidhra-torrent", optional = true }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+
+[features]
+# On-device BitTorrent for magnets added without a provider (LIDHRA_P2P=0 disables it at runtime).
+default = ["p2p"]
+p2p = ["dep:lidhra-torrent"]
