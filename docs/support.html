@@ -83,7 +83,14 @@
       <summary data-i18n="faqDebridQ">What is a debrid service and do I need one?</summary>
       <div class="ans">
         <p data-i18n="faqDebridA">A debrid service (such as Real-Debrid, AllDebrid, or TorBox) is a third-party cloud service that downloads torrents on its servers and gives you a direct HTTPS link. You bring your own debrid account and API token. Lidhra does not provide debrid accounts or content.</p>
-        <p data-i18n="faqDebridA2">On the App Store version, a debrid account is required because direct torrenting is not available. On the desktop direct-download version, you can choose to torrent locally without a debrid account.</p>
+        <p data-i18n="faqDebridA2">A debrid account is optional. Without one, Lidhra downloads the magnet directly on your device; with one, the cloud does the torrenting and your device only downloads over HTTPS, which is usually faster and keeps your IP address out of the swarm.</p>
+      </div>
+    </details>
+    <details>
+      <summary data-i18n="faqP2pQ">Can I download a magnet without a debrid account?</summary>
+      <div class="ans">
+        <p data-i18n="faqP2pA">Yes. Add the magnet and tap Download: Lidhra downloads it directly on your device over BitTorrent. Files land in the same place as every other download (on iPhone and iPad: Files, under On My iPhone, Lidhra). Sharing a finished download (seeding) is off unless you turn it on in Account, Direct downloads.</p>
+        <p data-i18n="faqP2pA2">On iPhone and iPad a direct download only runs while Lidhra is open, and pauses on cellular data unless you turn off Wi-Fi only. Reopen the app and it continues from where it stopped. Other peers in the swarm can see your IP address, as with any BitTorrent client; a debrid account avoids that.</p>
       </div>
     </details>
     <details>
@@ -161,7 +168,10 @@
       supFaqH:"Frequently asked questions",
       faqDebridQ:"What is a debrid service and do I need one?",
       faqDebridA:"A debrid service (such as Real-Debrid, AllDebrid, or TorBox) is a third-party cloud service that downloads torrents on its servers and gives you a direct HTTPS link. You bring your own debrid account and API token. Lidhra does not provide debrid accounts or content.",
-      faqDebridA2:"On the App Store version, a debrid account is required because direct torrenting is not available. On the desktop direct-download version, you can choose to torrent locally without a debrid account.",
+      faqDebridA2:"A debrid account is optional. Without one, Lidhra downloads the magnet directly on your device; with one, the cloud does the torrenting and your device only downloads over HTTPS, which is usually faster and keeps your IP address out of the swarm.",
+      faqP2pQ:"Can I download a magnet without a debrid account?",
+      faqP2pA:"Yes. Add the magnet and tap Download: Lidhra downloads it directly on your device over BitTorrent. Files land in the same place as every other download (on iPhone and iPad: Files, under On My iPhone, Lidhra). Sharing a finished download (seeding) is off unless you turn it on in Account, Direct downloads.",
+      faqP2pA2:"On iPhone and iPad a direct download only runs while Lidhra is open, and pauses on cellular data unless you turn off Wi-Fi only. Reopen the app and it continues from where it stopped. Other peers in the swarm can see your IP address, as with any BitTorrent client; a debrid account avoids that.",
       faqTokenQ:"How do I find my debrid API token?",
       faqTokenA:`Log in to your debrid provider's website and look for an API or settings page. For example, on Real-Debrid go to <b>My Account &rarr; API</b> to find your API token. Copy it and paste it into Lidhra when prompted.`,
       faqTrialQ:"Is there a free trial?",
@@ -198,7 +208,10 @@
       supFaqH:"Συχνές ερωτήσεις",
       faqDebridQ:"Τι είναι η υπηρεσία debrid και τη χρειάζομαι;",
       faqDebridA:"Η υπηρεσία debrid (όπως Real-Debrid, AllDebrid ή TorBox) είναι μια υπηρεσία cloud τρίτων που κατεβάζει torrents στους διακομιστές της και σας δίνει έναν άμεσο σύνδεσμο HTTPS. Φέρνετε τον δικό σας λογαριασμό debrid και API token. Το Lidhra δεν παρέχει λογαριασμούς debrid ή περιεχόμενο.",
-      faqDebridA2:"Στην έκδοση App Store, απαιτείται λογαριασμός debrid επειδή η άμεση λήψη torrent δεν είναι διαθέσιμη. Στην έκδοση απευθείας λήψης για desktop, μπορείτε να κάνετε torrent τοπικά χωρίς λογαριασμό debrid.",
+      faqDebridA2:"Ο λογαριασμός debrid είναι προαιρετικός. Χωρίς αυτόν, το Lidhra κατεβάζει το magnet απευθείας στη συσκευή σας. Με αυτόν, το cloud κάνει το torrenting και η συσκευή σας κατεβάζει μόνο μέσω HTTPS, κάτι που συνήθως είναι ταχύτερο και κρατά τη διεύθυνση IP σας εκτός του swarm.",
+      faqP2pQ:"Μπορώ να κατεβάσω ένα magnet χωρίς λογαριασμό debrid;",
+      faqP2pA:"Ναι. Προσθέστε το magnet και πατήστε Λήψη: το Lidhra το κατεβάζει απευθείας στη συσκευή σας μέσω BitTorrent. Τα αρχεία αποθηκεύονται στο ίδιο μέρος με κάθε άλλη λήψη (σε iPhone και iPad: Αρχεία, στο Στο iPhone μου, Lidhra). Ο διαμοιρασμός μιας ολοκληρωμένης λήψης (seeding) είναι απενεργοποιημένος εκτός αν τον ενεργοποιήσετε στο Λογαριασμός, Απευθείας λήψεις.",
+      faqP2pA2:"Σε iPhone και iPad μια απευθείας λήψη τρέχει μόνο όσο το Lidhra είναι ανοιχτό και μπαίνει σε παύση σε δεδομένα κινητής εκτός αν απενεργοποιήσετε το Μόνο Wi-Fi. Ανοίξτε ξανά την εφαρμογή και συνεχίζει από εκεί που σταμάτησε. Οι άλλοι peers του swarm βλέπουν τη διεύθυνση IP σας, όπως με κάθε πρόγραμμα BitTorrent. Ένας λογαριασμός debrid το αποφεύγει.",
       faqTokenQ:"Πώς βρίσκω το API token του debrid μου;",
       faqTokenA:`Συνδεθείτε στον ιστότοπο του παρόχου debrid σας και αναζητήστε μια σελίδα API ή ρυθμίσεων. Για παράδειγμα, στο Real-Debrid μεταβείτε στο <b>Ο Λογαριασμός μου &rarr; API</b> για να βρείτε το API token σας. Αντιγράψτε το και επικολλήστε το στο Lidhra όταν σας ζητηθεί.`,
       faqTrialQ:"Υπάρχει δωρεάν δοκιμή;",
@@ -235,7 +248,10 @@
       supFaqH:"Pyetje të shpeshta",
       faqDebridQ:"Çfarë është një shërbim debrid dhe a më duhet?",
       faqDebridA:"Një shërbim debrid (si Real-Debrid, AllDebrid ose TorBox) është një shërbim cloud i palëve të treta që shkarkon torrent-e në serverët e tij dhe ju jep një lidhje të drejtpërdrejtë HTTPS. Ju sillni llogarinë tuaj debrid dhe tokenin API. Lidhra nuk ofron llogari debrid ose përmbajtje.",
-      faqDebridA2:"Në versionin e App Store, kërkohet llogari debrid sepse shkarkimi direkt i torrent-eve nuk është i disponueshëm. Në versionin e shkarkimit të drejtpërdrejtë për desktop, mund të bëni torrent lokalisht pa llogari debrid.",
+      faqDebridA2:"Llogaria debrid është opsionale. Pa të, Lidhra e shkarkon magnet-in drejtpërdrejt në pajisjen tënde. Me të, cloud-i bën torrenting-un dhe pajisja jote shkarkon vetëm përmes HTTPS, që zakonisht është më e shpejtë dhe e mban adresën tënde IP jashtë swarm-it.",
+      faqP2pQ:"A mund të shkarkoj një magnet pa llogari debrid?",
+      faqP2pA:"Po. Shto magnet-in dhe prek Shkarko: Lidhra e shkarkon drejtpërdrejt në pajisjen tënde përmes BitTorrent. Skedarët ruhen në të njëjtin vend si çdo shkarkim tjetër (në iPhone dhe iPad: Files, te Në iPhone-in tim, Lidhra). Ndarja e një shkarkimi të përfunduar (seeding) është e fikur nëse nuk e ndez te Llogaria, Shkarkime direkte.",
+      faqP2pA2:"Në iPhone dhe iPad një shkarkim direkt ekzekutohet vetëm sa kohë Lidhra është e hapur dhe ndalon me të dhëna celulare nëse nuk e fik Vetëm Wi-Fi. Hape sërish aplikacionin dhe vazhdon nga ku mbeti. Peer-at e tjerë në swarm e shohin adresën tënde IP, si me çdo klient BitTorrent. Një llogari debrid e shmang këtë.",
       faqTokenQ:"Si e gjej tokenin API të debrid-it tim?",
       faqTokenA:`Hyni në faqen e ofruesit tuaj debrid dhe kërkoni një faqe API ose cilësimesh. Për shembull, në Real-Debrid shkoni te <b>Llogaria Ime &rarr; API</b> për të gjetur tokenin tuaj API. Kopjojeni dhe ngjiteni në Lidhra kur t'ju kërkohet.`,
       faqTrialQ:"A ka provë falas?",

@@ -19,12 +19,17 @@
 Lidhra is a reimagining of the classic torrent client as a **modern download manager** that:
 
 - speaks each platform's **native design language** (Liquid Glass, Material 3, Fluent, libadwaita) from **one shared Rust core**;
-- integrates every major **debrid service** (Real-Debrid, AllDebrid, TorBox, Premiumize, …) so the cloud does the torrenting and your device only ever does an **encrypted HTTPS download** - which also means it can ship on the **App Store**;
+- integrates every major **debrid service** (Real-Debrid, AllDebrid, TorBox, Premiumize, …) so the cloud does the torrenting and your device only ever does an **encrypted HTTPS download**;
+- downloads a magnet **directly on the device** when no debrid account is connected (a built-in, pure Rust BitTorrent engine, seeding off by default);
 - stays **tiny** (Tauri + system webview, no bundled Chromium) and **private** (no accounts, no telemetry).
 
-## Why debrid?
+## Why debrid, and what happens without it
 
-The device hands a magnet to a debrid cloud service the user already pays for; that service torrents it on **its** servers and returns a direct **TLS-encrypted HTTPS link**. Lidhra is then just a resumable download manager - no P2P on the device. A full local BitTorrent engine remains available in the directly-distributed build.
+The device hands a magnet to a debrid cloud service the user already pays for; that service torrents it on **its** servers and returns a direct **TLS-encrypted HTTPS link**. Lidhra is then just a resumable download manager - no P2P on the device, and usually much faster than a home connection.
+
+Without a debrid account the same magnet downloads **directly on the device** through `lidhra-torrent` (DHT, PEX and trackers; magnet metadata; per-file progress). It is deliberately conservative: seeding is off by default, downloads pause on cellular data (Wi-Fi only is the default on iOS) and while the app is suspended, and there is a free-space check before anything is written. Peers can see the device's IP address, as with any BitTorrent client; the debrid path avoids that. With a provider connected the add sheet still offers "Download directly on this device" as an explicit choice.
+
+On iOS a direct download only runs while Lidhra is open (plus the short grace period iOS grants when the app goes to the background); torrents resume from the pieces already on disk when the app is reopened.
 
 ## Repository layout
 
@@ -32,6 +37,8 @@ The device hands a magnet to a debrid cloud service the user already pays for; t
 crates/          Rust workspace - the engine (builds & tested in CI)
   lidhra-debrid    unified interface over debrid providers + adapters + registry
   lidhra-transfer  segmented, resumable HTTPS download engine
+  lidhra-torrent   on-device BitTorrent engine (magnets without a debrid account)
+  vendor/          one patched upstream crate (see vendor/README.md)
   lidhra-cli       the `lidhra` binary: magnet -> debrid -> download
   lidhra-server    local HTTP server + JSON API (the headless / Web-UI mode)
 ui/              the shared web UI - one page that runs in a browser (server) or a
@@ -48,6 +55,7 @@ docs/            the marketing website (deployed to lidhra.peterdsp.dev via GitH
 |-------|--------------|-------|
 | **`lidhra-debrid`** | `DebridProvider` trait + adapters for **Real-Debrid** (live-tested), **AllDebrid**, **TorBox**, **Premiumize**, a provider **registry** (`build_provider`), and a cross-provider policy/failover engine. | builds + unit-tested |
 | **`lidhra-transfer`** | Segmented, **resumable** HTTPS downloads: parallel Range connections, `.part` files with atomic rename, resume-from-partial. | verified byte-identical on live downloads |
+| **`lidhra-torrent`** | On-device BitTorrent over `librqbit` (pure Rust, rustls): magnets without a debrid account, seeding policy, pause on cellular or suspend, free-space check, session file that survives restarts. Behind the `p2p` feature in the app and server. | builds for iOS + tested (loopback swarm) |
 | **`lidhra-cli`** | `lidhra add "<magnet>" --provider <name>` - runs the whole pipeline end to end. | runs |
 | **`lidhra-server`** | Serves the web UI + a JSON API over the engine - "Lidhra like qbittorrent-nox." | runs (verified) |
 | **`app/` (Tauri)** | Native desktop shell wrapping the same UI; commands call the crates directly. | compiles on macOS |
