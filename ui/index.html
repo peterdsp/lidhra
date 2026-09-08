@@ -659,7 +659,7 @@
   <div class="field"><label for="token" data-i18n="lbl_token">API token</label>
     <input id="token" type="password" data-i18n-ph="ph_token" placeholder="API token" autocomplete="off">
     <div class="form-msg" id="cmsg" aria-live="polite"></div></div>
-  <div class="btn-row"><button class="btn" id="connect" data-i18n="btn_connect_account">Connect account</button></div>
+  <div class="btn-row"><button class="btn sec" id="disconnect" data-i18n="btn_disconnect" hidden>Disconnect</button><button class="btn" id="connect" data-i18n="btn_connect_account">Connect account</button></div>
   <div class="field" style="margin-top:18px"><label for="lang" data-i18n="lbl_language">Language</label><select id="lang" aria-label="Language"></select></div>
 </div>
 
@@ -701,7 +701,7 @@ const I18N = {
     m_need_connect:"connect a provider to add magnets", m_enter_token:"enter your API token", m_invalid:"invalid key",
     sub_counts:"{a} active · {s} seeding · {d} done", premium:"premium",
     wl_eyebrow:"A quieter way to move files", wl_title:"Move what matters.", wl_lede:"Fast, private file transfers. No account, no cloud looking over your shoulder, nothing to tidy up after.", wl_private:"Private", wl_fast:"Fast", wl_yours:"Yours", wl_begin:"Begin", wl_look:"Look around first",
-    fs_loading:"Loading files…", fs_err:"Couldn't load the files.", act_play:"Play in Lidhra", act_vlc:"Open in VLC", act_open_in:"Open in another app…", act_open:"Open with default app", act_download:"Download", act_download_all:"Download all ({0})", act_share:"Save to Files or share…", act_copy:"Copy link", act_copied:"Link copied", act_reveal:"Show in folder", act_fail:"That didn't work: {0}",
+    btn_disconnect:"Disconnect", fs_loading:"Loading files…", fs_err:"Couldn't load the files.", act_play:"Play in Lidhra", act_vlc:"Open in VLC", act_open_in:"Open in another app…", act_open:"Open with default app", act_download:"Download", act_download_all:"Download all ({0})", act_share:"Save to Files or share…", act_copy:"Copy link", act_copied:"Link copied", act_reveal:"Show in folder", act_fail:"That didn't work: {0}",
     u_sec:"sec", u_min:"min", u_hr:"h" },
   el:{ __locale:'el', __name:'Ελληνικά', library:"Βιβλιοθήκη", nav_overview:"Επισκόπηση", nav_active:"Ενεργά", nav_seeding:"Διαμοιρασμός", nav_done:"Ολοκληρωμένα",
     seg_active:"Ενεργά", tab_transfers:"Μεταφορές", tab_account:"Λογαριασμός",
@@ -721,7 +721,7 @@ const I18N = {
     m_need_connect:"σύνδεσε πάροχο για magnet", m_enter_token:"εισήγαγε διακριτικό API", m_invalid:"μη έγκυρο κλειδί",
     sub_counts:"{a} ενεργά · {s} διαμοιρασμός · {d} έτοιμα", premium:"premium",
     wl_eyebrow:"Ένας πιο ήσυχος τρόπος να μεταφέρεις αρχεία", wl_title:"Μετακίνησε ό,τι έχει σημασία.", wl_lede:"Γρήγορες, ιδιωτικές μεταφορές αρχείων. Χωρίς λογαριασμό, χωρίς cloud από πάνω σου, τίποτα να τακτοποιήσεις μετά.", wl_private:"Ιδιωτικό", wl_fast:"Γρήγορο", wl_yours:"Δικό σου", wl_begin:"Ξεκίνα", wl_look:"Ρίξε πρώτα μια ματιά",
-    fs_loading:"Φόρτωση αρχείων…", fs_err:"Δεν ήταν δυνατή η φόρτωση των αρχείων.", act_play:"Αναπαραγωγή στο Lidhra", act_vlc:"Άνοιγμα στο VLC", act_open_in:"Άνοιγμα σε άλλη εφαρμογή…", act_open:"Άνοιγμα με προεπιλεγμένη εφαρμογή", act_download:"Λήψη", act_download_all:"Λήψη όλων ({0})", act_share:"Αποθήκευση στα Αρχεία ή κοινοποίηση…", act_copy:"Αντιγραφή συνδέσμου", act_copied:"Ο σύνδεσμος αντιγράφηκε", act_reveal:"Εμφάνιση στον φάκελο", act_fail:"Κάτι πήγε στραβά: {0}",
+    btn_disconnect:"Αποσύνδεση", fs_loading:"Φόρτωση αρχείων…", fs_err:"Δεν ήταν δυνατή η φόρτωση των αρχείων.", act_play:"Αναπαραγωγή στο Lidhra", act_vlc:"Άνοιγμα στο VLC", act_open_in:"Άνοιγμα σε άλλη εφαρμογή…", act_open:"Άνοιγμα με προεπιλεγμένη εφαρμογή", act_download:"Λήψη", act_download_all:"Λήψη όλων ({0})", act_share:"Αποθήκευση στα Αρχεία ή κοινοποίηση…", act_copy:"Αντιγραφή συνδέσμου", act_copied:"Ο σύνδεσμος αντιγράφηκε", act_reveal:"Εμφάνιση στον φάκελο", act_fail:"Κάτι πήγε στραβά: {0}",
     u_sec:"δευτ", u_min:"λεπτά", u_hr:"ώρ" },
   sq:{ __locale:'sq', __name:'Shqip', library:"Biblioteka", nav_overview:"Përmbledhje", nav_active:"Aktive", nav_seeding:"Shpërndarje", nav_done:"Përfunduar",
     seg_active:"Aktive", tab_transfers:"Transferime", tab_account:"Llogaria",
@@ -741,7 +741,7 @@ const I18N = {
     m_need_connect:"lidh një ofrues për magnet", m_enter_token:"fut token-in API", m_invalid:"çelës i pavlefshëm",
     sub_counts:"{a} aktive · {s} shpërndarje · {d} përfunduar", premium:"premium",
     wl_eyebrow:"Një mënyrë më e qetë për të lëvizur skedarë", wl_title:"Lëviz atë që ka rëndësi.", wl_lede:"Transferime skedarësh të shpejta e private. Pa llogari, pa cloud që të shikon, asgjë për të rregulluar pas.", wl_private:"Privat", wl_fast:"I shpejtë", wl_yours:"I yti", wl_begin:"Fillo", wl_look:"Hidh një sy më parë",
-    fs_loading:"Po ngarkohen skedarët…", fs_err:"Skedarët nuk u ngarkuan dot.", act_play:"Luaj në Lidhra", act_vlc:"Hap në VLC", act_open_in:"Hap në një aplikacion tjetër…", act_open:"Hap me aplikacionin e parazgjedhur", act_download:"Shkarko", act_download_all:"Shkarko të gjitha ({0})", act_share:"Ruaj te Files ose ndaj…", act_copy:"Kopjo lidhjen", act_copied:"Lidhja u kopjua", act_reveal:"Shfaq në dosje", act_fail:"Nuk funksionoi: {0}",
+    btn_disconnect:"Shkëputu", fs_loading:"Po ngarkohen skedarët…", fs_err:"Skedarët nuk u ngarkuan dot.", act_play:"Luaj në Lidhra", act_vlc:"Hap në VLC", act_open_in:"Hap në një aplikacion tjetër…", act_open:"Hap me aplikacionin e parazgjedhur", act_download:"Shkarko", act_download_all:"Shkarko të gjitha ({0})", act_share:"Ruaj te Files ose ndaj…", act_copy:"Kopjo lidhjen", act_copied:"Lidhja u kopjua", act_reveal:"Shfaq në dosje", act_fail:"Nuk funksionoi: {0}",
     u_sec:"sek", u_min:"min", u_hr:"orë" },
   it:{ __locale:'it', __name:'Italiano', library:"Libreria", nav_overview:"Panoramica", nav_active:"Attivi", nav_seeding:"Condivisione", nav_done:"Completati",
     seg_active:"Attivi", tab_transfers:"Trasferimenti", tab_account:"Account",
@@ -761,7 +761,7 @@ const I18N = {
     m_need_connect:"connetti un provider per aggiungere magnet", m_enter_token:"inserisci il tuo token API", m_invalid:"chiave non valida",
     sub_counts:"{a} attivi · {s} in condivisione · {d} completati", premium:"premium",
     wl_eyebrow:"Un modo più tranquillo di spostare i file", wl_title:"Sposta ciò che conta.", wl_lede:"Trasferimenti di file veloci e privati. Nessun account, nessun cloud che ti osserva, niente da riordinare dopo.", wl_private:"Privato", wl_fast:"Veloce", wl_yours:"Tuo", wl_begin:"Inizia", wl_look:"Prima dai un'occhiata",
-    fs_loading:"Caricamento file…", fs_err:"Impossibile caricare i file.", act_play:"Riproduci in Lidhra", act_vlc:"Apri in VLC", act_open_in:"Apri in un'altra app…", act_open:"Apri con l'app predefinita", act_download:"Scarica", act_download_all:"Scarica tutto ({0})", act_share:"Salva su File o condividi…", act_copy:"Copia link", act_copied:"Link copiato", act_reveal:"Mostra nella cartella", act_fail:"Non ha funzionato: {0}",
+    btn_disconnect:"Disconnetti", fs_loading:"Caricamento file…", fs_err:"Impossibile caricare i file.", act_play:"Riproduci in Lidhra", act_vlc:"Apri in VLC", act_open_in:"Apri in un'altra app…", act_open:"Apri con l'app predefinita", act_download:"Scarica", act_download_all:"Scarica tutto ({0})", act_share:"Salva su File o condividi…", act_copy:"Copia link", act_copied:"Link copiato", act_reveal:"Mostra nella cartella", act_fail:"Non ha funzionato: {0}",
     u_sec:"sec", u_min:"min", u_hr:"h" },
   es:{ __locale:'es', __name:'Español', library:"Biblioteca", nav_overview:"Resumen", nav_active:"Activos", nav_seeding:"Compartiendo", nav_done:"Completados",
     seg_active:"Activos", tab_transfers:"Transferencias", tab_account:"Cuenta",
@@ -781,7 +781,7 @@ const I18N = {
     m_need_connect:"conecta un proveedor para añadir magnets", m_enter_token:"introduce tu token de API", m_invalid:"clave no válida",
     sub_counts:"{a} activos · {s} compartiendo · {d} completados", premium:"premium",
     wl_eyebrow:"Una forma más tranquila de mover archivos", wl_title:"Mueve lo que importa.", wl_lede:"Transferencias de archivos rápidas y privadas. Sin cuenta, sin nube vigilándote, nada que ordenar después.", wl_private:"Privado", wl_fast:"Rápido", wl_yours:"Tuyo", wl_begin:"Empezar", wl_look:"Echa un vistazo primero",
-    fs_loading:"Cargando archivos…", fs_err:"No se pudieron cargar los archivos.", act_play:"Reproducir en Lidhra", act_vlc:"Abrir en VLC", act_open_in:"Abrir en otra app…", act_open:"Abrir con la app predeterminada", act_download:"Descargar", act_download_all:"Descargar todo ({0})", act_share:"Guardar en Archivos o compartir…", act_copy:"Copiar enlace", act_copied:"Enlace copiado", act_reveal:"Mostrar en la carpeta", act_fail:"No funcionó: {0}",
+    btn_disconnect:"Desconectar", fs_loading:"Cargando archivos…", fs_err:"No se pudieron cargar los archivos.", act_play:"Reproducir en Lidhra", act_vlc:"Abrir en VLC", act_open_in:"Abrir en otra app…", act_open:"Abrir con la app predeterminada", act_download:"Descargar", act_download_all:"Descargar todo ({0})", act_share:"Guardar en Archivos o compartir…", act_copy:"Copiar enlace", act_copied:"Enlace copiado", act_reveal:"Mostrar en la carpeta", act_fail:"No funcionó: {0}",
     u_sec:"s", u_min:"min", u_hr:"h" },
   'zh-Hans':{ __locale:'zh-Hans', __name:'简体中文', library:"资源库", nav_overview:"概览", nav_active:"进行中", nav_seeding:"做种", nav_done:"已完成",
     seg_active:"进行中", tab_transfers:"传输", tab_account:"账户",
@@ -801,7 +801,7 @@ const I18N = {
     m_need_connect:"请先连接服务商再添加磁力链接", m_enter_token:"请输入你的 API 令牌", m_invalid:"无效的密钥",
     sub_counts:"{a} 进行中 · {s} 做种 · {d} 已完成", premium:"高级会员",
     wl_eyebrow:"更安静地传输文件", wl_title:"传输真正重要的文件。", wl_lede:"快速、私密的文件传输。无需账户，没有云端窥探，事后无需清理。", wl_private:"私密", wl_fast:"快速", wl_yours:"属于你", wl_begin:"开始", wl_look:"先四处看看",
-    fs_loading:"正在加载文件…", fs_err:"无法加载文件。", act_play:"在 Lidhra 中播放", act_vlc:"用 VLC 打开", act_open_in:"用其他应用打开…", act_open:"用默认应用打开", act_download:"下载", act_download_all:"全部下载（{0}）", act_share:"存储到“文件”或分享…", act_copy:"复制链接", act_copied:"链接已复制", act_reveal:"在文件夹中显示", act_fail:"操作失败：{0}",
+    btn_disconnect:"断开连接", fs_loading:"正在加载文件…", fs_err:"无法加载文件。", act_play:"在 Lidhra 中播放", act_vlc:"用 VLC 打开", act_open_in:"用其他应用打开…", act_open:"用默认应用打开", act_download:"下载", act_download_all:"全部下载（{0}）", act_share:"存储到“文件”或分享…", act_copy:"复制链接", act_copied:"链接已复制", act_reveal:"在文件夹中显示", act_fail:"操作失败：{0}",
     u_sec:"秒", u_min:"分", u_hr:"小时" },
   ru:{ __locale:'ru', __name:'Русский', library:"Библиотека", nav_overview:"Обзор", nav_active:"Активные", nav_seeding:"Раздача", nav_done:"Готово",
     seg_active:"Активные", tab_transfers:"Передачи", tab_account:"Аккаунт",
@@ -821,7 +821,7 @@ const I18N = {
     m_need_connect:"подключите провайдера, чтобы добавлять magnet", m_enter_token:"введите ваш API-токен", m_invalid:"неверный ключ",
     sub_counts:"{a} активных · {s} раздача · {d} готово", premium:"премиум",
     wl_eyebrow:"Более спокойный способ передавать файлы", wl_title:"Перемещайте то, что важно.", wl_lede:"Быстрые, приватные передачи файлов. Без аккаунта, без облака, следящего за вами, и без уборки потом.", wl_private:"Приватно", wl_fast:"Быстро", wl_yours:"Ваше", wl_begin:"Начать", wl_look:"Сначала осмотреться",
-    fs_loading:"Загрузка файлов…", fs_err:"Не удалось загрузить файлы.", act_play:"Воспроизвести в Lidhra", act_vlc:"Открыть в VLC", act_open_in:"Открыть в другом приложении…", act_open:"Открыть в приложении по умолчанию", act_download:"Скачать", act_download_all:"Скачать все ({0})", act_share:"Сохранить в Файлы или поделиться…", act_copy:"Копировать ссылку", act_copied:"Ссылка скопирована", act_reveal:"Показать в папке", act_fail:"Не сработало: {0}",
+    btn_disconnect:"Отключить", fs_loading:"Загрузка файлов…", fs_err:"Не удалось загрузить файлы.", act_play:"Воспроизвести в Lidhra", act_vlc:"Открыть в VLC", act_open_in:"Открыть в другом приложении…", act_open:"Открыть в приложении по умолчанию", act_download:"Скачать", act_download_all:"Скачать все ({0})", act_share:"Сохранить в Файлы или поделиться…", act_copy:"Копировать ссылку", act_copied:"Ссылка скопирована", act_reveal:"Показать в папке", act_fail:"Не сработало: {0}",
     u_sec:"с", u_min:"мин", u_hr:"ч" },
 };
 function pickLang(){
@@ -856,7 +856,7 @@ function pctS(p){ return nf(0,0).format(p)+'%'; }
 /* ================= backend (browser -> /api, Tauri -> invoke) ================= */
 const TAURI = !!(window.__TAURI__ && window.__TAURI__.core);
 const IOS = TAURI && /iP(hone|ad|od)/.test(navigator.userAgent||'');
-const ROUTES = { providers:['GET','/api/providers'], connect:['POST','/api/connect'], add:['POST','/api/add'], fetch:['POST','/api/fetch'],
+const ROUTES = { providers:['GET','/api/providers'], connect:['POST','/api/connect'], restore:['GET','/api/restore'], disconnect:['POST','/api/disconnect'], add:['POST','/api/add'], fetch:['POST','/api/fetch'],
   transfers:['GET','/api/transfers'], download:['POST','/api/download'], downloads:['GET','/api/downloads'],
   license:['GET','/api/license'], license_activate:['POST','/api/license'], license_activate_email:['POST','/api/license/email'] };
 async function api(name,args){
@@ -999,6 +999,17 @@ function reconcile(wrap,list){
 }
 
 /* ================= actions ================= */
+/* Sign back in with the login remembered on this device (survives restarts and updates). */
+async function restoreSession(){
+  try{ const a=await api('restore'); if(!a)return;
+    S.connected=true; setConn(a.username||t('premium')); if(a.provider)$('#provider').value=a.provider; startTransfers(); render();
+  }catch(e){}
+}
+async function doDisconnect(){
+  try{ await api('disconnect'); }catch(e){}
+  if(tpoll){ clearInterval(tpoll); tpoll=null; }
+  S.connected=false; S.tx=[]; setConn(null); $('#token').value=''; $('#cmsg').textContent=''; render();
+}
 async function doConnect(){
   const provider=$('#provider').value, token=$('#token').value.trim(), cm=$('#cmsg');
   if(!token){ cm.textContent=t('m_enter_token'); cm.className='form-msg err'; return; }
@@ -1008,7 +1019,7 @@ async function doConnect(){
   }catch(e){ S.connected=false; setConn(null); cm.textContent=e.message; cm.className='form-msg err'; }
 }
 function setConn(who){ const on=!!who;
-  $('#dot').classList.toggle('on',on); $('#dot-side').classList.toggle('on',on);
+  $('#dot').classList.toggle('on',on); $('#dot-side').classList.toggle('on',on); $('#disconnect').hidden=!on;
   $('#who').textContent=on?who:t('conn_not'); $('#who-side').textContent=on?who:t('conn_not');
   $('#conn-toggle-side').textContent=on?t('conn_change'):t('conn_connect'); }
 async function doAdd(){
@@ -1281,13 +1292,14 @@ async function init(){
   const onLang=v=>{ lang=v; localStorage.setItem('lidhra_lang',lang); fillLangSelects(); applyI18n(); setView(S.view,{silent:true}); render(); if(typeof refreshLicense==='function')refreshLicense(); };
   $('#lang').onchange=e=>onLang(e.target.value); $('#lang-side').onchange=e=>onLang(e.target.value);
   try{ const p=await api('providers'); $('#provider').innerHTML=p.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.label)+'</option>').join(''); }catch(e){}
+  restoreSession();
   $$('#sidenav .nav').forEach(n=>n.onclick=()=>setFilter(n.dataset.f));
   $$('.seg').forEach(b=>b.onclick=()=>setFilter(b.dataset.f));
   $$('.tabbar .tab').forEach(b=>b.onclick=()=>setView(b.dataset.view,{opener:b}));
   $('#add-open').onclick=()=>openSheet('add',$('#add-open'));
   $('#add-cancel').onclick=()=>closeSheet('add'); $('#add-scrim').onclick=()=>closeSheet('add'); $('#add-btn').onclick=doAdd;
   $('#add-in').addEventListener('keydown',e=>{ if(e.key==='Enter')doAdd(); if(e.key==='Escape')closeSheet('add'); });
-  $('#acct-scrim').onclick=()=>closeSheet('acct'); $('#conn-toggle-side').onclick=()=>openSheet('acct',$('#conn-toggle-side')); $('#connect').onclick=doConnect;
+  $('#acct-scrim').onclick=()=>closeSheet('acct'); $('#conn-toggle-side').onclick=()=>openSheet('acct',$('#conn-toggle-side')); $('#connect').onclick=doConnect; $('#disconnect').onclick=doDisconnect;
   $('#token').addEventListener('keydown',e=>{ if(e.key==='Enter')doConnect(); });
   $('#file-scrim').onclick=()=>closeSheet('file'); $('#player-close').onclick=closePlayer;
   $('#list').addEventListener('click',e=>{ const el=e.target.closest('button.card'); if(!el)return; const it=S.items[el.dataset.key]; if(it)openFile(it,el); });

@@ -6,7 +6,7 @@
 
 use lidhra_debrid::prelude::*;
 use lidhra_transfer::{download as fetch_file, DownloadConfig, Progress};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::result::Result; // shadow the prelude's `Result` alias back to std's
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -41,8 +41,39 @@ struct Inner {
     downloads: Vec<Arc<Dl>>,
     next_id: u64,
     config_dir: PathBuf,
+    /// Where the provider login is remembered (inside the app's own data
+    /// directory, so it survives restarts and app updates). Set in `setup`.
+    session_path: Option<PathBuf>,
 }
 struct AppState(Mutex<Inner>);
+
+/// The remembered provider login.
+#[derive(Serialize, Deserialize)]
+struct Session {
+    provider: String,
+    token: String,
+}
+
+fn load_session(path: Option<&Path>) -> Option<Session> {
+    let bytes = std::fs::read(path?).ok()?;
+    serde_json::from_slice(&bytes).ok()
+}
+
+fn save_session(path: Option<&Path>, s: &Session) {
+    let Some(path) = path else { return };
+    if let Some(dir) = path.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    if let Ok(json) = serde_json::to_vec(s) {
+        let _ = std::fs::write(path, json);
+        // Owner-only on Unix; on iOS the container is additionally encrypted at rest.
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600));
+        }
+    }
+}
 
 #[derive(Serialize)]
 struct Prov {
@@ -53,6 +84,8 @@ struct Prov {
 struct Acct {
     username: String,
     premium: bool,
+    /// The provider key the account was connected with (so the UI can preselect it).
+    provider: String,
 }
 #[derive(Serialize)]
 struct Tx {
@@ -152,14 +185,46 @@ fn providers() -> Vec<Prov> {
         .collect()
 }
 
+/// Authenticate against a provider. Runs without the state lock so polling
+/// keeps going while the network round-trips happen.
+async fn sign_in(provider: &str, token: &str) -> Result<(Box<dyn DebridProvider>, Acct), String> {
+    let id = ProviderId::from_key(provider).ok_or("unknown provider")?;
+    let p = build_provider(id, Credential::ApiKey(token.to_string())).map_err(|e| e.to_string())?;
+    p.authenticate(Credential::ApiKey(token.to_string())).await.map_err(|e| e.to_string())?;
+    let a = p.account().await.map_err(|e| e.to_string())?;
+    Ok((p, Acct { username: a.username, premium: a.premium, provider: provider.to_string() }))
+}
+
 #[tauri::command]
 async fn connect(state: tauri::State<'_, AppState>, provider: String, token: String) -> Result<Acct, String> {
-    let id = ProviderId::from_key(&provider).ok_or("unknown provider")?;
-    let p = build_provider(id, Credential::ApiKey(token.clone())).map_err(|e| e.to_string())?;
-    p.authenticate(Credential::ApiKey(token)).await.map_err(|e| e.to_string())?;
-    let a = p.account().await.map_err(|e| e.to_string())?;
+    let (p, acct) = sign_in(&provider, &token).await?;
+    let mut g = state.0.lock().await;
+    g.provider = Some(p);
+    save_session(g.session_path.as_deref(), &Session { provider, token });
+    Ok(acct)
+}
+
+/// Sign back in with the remembered login, if any. `Ok(None)` when nothing is
+/// saved; an error (offline, revoked token) keeps the saved login so the next
+/// launch can try again.
+#[tauri::command]
+async fn restore(state: tauri::State<'_, AppState>) -> Result<Option<Acct>, String> {
+    let path = state.0.lock().await.session_path.clone();
+    let Some(s) = load_session(path.as_deref()) else { return Ok(None) };
+    let (p, acct) = sign_in(&s.provider, &s.token).await?;
     state.0.lock().await.provider = Some(p);
-    Ok(Acct { username: a.username, premium: a.premium })
+    Ok(Some(acct))
+}
+
+/// Forget the remembered login and drop the active provider.
+#[tauri::command]
+async fn disconnect(state: tauri::State<'_, AppState>) -> Result<(), String> {
+    let mut g = state.0.lock().await;
+    g.provider = None;
+    if let Some(p) = g.session_path.as_deref() {
+        let _ = std::fs::remove_file(p);
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -405,28 +470,39 @@ pub fn run() {
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_lidhra_native::init())
-        .manage(AppState(Mutex::new(Inner { out_dir, config_dir, ..Default::default() })));
+        .manage(AppState(Mutex::new(Inner { out_dir, config_dir, ..Default::default() })))
+        .setup(|app| {
+            use tauri::Manager;
+            // Remember the provider login in the app's data directory.
+            if let Ok(dir) = app.path().app_data_dir() {
+                let state = app.state::<AppState>();
+                state.0.blocking_lock().session_path = Some(dir.join("session.json"));
+            }
 
-    // Auto-update only in the Ko-fi / direct build; the App Store handles updates itself.
-    #[cfg(not(feature = "appstore"))]
-    {
-        builder = builder.plugin(tauri_plugin_updater::Builder::new().build()).setup(|app| {
-            use tauri_plugin_updater::UpdaterExt;
-            let handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                if let Ok(updater) = handle.updater() {
-                    if let Ok(Some(update)) = updater.check().await {
-                        let _ = update.download_and_install(|_, _| {}, || {}).await;
+            // Auto-update only in the Ko-fi / direct build; the App Store handles updates itself.
+            #[cfg(not(feature = "appstore"))]
+            {
+                use tauri_plugin_updater::UpdaterExt;
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Ok(updater) = handle.updater() {
+                        if let Ok(Some(update)) = updater.check().await {
+                            let _ = update.download_and_install(|_, _| {}, || {}).await;
+                        }
                     }
-                }
-            });
+                });
+            }
             Ok(())
         });
+
+    #[cfg(not(feature = "appstore"))]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
     }
 
     builder
         .invoke_handler(tauri::generate_handler![
-            providers, connect, add, fetch, transfers, download, downloads, links, download_link, open_with,
+            providers, connect, restore, disconnect, add, fetch, transfers, download, downloads, links, download_link, open_with,
             reveal, file_share, file_open_in, file_play, native_can_open, license, license_activate,
             license_activate_email
         ])
