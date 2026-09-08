@@ -1,0 +1,23 @@
+[package]
+name = "lidhra-torrent"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Lidhra's on-device BitTorrent engine - downloads a magnet directly when no debrid account is connected."
+
+[dependencies]
+# Pure Rust engine (DHT, PEX, trackers, magnet metadata, per-file selection).
+# rustls only: no OpenSSL, so it cross-compiles for iOS unchanged.
+librqbit = { version = "9.0.1", default-features = false, features = ["rust-tls"] }
+tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+anyhow = "1"
+base64 = "0.22"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

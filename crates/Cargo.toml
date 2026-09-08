@@ -7,4 +7,9 @@ members = [
     "lidhra-cli",      # `lidhra` binary: magnet -> debrid -> download
     "lidhra-server",   # local HTTP server + web UI (headless / Web-UI mode)
     "lidhra-license",  # trial timer + offline license-key verification
+    "lidhra-torrent",  # on-device BitTorrent engine (magnets without a debrid account)
 ]
+
+# See vendor/README.md: one cfg fix so librqbit builds for iOS.
+[patch.crates-io]
+librqbit-dualstack-sockets = { path = "vendor/librqbit-dualstack-sockets" }
