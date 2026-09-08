@@ -110,8 +110,9 @@ jobs:
 
           # 4. Switch to the App Store flavor and verify. A silent failure here would
           #    ship the Ko-fi trial + "Buy on Ko-fi" UI and get rejected under 3.1.1.
-          sed -i '' 's/^default = \["kofi"\]/default = ["appstore"]/' app/src-tauri/Cargo.toml
-          grep -q '^default = \["appstore"\]' app/src-tauri/Cargo.toml \
+          # `p2p` (on-device torrents for magnets without a debrid account) stays on in the store build.
+          sed -i '' 's/^default = \["kofi", "p2p"\]/default = ["appstore", "p2p"]/' app/src-tauri/Cargo.toml
+          grep -q '^default = \["appstore", "p2p"\]' app/src-tauri/Cargo.toml \
             || { echo "::error::appstore feature not enabled - refusing to ship the Ko-fi build to the App Store"; exit 1; }
           # Belt-and-suspenders: physically strip the Ko-fi trial/license/purchase UI
           # from the shared web UI so it cannot appear in the App Store binary even if

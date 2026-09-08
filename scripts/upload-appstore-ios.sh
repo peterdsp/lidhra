@@ -26,7 +26,7 @@ unset TOOLCHAINS || true
 echo "==> Building signed App Store IPA (appstore feature: no self-updater)"
 pushd app/src-tauri >/dev/null
 cp Cargo.toml /tmp/Lidhra.Cargo.toml.bak
-sed -i.bak 's/^default = \["kofi"\]/default = ["appstore"]/' Cargo.toml && rm -f Cargo.toml.bak
+sed -i.bak 's/^default = \["kofi", "p2p"\]/default = ["appstore", "p2p"]/' Cargo.toml && rm -f Cargo.toml.bak
 popd >/dev/null
 
 cleanup() { cp /tmp/Lidhra.Cargo.toml.bak app/src-tauri/Cargo.toml 2>/dev/null || true; }
