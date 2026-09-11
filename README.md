@@ -12,8 +12,11 @@
 
 ---
 
-> **Status: early / work-in-progress.** The core libraries are built, tested, and usable from the CLI.
-> The desktop/mobile/TV GUI shells are designed (see [`design/`](design/)) but not yet implemented.
+> **Status: active.** The core libraries are built, tested, and usable from the CLI, the
+> local server, and the Tauri app (desktop and iOS, the latter on the App Store). The shared
+> web UI (`ui/index.html`) is the shipping interface; the TV shell is still design-only
+> (see [`design/`](design/)). As of 1.3.0 the interface adapts to available display regions
+> and is being readied for iPhone Duo (see [`docs/adaptive-layout.md`](docs/adaptive-layout.md)).
 > This is a real, evolving codebase - not a finished product.
 
 Lidhra is a reimagining of the classic torrent client as a **modern download manager** that:
