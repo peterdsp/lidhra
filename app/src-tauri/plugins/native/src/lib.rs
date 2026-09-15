@@ -36,13 +36,24 @@ impl<R: Runtime> Native<R> {
     }
 
     /// System share sheet for a local file (AirDrop, Messages, Save to Files, …).
-    pub fn share(&self, path: &str) -> Result<(), String> {
-        self.call("share", serde_json::json!({ "path": path })).map(|_| ())
+    /// `anchor` is the initiating control's box in the webview's CSS-pixel space
+    /// (`{x,y,w,h}`), so the popover points at it on iPad / large layouts; a
+    /// missing anchor falls back to the bottom-centre of the window.
+    pub fn share(&self, path: &str, anchor: Option<serde_json::Value>) -> Result<(), String> {
+        let mut payload = serde_json::json!({ "path": path });
+        if let Some(a) = anchor {
+            payload["anchor"] = a;
+        }
+        self.call("share", payload).map(|_| ())
     }
 
     /// "Open in…" menu: hand a local file to another installed app.
-    pub fn open_in(&self, path: &str) -> Result<(), String> {
-        self.call("openIn", serde_json::json!({ "path": path })).map(|_| ())
+    pub fn open_in(&self, path: &str, anchor: Option<serde_json::Value>) -> Result<(), String> {
+        let mut payload = serde_json::json!({ "path": path });
+        if let Some(a) = anchor {
+            payload["anchor"] = a;
+        }
+        self.call("openIn", payload).map(|_| ())
     }
 
     /// Native full-screen player for a local path or an http(s) URL.

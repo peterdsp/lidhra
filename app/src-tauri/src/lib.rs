@@ -658,16 +658,18 @@ async fn reveal(app: tauri::AppHandle, path: String) -> Result<(), String> {
     app.opener().reveal_item_in_dir(path).map_err(|e| e.to_string())
 }
 
-/// iOS share sheet for a downloaded file (includes "Save to Files").
+/// iOS share sheet for a downloaded file (includes "Save to Files"). `anchor`
+/// is the initiating control's box in the webview's CSS-pixel space, so the
+/// popover points at it instead of a fixed corner (see NativePlugin.swift).
 #[tauri::command]
-async fn file_share(app: tauri::AppHandle, path: String) -> Result<(), String> {
-    app.native().share(&path)
+async fn file_share(app: tauri::AppHandle, path: String, anchor: Option<serde_json::Value>) -> Result<(), String> {
+    app.native().share(&path, anchor)
 }
 
 /// iOS "Open in…" menu for a downloaded file (VLC, Infuse, …).
 #[tauri::command]
-async fn file_open_in(app: tauri::AppHandle, path: String) -> Result<(), String> {
-    app.native().open_in(&path)
+async fn file_open_in(app: tauri::AppHandle, path: String, anchor: Option<serde_json::Value>) -> Result<(), String> {
+    app.native().open_in(&path, anchor)
 }
 
 /// iOS native player for a local path or an http(s) URL.

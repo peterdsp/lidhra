@@ -50,6 +50,15 @@
     --sal:env(safe-area-inset-left,0px);
     --sar:env(safe-area-inset-right,0px);
     --tabh:68px;
+    /* Active reserved-region (iPhone Duo hinge / division) insets in CSS px,
+       reported by the native geometry bridge and converted to this viewport's
+       coordinate space. Zero everywhere means "no active division", so every
+       other target (browser, desktop, ordinary iPhone, iPad, and an iPhone Duo
+       whose display is continuous) renders exactly as before. Never guessed:
+       only the system may set these. */
+    --rr-top:0px; --rr-right:0px; --rr-bottom:0px; --rr-left:0px;
+    /* Detail pane sizing for the split / stack work-area layouts. */
+    --detail-w:380px;
   }
   @media (prefers-color-scheme: dark){
     :root{
@@ -115,9 +124,24 @@
   /* The single row must be explicitly bounded: WebKit does not resolve the
      screen's percentage height against an implicit auto row, so the content
      column grew past the viewport and the list could not scroll on iOS. */
-  .app{display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr);height:100dvh;height:100vh}
+  /* Dynamic viewport height, with a static fallback for engines without dvh.
+     dvh must come LAST so it wins where supported: it tracks the shrinking
+     viewport when the iOS keyboard or the URL bar appears, which a fixed vh
+     does not. An active division insets the app away from the fold via the
+     reserved-region variables (all 0 unless the system reports otherwise). */
+  .app{display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr);
+    height:100vh;height:100dvh;
+    padding:var(--rr-top) var(--rr-right) var(--rr-bottom) var(--rr-left)}
   .sidebar{display:none}
   .screen{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;height:100%}
+  /* Work area: the transfer list and, in split / stack layouts, the inline
+     selected-file detail beside or below it. A single flex line that the
+     layout modes below turn into a row or a column. In compact and regular
+     single-pane layouts the detail lives in the modal sheet instead and this
+     wrapper holds only the scrolling content, exactly as before. */
+  .workspace{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column}
+  .workspace>.content{flex:1;min-height:0;min-width:0}
+  #detail-pane{display:none}
 
   /* ---------- Header (no enclosing rectangle) ---------- */
   .header{
@@ -353,7 +377,7 @@
   .acts .btn svg{width:20px;height:20px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .acts .btn span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .acts .btn:disabled{opacity:.55;cursor:default}
-  #file-msg{margin-top:10px}
+  .file-msg{margin-top:10px}
 
   /* ---------- In-app player (desktop / browser; iOS uses the native player) ---------- */
   #player{position:fixed;inset:0;z-index:300;background:#000;color:#fff;display:flex;flex-direction:column}
@@ -362,6 +386,67 @@
   #player .ptitle{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:15px}
   #player .pclose{width:40px;height:40px;border-radius:20px;border:none;background:rgba(255,255,255,.14);color:#fff;font-size:18px;cursor:pointer;display:grid;place-items:center;-webkit-tap-highlight-color:transparent}
   #player video{flex:1;min-height:0;width:100%;background:#000;outline:none}
+
+  /* ================= Inline selected-file detail (split / stack) =================
+     The same detail surface the modal file sheet renders, hosted inline beside
+     or below the transfer list when there is room for two work areas. It reuses
+     the sheet's building blocks (.files, .frow, .acts, .btn) by class, so there
+     is one set of handlers, IDs, and accessibility elements, never a duplicate.
+     Hidden by default; the layout modes below reveal it. */
+  #detail-pane{
+    flex:0 0 var(--detail-w);min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+    border-radius:20px;padding:20px 18px;background:var(--card);border:1px solid var(--card-border);
+    box-shadow:0 1px 2px var(--card-shadow),0 8px 22px color-mix(in srgb,var(--card-shadow) 60%,transparent)}
+  #detail-pane::-webkit-scrollbar{width:0;height:0}
+  #detail-pane .file-title{margin:0 0 4px;font-size:19px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #detail-pane .file-hint{color:var(--text-secondary);font-size:13px;margin:0 0 16px}
+  /* Empty detail state: shown when nothing is selected in a two-pane layout. */
+  .detail-empty{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--text-secondary);padding:24px}
+  .detail-empty svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.6;margin-bottom:12px}
+  .detail-empty p{margin:0;font-size:14px;max-width:24ch;line-height:1.5}
+  #detail-pane.is-empty .detail-body{display:none}
+  #detail-pane.is-empty .detail-empty{display:flex}
+
+  /* ================= Layout modes (adaptive) =================
+     `data-layout` is set from content-driven thresholds and the system's
+     reported geometry by LidhraAdaptive, never from a model name or a fixed
+     screen size. `split` = list + detail side by side; `stack` = list above
+     detail (tabletop / horizontal division); `regular` = single content pane
+     with the sidebar; `compact` = single pane with the floating tab bar. */
+  .app[data-layout="split"] .workspace,
+  .app[data-layout="stack"] .workspace{gap:18px}
+  .app[data-layout="split"] .workspace{flex-direction:row;align-items:stretch;
+    padding:0 calc(var(--mx) + var(--sar) + var(--rr-right)) calc(var(--sab)) calc(var(--mx) + var(--sal) + var(--rr-left))}
+  .app[data-layout="split"] .workspace>.content{padding-left:0;padding-right:0}
+  .app[data-layout="split"] #detail-pane{display:block}
+  .app[data-layout="stack"] .workspace{flex-direction:column}
+  .app[data-layout="stack"] #detail-pane{display:block;flex:1 1 0;min-height:120px;margin:0 calc(var(--mx) + var(--sar) + var(--rr-right)) calc(var(--sab)) calc(var(--mx) + var(--sal) + var(--rr-left))}
+  .app[data-layout="stack"] .workspace>.content{flex:1 1 0}
+  /* Central fold: the gutter matches the fold and the list edge meets it. */
+  .app[data-fold="v"] .workspace{gap:var(--split-gap,18px)}
+  .app[data-fold="v"] .workspace>.content{flex:0 0 var(--split-list-basis,auto)}
+  .app[data-fold="h"] .workspace{gap:var(--split-gap,18px)}
+  /* Sidebar collapsed under a fold: hide it, restore the floating tab bar for
+     navigation, and give the work areas room to clear that bar. */
+  .app[data-nav="collapsed"]{grid-template-columns:1fr}
+  .app[data-nav="collapsed"] .sidebar{display:none}
+  .app[data-nav="collapsed"] .tabbar{display:grid}
+  .app[data-nav="collapsed"] .content,.app[data-nav="collapsed"] #detail-pane{
+    padding-bottom:calc(var(--tabh) + var(--sab) + var(--rr-bottom) + 16px)}
+  /* Detail pane clears the floating tab bar when that bar is still shown (a
+     fold-forced split narrower than the sidebar breakpoint keeps the tab bar
+     for navigation; at the sidebar breakpoint the bar is already hidden). */
+  .app[data-layout="split"] #detail-pane,.app[data-layout="stack"] #detail-pane{
+    padding-bottom:calc(20px + var(--sab) + var(--rr-bottom))}
+  /* Selected transfer card while its detail shows inline. */
+  .card.sel{border-color:var(--plate-border);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 55%,transparent),0 8px 22px var(--card-shadow)}
+
+  /* Fixed overlays clear an active division: the floating tab bar sits inside
+     the bottom / side reserved insets, and every sheet keeps its content out of
+     the fold. All 0 unless the system reports a division, so no empty stripe
+     ever appears on a continuous display. */
+  .tabbar{margin-bottom:var(--rr-bottom)}
+  .sheet{margin-bottom:0}
 
   /* ================= Tablet / desktop (>=768): sidebar layout ================= */
   @media (min-width:768px){
@@ -614,14 +699,19 @@
     <div class="lic" id="lic"></div>
     <!-- KOFI:END -->
 
-    <div class="content">
-      <div class="list" id="list"></div>
-      <div class="empty" id="empty" hidden>
-        <div class="eicon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v11m0 0l-4-4m4 4l4-4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></div>
-        <h2 id="empty-t"></h2>
-        <p id="empty-p"></p>
-        <button class="cta" id="empty-cta" hidden></button>
+    <div class="workspace">
+      <div class="content">
+        <div class="list" id="list"></div>
+        <div class="empty" id="empty" hidden>
+          <div class="eicon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v11m0 0l-4-4m4 4l4-4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></div>
+          <h2 id="empty-t"></h2>
+          <p id="empty-p"></p>
+          <button class="cta" id="empty-cta" hidden></button>
+        </div>
       </div>
+      <!-- Inline selected-file detail (split / stack layouts). The same surface
+           the modal file sheet renders, by class, so nothing is duplicated. -->
+      <aside id="detail-pane" class="is-empty" aria-label="Selected file"></aside>
     </div>
   </div>
 
@@ -687,11 +777,13 @@
 <div class="scrim" id="file-scrim"></div>
 <div class="sheet glass" id="file-sheet" role="dialog" aria-modal="true" aria-labelledby="file-title" aria-hidden="true">
   <div class="grab"></div>
-  <h2 id="file-title"></h2>
-  <p class="hint mono" id="file-hint"></p>
-  <div class="files" id="file-list" role="listbox" hidden></div>
-  <div class="acts" id="file-acts"></div>
-  <div class="form-msg" id="file-msg" aria-live="polite"></div>
+  <div class="detail-body">
+    <h2 class="file-title" id="file-title"></h2>
+    <p class="hint mono file-hint"></p>
+    <div class="files file-list" role="listbox" hidden></div>
+    <div class="acts file-acts"></div>
+    <div class="form-msg file-msg" aria-live="polite"></div>
+  </div>
 </div>
 
 <!-- ============ IN-APP PLAYER ============ -->
@@ -905,6 +997,20 @@ const I18N_P2P = {
     act_pause:"Пауза", act_resume:"Продолжить", act_remove:"Убрать из списка", act_remove_files:"Удалить файлы…", act_confirm_delete:"Нажмите ещё раз, чтобы удалить файлы", act_copy_magnet:"Копировать magnet-ссылку" }
 };
 Object.keys(I18N_P2P).forEach(k=>{ if(I18N[k]) Object.assign(I18N[k], I18N_P2P[k]); });
+/* The P2P table keys Chinese as `zh`; the main table uses `zh-Hans`. Merge it
+   explicitly so the Simplified Chinese build gets the direct-download strings. */
+if(I18N['zh-Hans'] && I18N_P2P.zh) Object.assign(I18N['zh-Hans'], I18N_P2P.zh);
+/* 1.3.0 adaptive-layout strings (inline selected-file detail empty state). */
+const I18N_ADAPT = {
+  en:{ detail_empty:"Select a transfer to see its files and actions." },
+  el:{ detail_empty:"Επίλεξε μια μεταφορά για να δεις τα αρχεία και τις ενέργειές της." },
+  sq:{ detail_empty:"Zgjidh një transferim për të parë skedarët dhe veprimet e tij." },
+  it:{ detail_empty:"Seleziona un trasferimento per vederne i file e le azioni." },
+  es:{ detail_empty:"Selecciona una transferencia para ver sus archivos y acciones." },
+  'zh-Hans':{ detail_empty:"选择一个传输以查看其文件和操作。" },
+  ru:{ detail_empty:"Выберите передачу, чтобы увидеть её файлы и действия." }
+};
+Object.keys(I18N_ADAPT).forEach(k=>{ if(I18N[k]) Object.assign(I18N[k], I18N_ADAPT[k]); });
 
 let lang=pickLang();
 function t(key,a){ let s=(I18N[lang]&&I18N[lang][key])||I18N.en[key]||key; return a!==undefined?String(s).replace('{0}',a):s; }
@@ -941,6 +1047,142 @@ async function api(name,args){
   const opt=m==='GET'?{}:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(args||{})};
   const r=await fetch(u,opt); const d=await r.json().catch(()=>({error:r.statusText})); if(!r.ok) throw new Error(d.error||r.statusText); return d;
 }
+
+/* ADAPTIVE:START — pure, DOM-free geometry + layout math.
+   This block is extracted verbatim and unit-tested in test/adaptive.test.mjs,
+   so it must not touch the DOM, `window`, or any app global. It turns the
+   native geometry payload and the measured viewport into a layout decision. */
+(function(root){
+  'use strict';
+  /* Content-driven thresholds (CSS px), documented by intent, not device size:
+       LIST_MIN    smallest comfortable transfer list
+       DETAIL_MIN  smallest usable selected-file detail
+       GAP         gutter between the two work areas
+       REGULAR_MIN width at/above which the sidebar layout applies; matches the
+                   768px CSS breakpoint that owns compact vs regular so the two
+                   never disagree. */
+  var T = { LIST_MIN:340, DETAIL_MIN:360, GAP:18, REGULAR_MIN:768, SIDEBAR:280, STACK_MIN_H:220 };
+
+  /* Native points -> this webview's CSS pixel space. `xf` is the *measured*
+     relationship, never assumed: `scale` (points->px, usually 1 but a webview
+     can be zoomed or inset), and `originX`/`originY`, the CSS-space position of
+     the webview's own top-left inside the scene, plus any keyboard shift. */
+  function toCssRect(r, xf){
+    xf = xf || {};
+    var s = (typeof xf.scale === 'number' && xf.scale > 0) ? xf.scale : 1;
+    var ox = xf.originX || 0, oy = xf.originY || 0;
+    return { x:(r.x*s)-ox, y:(r.y*s)-oy, w:r.w*s, h:r.h*s };
+  }
+
+  /* Reserved-region rects (in CSS space) -> edge insets plus any central fold.
+     A region touching one edge and reaching inward occludes that edge (an
+     inset, e.g. a camera housing or a rounded corner). A region that spans the
+     full height between the top and bottom edges without touching left or right
+     is a *central vertical fold* that separates two side-by-side work areas;
+     the full-width equivalent is a *central horizontal fold*. Empty rects, and
+     rects that float free of every edge, contribute nothing, so a stale or
+     bogus rect can never open a phantom gap. Returns
+       { insets:{top,right,bottom,left}, vDivide|null, hDivide|null }
+     where a divide is { axis, start, size } in CSS px. */
+  function analyzeRegions(regions, vw, vh){
+    var ins = { top:0, right:0, bottom:0, left:0 };
+    var vDiv=null, hDiv=null;
+    (regions||[]).forEach(function(g){
+      if(!g || g.w<=0 || g.h<=0) return;
+      var x0=g.x, y0=g.y, x1=g.x+g.w, y1=g.y+g.h;
+      var tL=x0<=1, tR=x1>=vw-1, tT=y0<=1, tB=y1>=vh-1;
+      if(g.h >= g.w){                                  // vertical-ish region
+        if(tT && tB && !tL && !tR){ if(!vDiv||g.w>vDiv.size) vDiv={axis:'v',start:x0,size:g.w}; return; }
+        if(tL && !tR) ins.left=Math.max(ins.left, x1);
+        else if(tR && !tL) ins.right=Math.max(ins.right, vw-x0);
+      } else {                                         // horizontal-ish region
+        if(tL && tR && !tT && !tB){ if(!hDiv||g.h>hDiv.size) hDiv={axis:'h',start:y0,size:g.h}; return; }
+        if(tT && !tB) ins.top=Math.max(ins.top, y1);
+        else if(tB && !tT) ins.bottom=Math.max(ins.bottom, vh-y0);
+      }
+    });
+    return { insets:ins, vDivide:vDiv, hDivide:hDiv };
+  }
+  /* Backward-compatible edge-inset view (used where only the insets matter). */
+  function regionInsets(regions, vw, vh){ return analyzeRegions(regions, vw, vh).insets; }
+
+  /* Layout decision. Inputs are space and geometry only, never a model name,
+     screen size, or orientation on its own.
+       env: { width, height, sidebar, regions, thresholds? }
+     returns { mode:'compact'|'regular'|'split'|'stack', insets, divide, mainWidth, sidebar } */
+  function chooseLayout(env){
+    var C = Object.assign({}, T, env.thresholds||{});
+    var vw = env.width, vh = env.height;
+    var a = analyzeRegions(env.regions, vw, vh);
+    var insets = a.insets;
+    var usableW = Math.max(0, vw - insets.left - insets.right);
+    var usableH = Math.max(0, vh - insets.top - insets.bottom);
+    var sidebar = env.sidebar || 0;
+
+    /* A central fold defines distinct usable regions and takes priority: the
+       two work areas meet on the fold. But only when both regions are actually
+       usable; if the fold would leave a pane below its minimum, it is treated
+       as an occlusion inset on the smaller side and the layout falls back to a
+       complete single pane clear of the fold (the constrained-pane rule). */
+    if(a.vDivide){
+      var leftR = a.vDivide.start - insets.left;
+      var rightR = (vw - insets.right) - (a.vDivide.start + a.vDivide.size);
+      /* Keep the sidebar if both work areas still fit; otherwise drop it before
+         squeezing them; only if a region is still too small do we give up on
+         two panes and occlude the smaller side. */
+      if(rightR >= C.DETAIL_MIN && (leftR - sidebar) >= C.LIST_MIN){
+        return { mode:'split', insets:insets, divide:a.vDivide, mainWidth:usableW - sidebar, sidebar:sidebar };
+      }
+      if(rightR >= C.DETAIL_MIN && leftR >= C.LIST_MIN){
+        return { mode:'split', insets:insets, divide:a.vDivide, mainWidth:usableW, sidebar:0 };
+      }
+      if(leftR < rightR) insets.left = Math.max(insets.left, a.vDivide.start + a.vDivide.size);
+      else insets.right = Math.max(insets.right, vw - a.vDivide.start);
+      usableW = Math.max(0, vw - insets.left - insets.right);
+    } else if(a.hDivide){
+      var th = a.hDivide.start - insets.top;
+      var bh = (vh - insets.bottom) - (a.hDivide.start + a.hDivide.size);
+      if(th >= C.STACK_MIN_H && bh >= C.STACK_MIN_H){
+        return { mode:'stack', insets:insets, divide:a.hDivide, mainWidth:usableW - sidebar, sidebar:sidebar };
+      }
+      if(th < bh) insets.top = Math.max(insets.top, a.hDivide.start + a.hDivide.size);
+      else insets.bottom = Math.max(insets.bottom, vh - a.hDivide.start);
+      usableW = Math.max(0, vw - insets.left - insets.right);
+      usableH = Math.max(0, vh - insets.top - insets.bottom);
+    }
+
+    /* No fold: content-driven. Below the sidebar breakpoint -> one compact pane
+       with the detail in the sheet, exactly the phone layout that always
+       shipped. Above it, split only when there is real room for both work
+       areas, so the sidebar is never dropped to cram them in. */
+    if(usableW < C.REGULAR_MIN){
+      return { mode:'compact', insets:insets, divide:null, mainWidth:usableW, sidebar:0 };
+    }
+    var mainW = usableW - sidebar;
+    if(mainW >= (C.LIST_MIN + C.DETAIL_MIN + C.GAP)){
+      return { mode:'split', insets:insets, divide:null, mainWidth:mainW, sidebar:sidebar };
+    }
+    return { mode:'regular', insets:insets, divide:null, mainWidth:mainW, sidebar:sidebar };
+  }
+
+  /* Guard a stream of geometry payloads: accept only a newer, well-formed
+     revision (payloads can arrive out of order or be replayed). Returns the
+     revision to record, or -1 to drop the event. */
+  function acceptRevision(payload, lastRev){
+    if(!payload || typeof payload !== 'object') return -1;
+    if(payload.v !== 1) return -1;                     // versioned contract
+    var rev = payload.rev;
+    if(typeof rev !== 'number' || !isFinite(rev)) return -1;
+    if(rev <= lastRev) return -1;
+    return rev;
+  }
+
+  root.LidhraAdaptive = {
+    toCssRect:toCssRect, regionInsets:regionInsets, analyzeRegions:analyzeRegions,
+    chooseLayout:chooseLayout, acceptRevision:acceptRevision, THRESHOLDS:T
+  };
+})(typeof globalThis!=='undefined'?globalThis:this);
+/* ADAPTIVE:END */
 
 /* ================= state + helpers ================= */
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
@@ -1052,6 +1294,13 @@ function render(){
   let bps=0; for(const k in S.speeds) bps+=S.speeds[k]||0;
   S.tx.forEach(x=>{ if(x.source==='local'&&x.status==='Downloading') bps+=x.down_bps||0; });
   const r=rate(bps); $('#speed').innerHTML=r?'<span class="d">↓ '+esc(r)+'</span>':'';
+  /* Keep the inline selection in sync after a poll reorders/removes cards. The
+     detail body itself is never re-fetched here, so an open pane keeps its
+     scroll position and focus (a progress tick must not reset it). */
+  if(detailInline()){
+    if(FS.item && !S.items[FS.item.id]){ FS.item=null; $('#detail-pane').classList.add('is-empty'); selectCard(null); }
+    else if(FS.item){ selectCard(FS.item.id); }
+  }
 }
 
 /* Cards are keyed by item id and updated in place. Rebuilding the list with
@@ -1149,38 +1398,79 @@ const IC={
   link:'<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>',
   pause:'<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>',
   trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>' };
+/* The selected-file detail can live in the modal sheet (compact / regular
+   single-pane layouts) or inline in the detail pane (split / stack). One
+   surface, one set of handlers: every helper below queries its active root by
+   class, so there is never a duplicate id or a second copy of the actions. */
+function detailInline(){ const l=appEl().dataset.layout; return l==='split'||l==='stack'; }
+function detailRoot(){ return detailInline() ? $('#detail-pane') : $('#file-sheet'); }
+function dq(sel){ const r=detailRoot(); return r?r.querySelector(sel):null; }
+/* Highlight the transfer card whose detail shows inline (no-op in single pane). */
+function selectCard(id){
+  $$('#list > .card').forEach(el=>{
+    const on = detailInline() && !!id && el.dataset.key===id;
+    el.classList.toggle('sel', on);
+    if(on) el.setAttribute('aria-current','true'); else el.removeAttribute('aria-current');
+  });
+}
 function openFile(it,opener){
-  FS.item=it; FS.files=[]; FS.sel=0;
-  $('#file-title').textContent=it.name; fileMsg('');
-  const list=$('#file-list'); list.hidden=true; list.innerHTML=''; $('#file-acts').innerHTML='';
-  openSheet('file',opener);
+  FS.item=it; FS.files=[]; FS.sel=0; FS.confirmDelete=false;
+  if(detailInline()){
+    const pane=$('#detail-pane'); pane.classList.remove('is-empty');
+    selectCard(it.id); fileMsg('');
+    loadFileDetail(it);
+  } else {
+    openSheet('file',opener); fileMsg('');
+    loadFileDetail(it);
+  }
+}
+/* Fill the active detail surface for `it`. Shared by the sheet and the pane. */
+function loadFileDetail(it){
+  dq('.file-title').textContent=it.name;
+  const list=dq('.file-list'); list.hidden=true; list.innerHTML=''; dq('.file-acts').innerHTML='';
   if(it.kind==='d'){
     FS.files=[{ name:it.name, url:it.url, path:it.path, size:it.size, local:it.local, busy:it.status==='Downloading' }];
-    $('#file-hint').textContent=it.metaExtra||''; renderFileSheet(); return;
+    dq('.file-hint').textContent=it.metaExtra||''; renderFileSheet(); return;
   }
   /* A torrent on this device: its files are on disk (finished ones open like
      any local download) plus pause / resume / remove for the torrent itself. */
   if(it.kind==='l'){
-    FS.confirmDelete=false; $('#file-hint').textContent=it.metaExtra||''; renderFileSheet();
+    dq('.file-hint').textContent=it.metaExtra||''; renderFileSheet();
     api('torrent_files',{id:it.key}).then(fs=>{ if(FS.item!==it)return;
       FS.files=fs.filter(f=>f.included).map(f=>({ name:f.filename, url:'', path:f.path, size:f.size||0, local:!!f.done, busy:!f.done }));
-      if(FS.files.length>1) $('#file-hint').textContent=t('meta_files',FS.files.length)+(it.metaExtra?' · '+it.metaExtra:'');
+      if(FS.files.length>1) dq('.file-hint').textContent=t('meta_files',FS.files.length)+(it.metaExtra?' · '+it.metaExtra:'');
       renderFileSheet();
     }).catch(()=>{});
     return;
   }
   /* Ready cloud transfer: resolve each file to a direct link first (Tauri
      only; the browser build just downloads the whole transfer). */
-  if(!TAURI){ $('#file-hint').textContent=it.metaExtra||''; renderFileSheet(); return; }
-  $('#file-hint').textContent=t('fs_loading');
+  if(!TAURI){ dq('.file-hint').textContent=it.metaExtra||''; renderFileSheet(); return; }
+  dq('.file-hint').textContent=t('fs_loading');
   api('links',{id:it.key}).then(ls=>{ if(FS.item!==it)return;
     FS.files=ls.map(l=>({ name:l.filename, url:l.url, path:'', size:l.size||0, local:false, busy:false }));
-    $('#file-hint').textContent=FS.files.length===1?human(FS.files[0].size):t('meta_files',FS.files.length);
+    dq('.file-hint').textContent=FS.files.length===1?human(FS.files[0].size):t('meta_files',FS.files.length);
     renderFileSheet();
-  }).catch(()=>{ if(FS.item!==it)return; $('#file-hint').textContent=t('fs_err'); renderFileSheet(); });
+  }).catch(()=>{ if(FS.item!==it)return; dq('.file-hint').textContent=t('fs_err'); renderFileSheet(); });
+}
+/* Move the open detail to the surface the current layout uses, preserving the
+   selection. Called only when the layout crosses the inline / single-pane
+   boundary, never on every geometry tick. */
+function relocateDetail(){
+  const pane=$('#detail-pane');
+  if(detailInline()){
+    if(sheetOpen==='file') closeSheet('file');
+    if(FS.item){ pane.classList.remove('is-empty'); selectCard(FS.item.id); loadFileDetail(FS.item); }
+    else { pane.classList.add('is-empty'); }
+  } else {
+    /* Single pane: the inline pane is hidden by CSS. Keep FS.item and clear the
+       inline highlight; a return to a two-pane layout restores the same detail,
+       and a tap reopens the sheet. No modal is forced open. */
+    selectCard(null);
+  }
 }
 function renderFileSheet(){
-  const it=FS.item, list=$('#file-list'), acts=$('#file-acts');
+  const it=FS.item; if(!it)return; const list=dq('.file-list'), acts=dq('.file-acts');
   if(FS.files.length>1){
     list.hidden=false;
     list.innerHTML=FS.files.map((f,n)=>'<button type="button" class="frow" role="option" aria-selected="'+(n===FS.sel)+'" data-n="'+n+'">'
@@ -1195,7 +1485,7 @@ function renderFileSheet(){
     if(IOS){
       /* A local file goes to other apps through the system "Open in" menu (VLC
          shows up there); a cloud link can stream straight into VLC. */
-      if(f.local) add('act_open_in',IC.open,()=>api('file_open_in',{path:f.path}));
+      if(f.local) add('act_open_in',IC.open,(anchor)=>api('file_open_in',{path:f.path,anchor}));
       else if(S.vlc&&f.url) add('act_vlc',IC.vlc,()=>api('open_with',{target:'vlc-x-callback://x-callback-url/stream?url='+encodeURIComponent(f.url)}));
     } else if(TAURI){
       if(src) add('act_vlc',IC.vlc,()=>api('open_with',{target:src,with:'VLC'}));
@@ -1203,7 +1493,7 @@ function renderFileSheet(){
     }
     if(TAURI&&f.url&&!f.local&&!f.busy) add('act_download',IC.down,()=>api('download_link',{url:f.url,filename:f.name}).then(refreshDownloads));
     if(it.kind==='t'&&FS.files.length>1) add('act_download_all',IC.down,()=>api('download',{id:it.key}).then(refreshDownloads),t('act_download_all',FS.files.length));
-    if(IOS&&f.local) add('act_share',IC.share,()=>api('file_share',{path:f.path}));
+    if(IOS&&f.local) add('act_share',IC.share,(anchor)=>api('file_share',{path:f.path,anchor}));
     if(TAURI&&!IOS&&f.local) add('act_reveal',IC.folder,()=>api('reveal',{path:f.path}));
     if(f.url) add('act_copy',IC.link,()=>copyText(f.url).then(()=>{ fileMsg(t('act_copied'),'ok'); return 'stay'; }));
   } else if(it.kind==='t'&&!TAURI){
@@ -1223,10 +1513,15 @@ function renderFileSheet(){
   acts.innerHTML=A.map((a,n)=>'<button type="button" class="btn sec" data-n="'+n+'">'+a.icon+'<span>'+esc(a.label)+'</span></button>').join('');
   acts.querySelectorAll('.btn').forEach(b=>b.onclick=()=>runAct(A[+b.dataset.n],b));
 }
-function fileMsg(s,k){ const m=$('#file-msg'); m.textContent=s; m.className='form-msg'+(k?' '+k:''); }
+function fileMsg(s,k){ const m=dq('.file-msg'); if(!m)return; m.textContent=s; m.className='form-msg file-msg'+(k?' '+k:''); }
+/* The initiating control's box, in CSS px (== the webview's UIKit points), so a
+   native popover (share / Open In) can point at it instead of a fixed corner. */
+function cssRectOf(el){ try{ const r=el.getBoundingClientRect(); return {x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height)}; }catch(e){ return null; } }
 async function runAct(a,btn){
   btn.disabled=true; fileMsg('');
-  try{ const r=await a.fn(); if(r==='stay')btn.disabled=false; else setTimeout(()=>closeSheet('file'),120); }
+  /* Modal sheet closes after an action; the inline pane stays open (there is
+     nothing to dismiss) and just re-enables the button. */
+  try{ const r=await a.fn(cssRectOf(btn)); if(r==='stay'||detailInline())btn.disabled=false; else setTimeout(()=>closeSheet('file'),120); }
   catch(e){ fileMsg(t('act_fail',(e&&e.message)||String(e)),'err'); btn.disabled=false; }
 }
 async function copyText(s){
@@ -1402,6 +1697,81 @@ function attachDrag(el,k,o){
   el.addEventListener('pointercancel',finish);
 }
 
+/* ================= adaptive layout: measure, decide, apply =================
+   Layout is derived here from the live viewport and, when present, the native
+   geometry payload. It is kept strictly separate from engine and session
+   state: a geometry event only re-lays-out the shell and can never add,
+   restart, cancel, or duplicate a transfer. */
+let _geo=null, _relayoutQueued=false, _geoRev=-1;
+function currentEnv(){
+  const sidebar = mqDesk.matches ? 280 : 0;
+  /* The viewport is always the source of truth for size; reserved regions come
+     from the last native report (empty on browser / desktop / ordinary iOS). */
+  return { width:window.innerWidth, height:window.innerHeight, sidebar, regions:(_geo&&_geo.regions)||[] };
+}
+function applyLayout(){
+  _relayoutQueued=false;
+  const app=appEl(); if(!app)return;
+  const env=currentEnv();
+  const r=LidhraAdaptive.chooseLayout(env);
+  const prev=app.dataset.layout;
+  app.dataset.layout=r.mode;
+  const i=r.insets;
+  app.style.setProperty('--rr-top',i.top+'px'); app.style.setProperty('--rr-right',i.right+'px');
+  app.style.setProperty('--rr-bottom',i.bottom+'px'); app.style.setProperty('--rr-left',i.left+'px');
+  /* A central fold aligns the pane boundary to itself: the divider sits on the
+     fold and its gutter matches the fold width. Clamped so a bogus rect can
+     never collapse a pane. Absent a fold these clear and the panes size by the
+     content-driven default. */
+  const C=LidhraAdaptive.THRESHOLDS;
+  if(r.divide && r.divide.axis==='v'){
+    const basis=Math.max(C.LIST_MIN, Math.min(r.divide.start - r.sidebar, r.mainWidth - C.DETAIL_MIN));
+    app.dataset.fold='v';
+    app.style.setProperty('--split-list-basis', basis+'px');
+    app.style.setProperty('--split-gap', r.divide.size+'px');
+  } else if(r.divide && r.divide.axis==='h'){
+    app.dataset.fold='h';
+    app.style.setProperty('--split-gap', r.divide.size+'px');
+  } else {
+    app.removeAttribute('data-fold');
+    app.style.removeProperty('--split-list-basis'); app.style.removeProperty('--split-gap');
+  }
+  /* Sidebar dropped to make room for two work areas ("collapse extra navigation
+     before squeezing both work areas"). Only meaningful where the CSS would
+     otherwise show the sidebar (>=768). */
+  if(r.sidebar===0 && mqDesk.matches && (r.mode==='split'||r.mode==='stack')) app.dataset.nav='collapsed';
+  else app.removeAttribute('data-nav');
+  const wasInline=(prev==='split'||prev==='stack'), isInline=(r.mode==='split'||r.mode==='stack');
+  if(wasInline!==isInline) relocateDetail();
+  repositionPlates();
+}
+/* Coalesce bursts of resize / geometry events into one relayout per frame:
+   no full DOM reconstruction, a single scheduled pass, no oscillation. */
+function requestRelayout(){ if(_relayoutQueued)return; _relayoutQueued=true; requestAnimationFrame(applyLayout); }
+
+/* Entry point the native geometry bridge calls (NativePlugin.swift). The
+   payload is a versioned snapshot; stale / malformed / replayed revisions are
+   dropped. Native points are converted to this webview's CSS space using the
+   *measured* ratio between the reported webview frame and the live viewport,
+   never an assumed 1:1. Safe-area insets are deliberately NOT applied here: the
+   CSS already uses env(safe-area-inset-*), so applying them again would pad
+   twice. Regions that no longer overlap the viewport are dropped, so a fold
+   that goes away clears its inset. */
+window.__lidhraGeometry=function(payload){
+  try{ if(typeof payload==='string') payload=JSON.parse(payload); }catch(e){ return; }
+  const rev=LidhraAdaptive.acceptRevision(payload,_geoRev);
+  if(rev<0) return;
+  _geoRev=rev;
+  const sc=payload.scene||{w:window.innerWidth,h:window.innerHeight};
+  const wv=payload.webview||{x:0,y:0,w:sc.w,h:sc.h};
+  const scale=(wv.w>0)? (window.innerWidth/wv.w) : 1;
+  const xf={ scale, originX:(wv.x||0)*scale, originY:(wv.y||0)*scale };
+  const regions=(payload.regions||[]).map(g=>LidhraAdaptive.toCssRect(g,xf))
+    .filter(g=>g.w>0 && g.h>0 && g.x<window.innerWidth && g.y<window.innerHeight && g.x+g.w>0 && g.y+g.h>0);
+  _geo={ regions };
+  requestRelayout();
+};
+
 /* ================= init ================= */
 /* ================= First-launch welcome ================= */
 function wlSetHeadline(){ const el=document.getElementById('wl-title'); if(!el)return;
@@ -1435,6 +1805,16 @@ function initWelcome(){
 }
 
 async function init(){
+  /* Build the inline detail pane's shared surface once (same classes as the
+     file sheet). Done before applyI18n so its empty-state string is filled. */
+  $('#detail-pane').innerHTML =
+    '<div class="detail-body">'
+    +'<h2 class="file-title"></h2><p class="hint mono file-hint"></p>'
+    +'<div class="files file-list" role="listbox" hidden></div>'
+    +'<div class="acts file-acts"></div>'
+    +'<div class="form-msg file-msg" aria-live="polite"></div></div>'
+    +'<div class="detail-empty" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 3h6l1 4H8z"/><path d="M6 7h12l-1 12a2 2 0 01-2 2H9a2 2 0 01-2-2z"/></svg>'
+    +'<p class="detail-empty-msg" data-i18n="detail_empty"></p></div>';
   fillLangSelects(); applyI18n(); initWelcome();
   const onLang=v=>{ lang=v; localStorage.setItem('lidhra_lang',lang); fillLangSelects(); applyI18n(); setView(S.view,{silent:true}); render(); syncAddSheet(); if(typeof refreshLicense==='function')refreshLicense(); };
   $('#lang').onchange=e=>onLang(e.target.value); $('#lang-side').onchange=e=>onLang(e.target.value);
@@ -1466,9 +1846,12 @@ async function init(){
     }
   });
   setView('transfers',{silent:true}); setFilter('active',{fromTab:true});
-  updateHeader(); mqDesk.addEventListener('change',()=>{updateHeader();repositionPlates();});
-  requestAnimationFrame(repositionPlates);
-  window.addEventListener('resize',repositionPlates); window.addEventListener('orientationchange',repositionPlates);
+  updateHeader(); mqDesk.addEventListener('change',()=>{updateHeader();requestRelayout();});
+  window.addEventListener('resize',requestRelayout); window.addEventListener('orientationchange',requestRelayout);
+  /* An element observer catches size changes the resize event misses (a scene
+     resize while the window count is unchanged), still coalesced to one frame. */
+  if(window.ResizeObserver){ try{ new ResizeObserver(()=>requestRelayout()).observe(appEl()); }catch(e){} }
+  applyLayout(); // first pass synchronously so the initial paint is correct
   render();
   loadP2p();
   refreshDownloads(); setInterval(refreshDownloads,1500);

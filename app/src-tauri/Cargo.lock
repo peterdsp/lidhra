@@ -2883,7 +2883,7 @@ dependencies = [
 
 [[package]]
 name = "lidhra-desktop"
-version = "1.0.0"
+version = "1.3.0"
 dependencies = [
  "lidhra-debrid",
  "lidhra-license",
