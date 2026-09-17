@@ -684,6 +684,15 @@ async fn native_can_open(app: tauri::AppHandle, url: String) -> Result<bool, Str
     app.native().can_open(&url)
 }
 
+/// Page-ready handshake: pull the first native geometry snapshot once the web UI
+/// is loaded. A no-op off iOS; failures are swallowed so a browser/desktop build
+/// never sees an error for a call the web layer makes unconditionally on iOS.
+#[tauri::command]
+async fn geometry_sync(app: tauri::AppHandle) -> Result<(), String> {
+    let _ = app.native().geometry_sync();
+    Ok(())
+}
+
 #[derive(Serialize)]
 struct Lic {
     state: String,
@@ -844,7 +853,7 @@ pub fn run() {
     builder
         .invoke_handler(tauri::generate_handler![
             providers, connect, restore, disconnect, add, fetch, transfers, download, downloads, links, download_link, open_with,
-            reveal, file_share, file_open_in, file_play, native_can_open, license, license_activate,
+            reveal, file_share, file_open_in, file_play, native_can_open, geometry_sync, license, license_activate,
             license_activate_email, torrent_files, torrent_pause, torrent_resume, torrent_remove, p2p_settings,
             p2p_set_settings
         ])

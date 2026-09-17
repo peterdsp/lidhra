@@ -147,14 +147,34 @@ final class LifecycleBridge {
 /// enabled only in an Xcode 27.1 build that defines `LIDHRA_DUO`. Enabling it
 /// changes nothing for any other configuration.
 enum DuoRegions {
+  /// Whether a working reserved-region provider is compiled in. This is not the
+  /// same as "no active regions": the web side must be able to tell an
+  /// unimplemented provider (responsive fallback, never a guessed fold) apart
+  /// from a real provider that currently reports none.
+  static var supported: Bool {
+    #if LIDHRA_DUO
+    return true
+    #else
+    return false
+    #endif
+  }
+
+  /// The active reserved regions of the current scene, each in the scene's
+  /// coordinate space (the space the webview frame is reported in) as
+  /// `["id","kind","active","x","y","w","h"]`. Multiple regions, interior
+  /// occlusions, and zero-thickness divisions are all preserved for the web
+  /// side to interpret; nothing is collapsed or relabelled here.
   static func active(in view: UIView) -> [[String: Any]] {
     #if LIDHRA_DUO
     // INTEGRATION POINT (Xcode 27.1 + iPhone Duo SDK):
-    // Query the scene's active division / reserved regions from the arrangement
-    // geometry, map each rectangle into `view.window` (scene) coordinates, and
-    // return one dictionary per region:
-    //   ["x": r.minX, "y": r.minY, "w": r.width, "h": r.height, "kind": "hinge"]
-    // Convert with the confirmed API only; do not fabricate a symbol here.
+    // Query the scene's reserved regions (division and occlusion), map each
+    // rectangle into `view.window` (scene) coordinates, and return one
+    // dictionary per region, e.g.
+    //   ["id": r.identifier, "kind": "division"|"occlusion",
+    //    "active": r.isActive, "x": f.minX, "y": f.minY, "w": f.width, "h": f.height]
+    // Preserve inactive regions with "active": false (they may inform a layout
+    // preference but must not open a permanent gap). Use the confirmed API only;
+    // do not fabricate a symbol here.
     #warning("LIDHRA_DUO: implement the reserved-region query against the confirmed iPhone Duo SDK before shipping Duo support.")
     return []
     #else
@@ -181,7 +201,14 @@ final class GeometryBridge {
   private var boundsObservation: NSKeyValueObservation?
   private var revision: Int = 0
   private var keyboardInset: CGFloat = 0
+  private var keyboardDocked = false
+  private var keyboardFloating = false
   private var scheduled = false
+  /// A fresh token per bridge instance. A reload or webview process recovery
+  /// makes a new bridge, hence a new session id, which tells the web side to
+  /// reset its revision ordering so an old high revision cannot contaminate the
+  /// new attachment.
+  private let sessionToken = UUID().uuidString
 
   func start(webview: WKWebView) {
     self.webview = webview
@@ -200,7 +227,7 @@ final class GeometryBridge {
       [weak self] note in self?.keyboardChanged(note)
     })
     observers.append(center.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) {
-      [weak self] _ in self?.keyboardInset = 0; self?.schedule()
+      [weak self] _ in self?.keyboardInset = 0; self?.keyboardDocked = false; self?.keyboardFloating = false; self?.schedule()
     })
     boundsObservation = webview.observe(\.bounds, options: [.new]) { [weak self] _, _ in
       self?.schedule()
@@ -217,14 +244,39 @@ final class GeometryBridge {
 
   deinit { stop() }
 
+  /// Emit a fresh snapshot on demand. The web side calls this once it is ready
+  /// (the page-ready handshake) because the best-effort emit at attach time can
+  /// fire before `window.__lidhraGeometry` exists.
+  func requestSnapshot() { schedule() }
+
   private func keyboardChanged(_ note: Notification) {
-    guard let webview = webview,
+    guard let webview = webview, let window = webview.window,
       let frame = (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
     else { return }
-    // How much of the webview the keyboard covers, in the webview's own space.
+    // A docked keyboard spans the window width and sits at the bottom; a
+    // floating or undocked keyboard does not and must not create a full-width
+    // inset. Overlap is measured in the webview's own space and only kept when
+    // docked, so the web side never double-subtracts a floating keyboard.
+    let inWindow = window.convert(frame, from: nil)
+    let spansWidth = inWindow.width >= window.bounds.width - 1
+    let atBottom = inWindow.maxY >= window.bounds.maxY - 1
+    let present = frame.height > 0
+    keyboardDocked = present && spansWidth && atBottom
+    keyboardFloating = present && !keyboardDocked
     let kb = webview.convert(frame, from: webview.window)
-    keyboardInset = max(0, webview.bounds.maxY - kb.minY)
+    keyboardInset = keyboardDocked ? max(0, webview.bounds.maxY - kb.minY) : 0
     schedule()
+  }
+
+  /// The scene's size classes, when a scene is attached. Camera and bar changes
+  /// can occur without a bounds change, so these travel with every snapshot.
+  private func traits(_ view: UIView) -> [String: Any] {
+    let t = view.traitCollection
+    func cls(_ c: UIUserInterfaceSizeClass) -> String {
+      switch c { case .compact: return "compact"; case .regular: return "regular"; default: return "unknown" }
+    }
+    return ["horizontalSizeClass": cls(t.horizontalSizeClass),
+            "verticalSizeClass": cls(t.verticalSizeClass)]
   }
 
   /// Coalesce a burst of events into one emit on the next main-loop hop.
@@ -242,17 +294,34 @@ final class GeometryBridge {
     let scene = window.windowScene?.coordinateSpace.bounds ?? window.bounds
     let frame = webview.convert(webview.bounds, to: window)
     let safe = webview.safeAreaInsets
+    let margins = webview.layoutMargins
     revision += 1
 
+    // Regions are reported in scene space, matching the webview frame, so the
+    // web side converts both with one transform.
+    let regions = DuoRegions.active(in: webview).map { r -> [String: Any] in
+      var out: [String: Any] = ["kind": r["kind"] ?? "region", "active": r["active"] ?? true]
+      if let id = r["id"] { out["id"] = id }
+      out["rect"] = ["x": r["x"] ?? 0, "y": r["y"] ?? 0, "w": r["w"] ?? 0, "h": r["h"] ?? 0]
+      return out
+    }
+
     let payload: [String: Any] = [
-      "v": 1,
-      "rev": revision,
+      "version": 2,
+      "revision": revision,
+      "sessionId": sessionToken,
+      "sceneId": window.windowScene?.session.persistentIdentifier ?? "main",
+      "source": "native",
       "coordinateSpace": "scene",
-      "scene": ["w": scene.width, "h": scene.height],
-      "webview": ["x": frame.minX, "y": frame.minY, "w": frame.width, "h": frame.height],
+      "units": "points",
+      "capabilities": ["regions": DuoRegions.supported],
+      "webviewBounds": ["x": frame.minX, "y": frame.minY, "w": frame.width, "h": frame.height],
+      "visibleBounds": ["x": scene.minX, "y": scene.minY, "w": scene.width, "h": scene.height],
       "safeArea": ["top": safe.top, "right": safe.right, "bottom": safe.bottom, "left": safe.left],
-      "keyboard": keyboardInset,
-      "regions": DuoRegions.active(in: webview),
+      "layoutMargins": ["top": margins.top, "right": margins.right, "bottom": margins.bottom, "left": margins.left],
+      "traits": traits(webview),
+      "keyboard": ["docked": keyboardDocked, "floating": keyboardFloating, "overlap": keyboardInset],
+      "regions": regions,
     ]
 
     guard
@@ -388,6 +457,14 @@ class NativePlugin: Plugin {
       }
       invoke.resolve()
     }
+  }
+
+  /// Page-ready handshake: the web UI calls this once loaded to pull a fresh
+  /// geometry snapshot, closing the race where the attach-time emit fires before
+  /// `window.__lidhraGeometry` exists.
+  @objc public func geometrySync(_ invoke: Invoke) throws {
+    onMain { self.geometry.requestSnapshot() }
+    invoke.resolve()
   }
 
   /// `canOpenURL` probe. Schemes must be listed under LSApplicationQueriesSchemes.
