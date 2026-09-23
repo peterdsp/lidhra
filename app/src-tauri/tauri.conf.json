@@ -41,7 +41,7 @@
     "targets": "all",
     "createUpdaterArtifacts": true,
     "iOS": {
-      "bundleVersion": "9",
+      "bundleVersion": "10",
       "minimumSystemVersion": "15.0"
     },
     "icon": [
