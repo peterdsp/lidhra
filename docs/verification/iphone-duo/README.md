@@ -2,15 +2,25 @@
 
 ## Render evidence
 
-![Lidhra on the iPhone Duo simulator](images/iphone-duo-welcome.png)
+All three captured from the live app on the iPhone Duo simulator (iOS 27.1, inner
+display 1398 x 2034) via `WKWebView.takeSnapshot`. `simctl` and the simulator
+panel capture the out-of-process WKWebView as black (`mainScreenSurfaceNotFound`);
+`takeSnapshot` renders the actual web content, so these are genuine on-device
+renders, not mocks. The transfers and fold shots were driven with sample data
+through the running webview.
 
-Lidhra running on the iPhone Duo simulator (iOS 27.1, inner display 1398 x 2034),
-captured from the live app via `WKWebView.takeSnapshot`. `simctl` and the
-simulator panel capture the out-of-process WKWebView as black
-(`mainScreenSurfaceNotFound`); `takeSnapshot` renders the actual web content, so
-this is a genuine on-device render, not a mock. The content-rich transfer list
-and the two-pane fold layout are the same `ui/index.html` WebKit renders at Duo
-dimensions.
+Welcome / hero:
+
+![Lidhra welcome on the iPhone Duo](images/iphone-duo-welcome.png)
+
+Transfer list (compact, Duo portrait):
+
+![Lidhra transfer list on the iPhone Duo](images/iphone-duo-transfers.png)
+
+Tabletop fold, stacked adaptive layout (list above, selected-file detail below,
+meeting at the fold):
+
+![Lidhra fold stack layout on the iPhone Duo](images/iphone-duo-fold-stack.png)
 
 Status vocabulary: **not run** / **passed** / **failed** / **blocked** /
 **n/a (reason)**. Every geometry result below that is not from an on-device Duo
