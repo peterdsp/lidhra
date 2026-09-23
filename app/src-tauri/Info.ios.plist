@@ -21,10 +21,14 @@
 	     delegate, so a single-scene manifest with no scene delegate is enough to
 	     adopt the lifecycle while keeping that window. The reserved-region layout
 	     lives inside the one full-scene webview, so multiple scenes are not needed. -->
+	<!-- Tauri's windowing layer (tao) only registers its scene delegate
+	     (configurationForConnectingSceneSession) when the app declares multiple
+	     scene support, so this must be true or tao's window is never attached to
+	     the iOS 27 scene and the webview stays black. -->
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
+		<true/>
 		<key>UISceneConfigurations</key>
 		<dict>
 			<key>UIWindowSceneSessionRoleApplication</key>

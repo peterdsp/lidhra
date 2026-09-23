@@ -52,3 +52,7 @@ tauri-plugin-lidhra-native = { path = "plugins/native" }
 # See crates/vendor/README.md: one cfg fix so librqbit builds for iOS.
 [patch.crates-io]
 librqbit-dualstack-sockets = { path = "../../crates/vendor/librqbit-dualstack-sockets" }
+# Vendored tao 0.35.3 with an iOS 27 scene fix: on iPhone (incl. iPhone Duo) the
+# stock crate requests a second scene during launch, which deactivates the main
+# scene and leaves the webview black. See crates/vendor/tao (connecting_scene).
+tao = { path = "../../crates/vendor/tao" }

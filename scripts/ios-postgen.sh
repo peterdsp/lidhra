@@ -57,7 +57,7 @@ if [ -f "$PLIST" ] && ! /usr/libexec/PlistBuddy -c "Print :UIApplicationSceneMan
   # class programmatically, so the config is named here without a delegate class.
   /usr/libexec/PlistBuddy \
     -c "Add :UIApplicationSceneManifest dict" \
-    -c "Add :UIApplicationSceneManifest:UIApplicationSupportsMultipleScenes bool false" \
+    -c "Add :UIApplicationSceneManifest:UIApplicationSupportsMultipleScenes bool true" \
     -c "Add :UIApplicationSceneManifest:UISceneConfigurations dict" \
     -c "Add :UIApplicationSceneManifest:UISceneConfigurations:UIWindowSceneSessionRoleApplication array" \
     -c "Add :UIApplicationSceneManifest:UISceneConfigurations:UIWindowSceneSessionRoleApplication:0 dict" \
