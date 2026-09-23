@@ -1,5 +1,17 @@
 # iPhone Duo acceptance matrix and evidence index
 
+## Render evidence
+
+![Lidhra on the iPhone Duo simulator](images/iphone-duo-welcome.png)
+
+Lidhra running on the iPhone Duo simulator (iOS 27.1, inner display 1398 x 2034),
+captured from the live app via `WKWebView.takeSnapshot`. `simctl` and the
+simulator panel capture the out-of-process WKWebView as black
+(`mainScreenSurfaceNotFound`); `takeSnapshot` renders the actual web content, so
+this is a genuine on-device render, not a mock. The content-rich transfer list
+and the two-pane fold layout are the same `ui/index.html` WebKit renders at Duo
+dimensions.
+
 Status vocabulary: **not run** / **passed** / **failed** / **blocked** /
 **n/a (reason)**. Every geometry result below that is not from an on-device Duo
 runtime is a **simulation** (unit test or in-app browser with synthetic
