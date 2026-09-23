@@ -68,6 +68,12 @@ impl<R: Runtime> Native<R> {
             Err(_) => Ok(false),
         }
     }
+
+    /// Page-ready handshake: ask the native geometry bridge to push a fresh
+    /// snapshot now. Off iOS this is a no-op the caller can ignore.
+    pub fn geometry_sync(&self) -> Result<(), String> {
+        self.call("geometrySync", serde_json::json!({})).map(|_| ())
+    }
 }
 
 pub trait NativeExt<R: Runtime> {

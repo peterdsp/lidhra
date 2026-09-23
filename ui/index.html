@@ -314,7 +314,7 @@
     transition:background .18s ease, visibility 0s linear .18s}
   .scrim.show{visibility:visible;background:rgba(4,16,12,.22);transition:background .18s ease}
   .sheet{position:fixed;z-index:50;
-    left:calc(8px + var(--sal));right:calc(8px + var(--sar));bottom:calc(var(--sab) + 8px);
+    left:calc(8px + var(--sal) + var(--rr-left));right:calc(8px + var(--sar) + var(--rr-right));bottom:calc(var(--sab) + var(--rr-bottom) + 8px);
     width:auto;max-width:620px;margin:0 auto;
     max-height:min(78dvh,720px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
     border-radius:32px;padding:24px 20px;padding-bottom:max(24px,var(--sab));
@@ -382,7 +382,7 @@
   /* ---------- In-app player (desktop / browser; iOS uses the native player) ---------- */
   #player{position:fixed;inset:0;z-index:300;background:#000;color:#fff;display:flex;flex-direction:column}
   #player[hidden]{display:none}
-  #player .pbar{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:calc(var(--sat) + 10px) 16px 10px}
+  #player .pbar{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:calc(var(--sat) + var(--rr-top) + 10px) calc(16px + var(--sar) + var(--rr-right)) 10px calc(16px + var(--sal) + var(--rr-left))}
   #player .ptitle{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:15px}
   #player .pclose{width:40px;height:40px;border-radius:20px;border:none;background:rgba(255,255,255,.14);color:#fff;font-size:18px;cursor:pointer;display:grid;place-items:center;-webkit-tap-highlight-color:transparent}
   #player video{flex:1;min-height:0;width:100%;background:#000;outline:none}
@@ -1048,10 +1048,14 @@ async function api(name,args){
   const r=await fetch(u,opt); const d=await r.json().catch(()=>({error:r.statusText})); if(!r.ok) throw new Error(d.error||r.statusText); return d;
 }
 
-/* ADAPTIVE:START — pure, DOM-free geometry + layout math.
+/* ADAPTIVE:START : pure, DOM-free geometry + layout math.
    This block is extracted verbatim and unit-tested in test/adaptive.test.mjs,
-   so it must not touch the DOM, `window`, or any app global. It turns the
-   native geometry payload and the measured viewport into a layout decision. */
+   so it must not touch the DOM, `window`, or any app global. It turns a native
+   or browser geometry snapshot and the measured viewport into a layout
+   decision. The public shape consumed by the app and the tests is frozen:
+   toCssRect, toNativeRect, deriveTransform, analyzeRegions, regionInsets,
+   chooseLayout, acceptRevision (v1 shim), normalizeSnapshot, acceptSnapshot,
+   segmentsToRegions and THRESHOLDS. */
 (function(root){
   'use strict';
   /* Content-driven thresholds (CSS px), documented by intent, not device size:
@@ -1060,8 +1064,13 @@ async function api(name,args){
        GAP         gutter between the two work areas
        REGULAR_MIN width at/above which the sidebar layout applies; matches the
                    768px CSS breakpoint that owns compact vs regular so the two
-                   never disagree. */
-  var T = { LIST_MIN:340, DETAIL_MIN:360, GAP:18, REGULAR_MIN:768, SIDEBAR:280, STACK_MIN_H:220 };
+                   never disagree.
+       STACK_MIN_H smallest usable half for a stacked (horizontal fold) layout.
+       HYST        threshold margin used only when a previous mode is supplied,
+                   so a width hovering on a boundary does not oscillate. */
+  var T = { LIST_MIN:340, DETAIL_MIN:360, GAP:18, REGULAR_MIN:768, SIDEBAR:280, STACK_MIN_H:220, HYST:24 };
+
+  function isNum(v){ return typeof v === 'number' && isFinite(v); }
 
   /* Native points -> this webview's CSS pixel space. `xf` is the *measured*
      relationship, never assumed: `scale` (points->px, usually 1 but a webview
@@ -1072,6 +1081,34 @@ async function api(name,args){
     var s = (typeof xf.scale === 'number' && xf.scale > 0) ? xf.scale : 1;
     var ox = xf.originX || 0, oy = xf.originY || 0;
     return { x:(r.x*s)-ox, y:(r.y*s)-oy, w:r.w*s, h:r.h*s };
+  }
+
+  /* Inverse of toCssRect: a rect measured in this webview's CSS pixels back to
+     native points, using the *same* measured transform. The old code handed a
+     DOM getBoundingClientRect() straight to a native popover as if CSS px were
+     UIKit points; under zoom or an inset host that is wrong, so a native anchor
+     (share / Open In) must round-trip through this. */
+  function toNativeRect(r, xf){
+    xf = xf || {};
+    var s = (typeof xf.scale === 'number' && xf.scale > 0) ? xf.scale : 1;
+    var ox = xf.originX || 0, oy = xf.originY || 0;
+    return { x:(r.x+ox)/s, y:(r.y+oy)/s, w:r.w/s, h:r.h/s };
+  }
+
+  /* Derive the measured native-points -> CSS-pixels transform from the reported
+     webview bounds (native points) and the live viewport, including any visual
+     viewport offset from pinch-zoom or a keyboard shift. Never assumes 1:1:
+     `scale` is the ratio of measured CSS width to reported native width.
+     Returns { scale, originX, originY }, the `xf` toCssRect/toNativeRect take. */
+  function deriveTransform(webview, view){
+    webview = webview || {}; view = view || {};
+    var nw = webview.w > 0 ? webview.w : 0;
+    var vw = view.width > 0 ? view.width : nw;
+    var scale = (nw > 0 && vw > 0) ? (vw / nw) : 1;
+    if(!(scale > 0)) scale = 1;
+    var ox = (webview.x || 0) * scale + (view.offsetX || 0);
+    var oy = (webview.y || 0) * scale + (view.offsetY || 0);
+    return { scale:scale, originX:ox, originY:oy };
   }
 
   /* Reserved-region rects (in CSS space) -> edge insets plus any central fold.
@@ -1115,6 +1152,11 @@ async function api(name,args){
     var vw = env.width, vh = env.height;
     var a = analyzeRegions(env.regions, vw, vh);
     var insets = a.insets;
+    /* A keyboard that overlaps the bottom of this view is a single bottom inset,
+       folded in here and nowhere else so it can never be subtracted twice. A
+       floating or undocked keyboard reports zero and opens no inset. */
+    var kb = (isNum(env.keyboard) && env.keyboard > 0) ? env.keyboard : 0;
+    if(kb > 0) insets.bottom = Math.max(insets.bottom, kb);
     var usableW = Math.max(0, vw - insets.left - insets.right);
     var usableH = Math.max(0, vh - insets.top - insets.bottom);
     var sidebar = env.sidebar || 0;
@@ -1155,11 +1197,19 @@ async function api(name,args){
        with the detail in the sheet, exactly the phone layout that always
        shipped. Above it, split only when there is real room for both work
        areas, so the sidebar is never dropped to cram them in. */
-    if(usableW < C.REGULAR_MIN){
+    /* Content-driven thresholds. When a previous mode is supplied (and no fold
+       is dictating the layout) a small margin is added around each boundary so a
+       width hovering on the edge does not flip back and forth every frame. With
+       no previous mode the thresholds are exact, so the shipped boundary tests
+       are unaffected, and a fold or occlusion still reacts immediately. */
+    var hy = (env.prev && !a.vDivide && !a.hDivide) ? (C.HYST||0) : 0;
+    var regThresh = C.REGULAR_MIN + (env.prev==='compact' ? hy : -hy);
+    if(usableW < regThresh){
       return { mode:'compact', insets:insets, divide:null, mainWidth:usableW, sidebar:0 };
     }
     var mainW = usableW - sidebar;
-    if(mainW >= (C.LIST_MIN + C.DETAIL_MIN + C.GAP)){
+    var splitThresh = (C.LIST_MIN + C.DETAIL_MIN + C.GAP) + (env.prev==='split' ? -hy : hy);
+    if(mainW >= splitThresh){
       return { mode:'split', insets:insets, divide:null, mainWidth:mainW, sidebar:sidebar };
     }
     return { mode:'regular', insets:insets, divide:null, mainWidth:mainW, sidebar:sidebar };
@@ -1177,9 +1227,127 @@ async function api(name,args){
     return rev;
   }
 
+  /* A rect from any of the shapes the contract carries (`{x,y,w,h}`,
+     `{x,y,width,height}`, or a wrapped `{rect:{...}}`). Rejects non-finite or
+     negative-size rects so a malformed payload can never advance the layout. */
+  function rectOf(o){
+    if(!o || typeof o !== 'object') return null;
+    var x=o.x, y=o.y, w=(o.w!=null?o.w:o.width), h=(o.h!=null?o.h:o.height);
+    if(!isNum(x)||!isNum(y)||!isNum(w)||!isNum(h)) return null;
+    if(w<0||h<0) return null;
+    return { x:x, y:y, w:w, h:h };
+  }
+
+  /* Normalise a geometry snapshot from either the v1 payload the shipped native
+     bridge sends or the richer v2 contract into one canonical object. This is
+     the single place the two wire formats converge, so the rest of the app is
+     version-agnostic. Returns null for anything malformed or of an unknown
+     version. The canonical shape:
+       { version, revision, sessionId, sceneId, source, coordinateSpace,
+         webview:{x,y,w,h}|null, viewport:{x,y,w,h}|null,
+         safeArea|null, traits|null, barPlacement|null,
+         regions:[{x,y,w,h,kind,active,id?}], keyboard:Number, raw } */
+  function normalizeSnapshot(p){
+    if(!p || typeof p !== 'object') return null;
+    var version = (p.version===2) ? 2 : (p.v===1 ? 1 : null);
+    if(version===null) return null;
+    var out = { version:version, source:'native', coordinateSpace:'scene',
+                regions:[], keyboard:0, safeArea:null, traits:null,
+                barPlacement:null, webview:null, viewport:null, raw:p };
+    if(version===1){
+      if(!isNum(p.rev)) return null;
+      out.revision = p.rev;
+      out.sessionId = (p.sessionId!=null) ? String(p.sessionId) : 'v1';
+      out.sceneId = (p.sceneId!=null) ? String(p.sceneId) : 'main';
+      out.webview = rectOf(p.webview);
+      out.viewport = p.scene ? rectOf({x:0,y:0,w:p.scene.w,h:p.scene.h}) : null;
+      out.safeArea = p.safeArea || null;
+      if(isNum(p.keyboard) && p.keyboard>0) out.keyboard = p.keyboard;
+      out.regions = (Array.isArray(p.regions)?p.regions:[]).map(function(g){
+        var r = rectOf(g); if(!r) return null;
+        r.kind = g && g.kind || 'region'; r.active = true; return r;
+      }).filter(Boolean);
+      return out;
+    }
+    /* version 2 */
+    if(!isNum(p.revision) || p.sessionId==null) return null;
+    out.revision = p.revision;
+    out.sessionId = String(p.sessionId);
+    out.sceneId = (p.sceneId!=null) ? String(p.sceneId) : 'main';
+    out.source = p.source || 'native';
+    out.coordinateSpace = p.coordinateSpace || 'webview';
+    out.webview = rectOf(p.webviewBounds);
+    out.viewport = rectOf(p.visibleBounds) || out.webview;
+    out.safeArea = p.safeArea || null;
+    out.layoutMargins = p.layoutMargins || null;
+    out.traits = p.traits || null;
+    out.barPlacement = p.barPlacement || null;
+    out.capabilities = p.capabilities || null;
+    out.regions = (Array.isArray(p.regions)?p.regions:[]).map(function(g){
+      var r = rectOf(g.rect || g); if(!r) return null;
+      r.kind = g.kind || 'region';
+      r.active = (g.active!==false);
+      if(g.id!=null) r.id = String(g.id);
+      if(g.axis) r.axis = g.axis;
+      return r;
+    }).filter(Boolean);
+    /* Only a docked keyboard that actually overlaps this view becomes an inset;
+       a floating or external keyboard must not invent a full-width bottom gap. */
+    var k = p.keyboard;
+    if(k && k.docked && isNum(k.overlap) && k.overlap>0) out.keyboard = k.overlap;
+    return out;
+  }
+
+  /* Decide what to do with an incoming snapshot given the last accepted state
+     `{ lastRev, sessionId }`. A new session id (a fresh bridge/page attachment,
+     reload, or process recovery) resets ordering so an old high revision from a
+     previous attachment can never contaminate the new one. Within a session
+     only a strictly newer revision is accepted; stale and replayed revisions
+     drop. Returns { action:'reset'|'accept'|'drop', revision?, sessionId?, snap? }. */
+  function acceptSnapshot(payload, state){
+    var snap = normalizeSnapshot(payload);
+    if(!snap) return { action:'drop' };
+    state = state || {};
+    if(snap.sessionId !== state.sessionId){
+      return { action:'reset', revision:snap.revision, sessionId:snap.sessionId, snap:snap };
+    }
+    if(isNum(state.lastRev) && snap.revision <= state.lastRev) return { action:'drop' };
+    return { action:'accept', revision:snap.revision, sessionId:snap.sessionId, snap:snap };
+  }
+
+  /* Browser viewport segments (the shipped `window.viewport.segments`, or the
+     older `visualViewport.segments`) -> gap regions in the shared contract.
+     Adjacent same-row segments separated by a real gap yield a vertical fold
+     region; same-column segments separated by a gap yield a horizontal fold.
+     A seamless (zero-gap) boundary yields nothing, so a continuous surface
+     stays responsive with no forced fold stripe, matching the native path where
+     analyzeRegions turns a full-span gap into a divide. Coordinates are the
+     segments' own CSS pixels. */
+  function segmentsToRegions(segments, vw, vh){
+    if(!Array.isArray(segments) || segments.length < 2) return [];
+    var segs = segments.map(rectOf).filter(Boolean);
+    if(segs.length < 2) return [];
+    var out = [];
+    var byX = segs.slice().sort(function(a,b){ return a.x-b.x; });
+    for(var i=1;i<byX.length;i++){
+      var L=byX[i-1], R=byX[i], gap=R.x-(L.x+L.w);
+      if(gap>0 && Math.abs(L.y-R.y)<2 && Math.abs(L.h-R.h)<2)
+        out.push({ x:L.x+L.w, y:Math.min(L.y,R.y), w:gap, h:Math.max(L.h,R.h), kind:'fold' });
+    }
+    var byY = segs.slice().sort(function(a,b){ return a.y-b.y; });
+    for(var j=1;j<byY.length;j++){
+      var Tp=byY[j-1], Bt=byY[j], vgap=Bt.y-(Tp.y+Tp.h);
+      if(vgap>0 && Math.abs(Tp.x-Bt.x)<2 && Math.abs(Tp.w-Bt.w)<2)
+        out.push({ x:Math.min(Tp.x,Bt.x), y:Tp.y+Tp.h, w:Math.max(Tp.w,Bt.w), h:vgap, kind:'fold' });
+    }
+    return out;
+  }
+
   root.LidhraAdaptive = {
-    toCssRect:toCssRect, regionInsets:regionInsets, analyzeRegions:analyzeRegions,
-    chooseLayout:chooseLayout, acceptRevision:acceptRevision, THRESHOLDS:T
+    toCssRect:toCssRect, toNativeRect:toNativeRect, deriveTransform:deriveTransform,
+    regionInsets:regionInsets, analyzeRegions:analyzeRegions, chooseLayout:chooseLayout,
+    acceptRevision:acceptRevision, normalizeSnapshot:normalizeSnapshot,
+    acceptSnapshot:acceptSnapshot, segmentsToRegions:segmentsToRegions, THRESHOLDS:T
   };
 })(typeof globalThis!=='undefined'?globalThis:this);
 /* ADAPTIVE:END */
@@ -1297,10 +1465,16 @@ function render(){
   /* Keep the inline selection in sync after a poll reorders/removes cards. The
      detail body itself is never re-fetched here, so an open pane keeps its
      scroll position and focus (a progress tick must not reset it). */
-  if(detailInline()){
-    if(FS.item && !S.items[FS.item.id]){ FS.item=null; $('#detail-pane').classList.add('is-empty'); selectCard(null); }
-    else if(FS.item){ selectCard(FS.item.id); }
-  }
+  /* If the selected transfer disappeared (removed, or filtered out), drop the
+     detail explicitly rather than silently reselecting an unrelated item. In
+     the inline pane it returns to the empty state; an open file sheet for it is
+     dismissed. Late-resolving requests for the gone item are ignored by the
+     FS.item identity guard in loadFileDetail. */
+  if(FS.item && !S.items[FS.item.id]){
+    FS.item=null; FS.files=[]; FS.loaded=false; FS.active=false; FS.hint='';
+    $('#detail-pane').classList.add('is-empty'); selectCard(null);
+    if(sheetOpen==='file') closeSheet('file');
+  } else if(detailInline() && FS.item){ selectCard(FS.item.id); }
 }
 
 /* Cards are keyed by item id and updated in place. Rebuilding the list with
@@ -1386,7 +1560,14 @@ async function doAdd(){
 }
 
 /* ================= file sheet: tap a card ================= */
-const FS={ item:null, files:[], sel:0 };
+/* Selected-file detail state, kept by stable identity so a poll, a relayout, or
+   a move between the inline pane and the modal sheet never refetches or resets
+   it. `active` records presentation intent: true once the user opens the detail
+   (so a collapse to compact retains it), false for a merely-selected item.
+   `loaded` guards against a refetch when only the host surface changes; `hint`
+   and `scroll` are the cached sub-line and scroll anchor restored on a move. */
+const FS={ item:null, files:[], sel:0, active:false, loaded:false, hint:'', scroll:0 };
+let _relocClosing=false;   // true while relocateDetail closes the sheet itself
 const MEDIA_RE=/\.(mp4|m4v|mov|mp3|m4a|aac|wav|flac|aiff?|m3u8|webm|ogg|oga)$/i;
 const IC={
   play:'<svg viewBox="0 0 24 24"><path d="M7 4l12 8-12 8z"/></svg>',
@@ -1414,7 +1595,7 @@ function selectCard(id){
   });
 }
 function openFile(it,opener){
-  FS.item=it; FS.files=[]; FS.sel=0; FS.confirmDelete=false;
+  FS.item=it; FS.files=[]; FS.sel=0; FS.confirmDelete=false; FS.active=true; FS.loaded=false; FS.hint=''; FS.scroll=0;
   if(detailInline()){
     const pane=$('#detail-pane'); pane.classList.remove('is-empty');
     selectCard(it.id); fileMsg('');
@@ -1424,49 +1605,69 @@ function openFile(it,opener){
     loadFileDetail(it);
   }
 }
-/* Fill the active detail surface for `it`. Shared by the sheet and the pane. */
+/* Set the cached sub-line and paint it into the active surface. Cached so a move
+   between surfaces restores it without a refetch. */
+function setHint(s){ FS.hint=s; const el=dq('.file-hint'); if(el) el.textContent=s; }
+/* Fill the active detail surface for `it`. Shared by the sheet and the pane.
+   This is the only path that fetches; moving surfaces uses paintDetail instead. */
 function loadFileDetail(it){
   dq('.file-title').textContent=it.name;
   const list=dq('.file-list'); list.hidden=true; list.innerHTML=''; dq('.file-acts').innerHTML='';
   if(it.kind==='d'){
     FS.files=[{ name:it.name, url:it.url, path:it.path, size:it.size, local:it.local, busy:it.status==='Downloading' }];
-    dq('.file-hint').textContent=it.metaExtra||''; renderFileSheet(); return;
+    setHint(it.metaExtra||''); FS.loaded=true; renderFileSheet(); return;
   }
   /* A torrent on this device: its files are on disk (finished ones open like
      any local download) plus pause / resume / remove for the torrent itself. */
   if(it.kind==='l'){
-    dq('.file-hint').textContent=it.metaExtra||''; renderFileSheet();
+    setHint(it.metaExtra||''); renderFileSheet();
     api('torrent_files',{id:it.key}).then(fs=>{ if(FS.item!==it)return;
       FS.files=fs.filter(f=>f.included).map(f=>({ name:f.filename, url:'', path:f.path, size:f.size||0, local:!!f.done, busy:!f.done }));
-      if(FS.files.length>1) dq('.file-hint').textContent=t('meta_files',FS.files.length)+(it.metaExtra?' · '+it.metaExtra:'');
-      renderFileSheet();
+      if(FS.files.length>1) setHint(t('meta_files',FS.files.length)+(it.metaExtra?' · '+it.metaExtra:''));
+      FS.loaded=true; renderFileSheet();
     }).catch(()=>{});
     return;
   }
   /* Ready cloud transfer: resolve each file to a direct link first (Tauri
      only; the browser build just downloads the whole transfer). */
-  if(!TAURI){ dq('.file-hint').textContent=it.metaExtra||''; renderFileSheet(); return; }
-  dq('.file-hint').textContent=t('fs_loading');
+  if(!TAURI){ setHint(it.metaExtra||''); FS.loaded=true; renderFileSheet(); return; }
+  setHint(t('fs_loading'));
   api('links',{id:it.key}).then(ls=>{ if(FS.item!==it)return;
     FS.files=ls.map(l=>({ name:l.filename, url:l.url, path:'', size:l.size||0, local:false, busy:false }));
-    dq('.file-hint').textContent=FS.files.length===1?human(FS.files[0].size):t('meta_files',FS.files.length);
-    renderFileSheet();
-  }).catch(()=>{ if(FS.item!==it)return; dq('.file-hint').textContent=t('fs_err'); renderFileSheet(); });
+    setHint(FS.files.length===1?human(FS.files[0].size):t('meta_files',FS.files.length));
+    FS.loaded=true; renderFileSheet();
+  }).catch(()=>{ if(FS.item!==it)return; setHint(t('fs_err')); renderFileSheet(); });
+}
+/* Repaint the active surface from cached FS state, no refetch. Restores the
+   selected file, the sub-line, and the scroll anchor. Loading data is separate
+   from moving its presentation: this runs when only the host surface changes. */
+function paintDetail(){
+  const it=FS.item; if(!it)return;
+  dq('.file-title').textContent=it.name;
+  const el=dq('.file-hint'); if(el) el.textContent=FS.hint||it.metaExtra||'';
+  renderFileSheet();
+  const root=detailRoot(); if(root) requestAnimationFrame(()=>{ try{ root.scrollTop=FS.scroll||0; }catch(e){} });
 }
 /* Move the open detail to the surface the current layout uses, preserving the
-   selection. Called only when the layout crosses the inline / single-pane
-   boundary, never on every geometry tick. */
+   selection, data, and scroll. Called only when the layout crosses the inline /
+   single-pane boundary, never on every geometry tick, and never refetches when
+   the detail is already loaded. */
 function relocateDetail(){
   const pane=$('#detail-pane');
   if(detailInline()){
-    if(sheetOpen==='file') closeSheet('file');
-    if(FS.item){ pane.classList.remove('is-empty'); selectCard(FS.item.id); loadFileDetail(FS.item); }
+    if(sheetOpen==='file'){ _relocClosing=true; closeSheet('file'); _relocClosing=false; }
+    if(FS.item){ pane.classList.remove('is-empty'); selectCard(FS.item.id);
+      if(FS.loaded) paintDetail(); else loadFileDetail(FS.item); }
     else { pane.classList.add('is-empty'); }
   } else {
-    /* Single pane: the inline pane is hidden by CSS. Keep FS.item and clear the
-       inline highlight; a return to a two-pane layout restores the same detail,
-       and a tap reopens the sheet. No modal is forced open. */
+    /* Single pane: the inline pane is hidden by CSS. An actively-viewed detail
+       moves into the sheet so it is retained across the collapse; a merely
+       selected item keeps the list and never forces a modal open. */
     selectCard(null);
+    if(FS.item && FS.active && sheetOpen!=='file'){
+      openSheet('file', null);
+      if(FS.loaded) paintDetail(); else loadFileDetail(FS.item);
+    }
   }
 }
 function renderFileSheet(){
@@ -1514,14 +1715,23 @@ function renderFileSheet(){
   acts.querySelectorAll('.btn').forEach(b=>b.onclick=()=>runAct(A[+b.dataset.n],b));
 }
 function fileMsg(s,k){ const m=dq('.file-msg'); if(!m)return; m.textContent=s; m.className='form-msg file-msg'+(k?' '+k:''); }
-/* The initiating control's box, in CSS px (== the webview's UIKit points), so a
-   native popover (share / Open In) can point at it instead of a fixed corner. */
+/* The initiating control's box in CSS px. */
 function cssRectOf(el){ try{ const r=el.getBoundingClientRect(); return {x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height)}; }catch(e){ return null; } }
+/* The same box mapped to native points for a native popover (share / Open In),
+   so it points at the control instead of a fixed corner. The old code handed the
+   CSS rect straight through, which is only correct at 1:1; toNativeRect applies
+   the inverse of the measured geometry transform (identity when nothing reported
+   a zoom or inset host, so the ordinary case is unchanged). */
+function nativeAnchorOf(el){
+  const c=cssRectOf(el); if(!c) return null;
+  const r=LidhraAdaptive.toNativeRect(c,(_geo&&_geo.xf)||{});
+  return { x:Math.round(r.x), y:Math.round(r.y), w:Math.round(r.w), h:Math.round(r.h) };
+}
 async function runAct(a,btn){
   btn.disabled=true; fileMsg('');
   /* Modal sheet closes after an action; the inline pane stays open (there is
      nothing to dismiss) and just re-enables the button. */
-  try{ const r=await a.fn(cssRectOf(btn)); if(r==='stay'||detailInline())btn.disabled=false; else setTimeout(()=>closeSheet('file'),120); }
+  try{ const r=await a.fn(nativeAnchorOf(btn)); if(r==='stay'||detailInline())btn.disabled=false; else setTimeout(()=>closeSheet('file'),120); }
   catch(e){ fileMsg(t('act_fail',(e&&e.message)||String(e)),'err'); btn.disabled=false; }
 }
 async function copyText(s){
@@ -1643,6 +1853,10 @@ function doCloseState(k,el,o){
   const app=appEl(); if(app){ try{app.inert=false;}catch(e){} app.removeAttribute('aria-hidden'); }
   document.body.classList.remove('sheet-open');
   if(k==='acct') syncTabsToView();
+  /* A user-driven close of the file sheet ends the active-viewing intent, so a
+     later collapse does not pop it back open. A close the relayout performs to
+     move the detail inline must not. */
+  if(k==='file' && !_relocClosing) FS.active=false;
   const opener=sheetOpener; sheetOpener=null;
   /* Return focus to the opener, except onto a tapped card (that only paints a focus ring). */
   try{ if(opener&&opener.focus&&opener.offsetParent!==null&&(keyboardNav||!opener.classList.contains('card'))) opener.focus(); }catch(e){}
@@ -1702,12 +1916,56 @@ function attachDrag(el,k,o){
    geometry payload. It is kept strictly separate from engine and session
    state: a geometry event only re-lays-out the shell and can never add,
    restart, cancel, or duplicate a transfer. */
-let _geo=null, _relayoutQueued=false, _geoRev=-1;
+let _geo=null, _relayoutQueued=false;
+/* Session-scoped acceptance state for the geometry stream. A new sessionId (a
+   fresh bridge/page attachment, reload, or webview process recovery) resets
+   revision ordering so a stale high revision can never contaminate it. */
+let _geoState={ lastRev:-1, sessionId:undefined };
+let _geoRaw=null;               // last accepted canonical snapshot, for recompute
+/* The live visual viewport, which pinch-zoom and the keyboard move without
+   changing window.innerWidth/Height. Used to keep the native->CSS transform
+   honest across zoom/scroll rather than assuming the layout viewport. */
+function visualView(){
+  const vv=window.visualViewport;
+  if(vv) return { width:vv.width, height:vv.height, offsetX:vv.offsetLeft||0, offsetY:vv.offsetTop||0, scale:vv.scale||1 };
+  return { width:window.innerWidth, height:window.innerHeight, offsetX:0, offsetY:0, scale:1 };
+}
+/* Segments reported by a foldable browser (the shipped window.viewport.segments,
+   or the older visualViewport.segments), as CSS-pixel rects. Empty when the API
+   is absent or reports a single full-viewport segment, which is ordinary
+   responsive behaviour, never a fabricated fold. */
+function browserSegments(){
+  try{
+    const src=(window.viewport&&window.viewport.segments)||(window.visualViewport&&window.visualViewport.segments);
+    if(!src||src.length<2) return [];
+    return [...src].map(s=>({ x:s.x||0, y:s.y||0, w:(s.width!=null?s.width:s.w), h:(s.height!=null?s.height:s.h) }));
+  }catch(e){ return []; }
+}
+/* Recompute the CSS-space regions and keyboard inset from the last accepted raw
+   snapshot, using the current measured viewport. Called on a fresh snapshot and
+   whenever the visual viewport transforms (zoom / scroll / keyboard) so the
+   converted geometry follows without another native round-trip. */
+function computeGeoFromSnapshot(snap){
+  const view=visualView();
+  const wv=snap.webview||{x:0,y:0,w:view.width,h:view.height};
+  const xf=LidhraAdaptive.deriveTransform(wv,{ width:view.width, offsetX:0, offsetY:0 });
+  const regions=(snap.regions||[]).map(g=>{ const r=LidhraAdaptive.toCssRect(g,xf); r.kind=g.kind; r.active=g.active; return r; })
+    /* Inactive regions are dropped from the layout so an inactive division never
+       opens a permanent gap; only active, on-screen, non-empty rects drive it. */
+    .filter(g=>g.active!==false && g.w>0 && g.h>0 && g.x<window.innerWidth && g.y<window.innerHeight && g.x+g.w>0 && g.y+g.h>0);
+  _geo={ regions, keyboard:snap.keyboard||0, xf, source:snap.source||'native', sessionId:snap.sessionId };
+}
+function recomputeGeometry(){ if(_geoRaw){ computeGeoFromSnapshot(_geoRaw); requestRelayout(); } }
 function currentEnv(){
   const sidebar = mqDesk.matches ? 280 : 0;
-  /* The viewport is always the source of truth for size; reserved regions come
-     from the last native report (empty on browser / desktop / ordinary iOS). */
-  return { width:window.innerWidth, height:window.innerHeight, sidebar, regions:(_geo&&_geo.regions)||[] };
+  /* Geometry-source precedence: a valid native snapshot first, then validated
+     browser segments, then ordinary responsive layout with no regions. The
+     viewport is always the source of truth for size. */
+  let regions=(_geo&&_geo.regions)||[];
+  if(!regions.length && _geo && _geo.source==='native'){ /* native present but no active regions */ }
+  else if(!regions.length){ regions=LidhraAdaptive.segmentsToRegions(browserSegments(), window.innerWidth, window.innerHeight); }
+  return { width:window.innerWidth, height:window.innerHeight, sidebar, regions,
+           keyboard:(_geo&&_geo.keyboard)||0, prev:appEl().dataset.layout };
 }
 function applyLayout(){
   _relayoutQueued=false;
@@ -1719,6 +1977,13 @@ function applyLayout(){
   const i=r.insets;
   app.style.setProperty('--rr-top',i.top+'px'); app.style.setProperty('--rr-right',i.right+'px');
   app.style.setProperty('--rr-bottom',i.bottom+'px'); app.style.setProperty('--rr-left',i.left+'px');
+  /* Mirror the reserved-region insets onto :root so body-level overlays (the
+     modal sheets, their scrim, and the browser player) that sit outside .app,
+     and therefore do not inherit its custom properties, can also keep clear of a
+     fold or occlusion. Applied once here; the overlays reference them in CSS. */
+  const de=document.documentElement.style;
+  de.setProperty('--rr-top',i.top+'px'); de.setProperty('--rr-right',i.right+'px');
+  de.setProperty('--rr-bottom',i.bottom+'px'); de.setProperty('--rr-left',i.left+'px');
   /* A central fold aligns the pane boundary to itself: the divider sits on the
      fold and its gutter matches the fold width. Clamped so a bogus rect can
      never collapse a pane. Absent a fold these clear and the panes size by the
@@ -1750,27 +2015,30 @@ function applyLayout(){
 function requestRelayout(){ if(_relayoutQueued)return; _relayoutQueued=true; requestAnimationFrame(applyLayout); }
 
 /* Entry point the native geometry bridge calls (NativePlugin.swift). The
-   payload is a versioned snapshot; stale / malformed / replayed revisions are
-   dropped. Native points are converted to this webview's CSS space using the
-   *measured* ratio between the reported webview frame and the live viewport,
-   never an assumed 1:1. Safe-area insets are deliberately NOT applied here: the
-   CSS already uses env(safe-area-inset-*), so applying them again would pad
-   twice. Regions that no longer overlap the viewport are dropped, so a fold
-   that goes away clears its inset. */
+   payload is a versioned snapshot (v1 or the richer v2 contract). Acceptance is
+   session-aware: a new session id resets ordering, and within a session only a
+   strictly newer revision is taken, so stale / malformed / replayed / wrong
+   session events are dropped. The accepted snapshot is retained raw so the
+   CSS-space conversion can be recomputed when the visual viewport transforms.
+   Native points are converted to this webview's CSS space using the *measured*
+   webview frame, never an assumed 1:1. Safe-area insets are deliberately NOT
+   applied here: the CSS already uses env(safe-area-inset-*), so applying them
+   again would pad twice. Regions that no longer overlap the viewport are
+   dropped, so a fold that goes away clears its inset. */
 window.__lidhraGeometry=function(payload){
   try{ if(typeof payload==='string') payload=JSON.parse(payload); }catch(e){ return; }
-  const rev=LidhraAdaptive.acceptRevision(payload,_geoRev);
-  if(rev<0) return;
-  _geoRev=rev;
-  const sc=payload.scene||{w:window.innerWidth,h:window.innerHeight};
-  const wv=payload.webview||{x:0,y:0,w:sc.w,h:sc.h};
-  const scale=(wv.w>0)? (window.innerWidth/wv.w) : 1;
-  const xf={ scale, originX:(wv.x||0)*scale, originY:(wv.y||0)*scale };
-  const regions=(payload.regions||[]).map(g=>LidhraAdaptive.toCssRect(g,xf))
-    .filter(g=>g.w>0 && g.h>0 && g.x<window.innerWidth && g.y<window.innerHeight && g.x+g.w>0 && g.y+g.h>0);
-  _geo={ regions };
+  const d=LidhraAdaptive.acceptSnapshot(payload,_geoState);
+  if(d.action==='drop') return;
+  if(d.action==='reset'){ _geoState={ lastRev:d.revision, sessionId:d.sessionId }; _geo=null; }
+  else { _geoState.lastRev=d.revision; }
+  _geoRaw=d.snap;
+  computeGeoFromSnapshot(d.snap);
   requestRelayout();
 };
+/* Ask the native bridge for a fresh snapshot once the page is ready. The native
+   emitter is best-effort at attach time and can fire before this handler exists;
+   this closes that race (the initial page-ready handshake). No-op off iOS. */
+function requestGeometrySnapshot(){ if(typeof IOS!=='undefined' && IOS){ try{ api('geometry_sync'); }catch(e){} } }
 
 /* ================= init ================= */
 /* ================= First-launch welcome ================= */
@@ -1832,6 +2100,9 @@ async function init(){
   $('#token').addEventListener('keydown',e=>{ if(e.key==='Enter')doConnect(); });
   $('#file-scrim').onclick=()=>closeSheet('file'); $('#player-close').onclick=closePlayer;
   $('#list').addEventListener('click',e=>{ const el=e.target.closest('button.card'); if(!el)return; const it=S.items[el.dataset.key]; if(it)openFile(it,el); });
+  /* Track the detail scroll anchor on whichever surface is active so a move
+     between the inline pane and the sheet restores the reading position. */
+  ['#detail-pane','#file-sheet'].forEach(sel=>{ const el=$(sel); if(el) el.addEventListener('scroll',()=>{ if(FS.item && detailRoot()===el) FS.scroll=el.scrollTop; },{passive:true}); });
   if(IOS){ api('native_can_open',{url:'vlc-x-callback://x-callback-url/stream'}).then(ok=>{ S.vlc=!!ok; }).catch(()=>{}); }
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape'&&!$('#player').hidden){ closePlayer(); return; }
@@ -1848,10 +2119,20 @@ async function init(){
   setView('transfers',{silent:true}); setFilter('active',{fromTab:true});
   updateHeader(); mqDesk.addEventListener('change',()=>{updateHeader();requestRelayout();});
   window.addEventListener('resize',requestRelayout); window.addEventListener('orientationchange',requestRelayout);
+  /* Pinch-zoom, scroll and the keyboard move the visual viewport without a
+     resize event; recompute the converted geometry from the retained snapshot
+     so native regions and anchors stay aligned. Coalesced to one frame. */
+  if(window.visualViewport){
+    try{ window.visualViewport.addEventListener('resize',recomputeGeometry);
+         window.visualViewport.addEventListener('scroll',recomputeGeometry); }catch(e){}
+  }
+  /* A foldable browser can change its segments without a plain resize. */
+  try{ if(window.viewport&&window.viewport.addEventListener) window.viewport.addEventListener('change',requestRelayout); }catch(e){}
   /* An element observer catches size changes the resize event misses (a scene
      resize while the window count is unchanged), still coalesced to one frame. */
   if(window.ResizeObserver){ try{ new ResizeObserver(()=>requestRelayout()).observe(appEl()); }catch(e){} }
   applyLayout(); // first pass synchronously so the initial paint is correct
+  requestGeometrySnapshot(); // page-ready handshake: pull the first native snapshot
   render();
   loadP2p();
   refreshDownloads(); setInterval(refreshDownloads,1500);

@@ -15,5 +15,36 @@
 		<string>vlc-x-callback</string>
 		<string>vlc</string>
 	</array>
+	<!-- The iOS 27 SDK hard-requires UIScene lifecycle adoption: an app with no
+	     scene manifest traps at launch (UIApplicationEvaluateRuntimeIssueForNoScene
+	     LifecycleAdoption). Tauri's generated app owns its window through the app
+	     delegate, so a single-scene manifest with no scene delegate is enough to
+	     adopt the lifecycle while keeping that window. The reserved-region layout
+	     lives inside the one full-scene webview, so multiple scenes are not needed. -->
+	<!-- Tauri's windowing layer (tao) only registers its scene delegate
+	     (configurationForConnectingSceneSession) when the app declares multiple
+	     scene support, so this must be true or tao's window is never attached to
+	     the iOS 27 scene and the webview stays black. -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<!-- Tauri's windowing layer (tao) returns a scene configuration
+					     named "TaoScene" from the app delegate and registers its
+					     TaoSceneDelegate class at runtime, so the class name is set
+					     programmatically, not here: naming it in the plist fails with
+					     "could not load class" because the scene is created before
+					     tao's Rust code runs. -->
+					<key>UISceneConfigurationName</key>
+					<string>TaoScene</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 </dict>
 </plist>

@@ -15,24 +15,39 @@ the hand-off for the one part that cannot be finished on today's toolchain.
   bottom sheet (single-pane layouts) or inline beside / below the transfer list
   (two-pane layouts), with no duplicated IDs, handlers, or accessibility nodes.
 - A versioned native → web geometry bridge (`NativePlugin.swift` →
-  `window.__lidhraGeometry`) carrying scene bounds, the webview frame, all four
-  safe-area insets, the keyboard overlap, and active reserved regions.
-- Share / Open In popovers anchored to the initiating control instead of a
-  fixed bottom-centre point.
-- The `100vh` / `100dvh` ordering fix so the viewport tracks the keyboard.
+  `window.__lidhraGeometry`) carrying a session id, scene bounds, the webview
+  frame, all four safe-area insets and layout margins, size-class traits, a
+  structured keyboard state (docked / floating / overlap), and active reserved
+  regions. The web side accepts both the v1 and the richer v2 payload.
+- A session-aware acceptance handshake: a new attachment (reload or webview
+  process recovery) is a new session id that resets revision ordering, and the
+  web UI pulls the first snapshot on page-ready (`geometry_sync`) so no initial
+  emission is lost to a startup race.
+- Progressive foldable-browser support: `window.viewport.segments` (or the older
+  `visualViewport.segments`) is normalised into the same region contract, with an
+  ordinary responsive fallback and no fabricated hinge.
+- Share / Open In popovers anchored to the initiating control, mapped back to
+  native points through the measured transform (`toNativeRect`) instead of a raw
+  1:1 cast, so the anchor is correct under zoom or an inset host.
+- Reserved-region insets mirrored to body-level overlays (modal sheets and the
+  browser player) so a presentation stays clear of a fold or camera occlusion.
+- Threshold hysteresis so a width hovering on a mode boundary does not oscillate,
+  while a fold or occlusion still reacts immediately.
+- The `100vh` / `100dvh` ordering fix, plus a visual-viewport recompute so the
+  converted geometry follows pinch-zoom, scroll, and the keyboard.
 
 ## What does NOT ship as "supported" yet
 
-The iPhone Duo native adaptive APIs (`ArrangementView` /
-`UIArrangementViewController` and the reserved-region geometry) require **Xcode
-27.1**, which Apple lists as *coming later this month* on
-<https://developer.apple.com/iphone-duo/>. This project builds against the
-**iOS 26 SDK (Xcode 26)**, where those symbols do not exist. The reserved-region
-emitter is therefore isolated behind the `LIDHRA_DUO` compilation condition and
-returns no regions on every currently shippable build. Until it is wired to the
-confirmed API and the acceptance matrix passes on the official Duo runtime,
-1.3.0 is **not** an iPhone-Duo-supported release; it is a release whose layout is
-Duo-*ready*.
+The iPhone Duo native adaptive APIs (`UIArrangementViewController` and the
+`UIView.reservedRegions` geometry) exist only in the **iOS 27.1 SDK (Xcode
+27.1)**. The default App Store build still targets the iOS 26 / 27.0 SDK, where
+those symbols are absent, so the Duo code is isolated behind the `LIDHRA_DUO`
+compilation condition and a default build reports no regions and presents the
+player full screen. The gated code is implemented and type-checked against the
+real 27.1 SDK, but a Duo build is not shipped and the acceptance matrix has not
+passed on an official Duo runtime, so 1.3.0 is **not** an iPhone-Duo-supported
+release; its layout is Duo-*ready* and the native path is Duo-*implemented but
+unverified on device*.
 
 ## Architecture
 
@@ -61,36 +76,55 @@ arrangement pane would not make its internal controls hinge-aware. The native
 `ArrangementView` / `UIArrangementViewController` work (below) is reserved for
 the native AVPlayer surface, not for hosting the webview.
 
-## Geometry payload (contract v1)
+## Geometry payload (contract v2, v1 still accepted)
 
-`window.__lidhraGeometry(payload)` accepts one JSON object:
+`window.__lidhraGeometry(payload)` accepts the v2 object below; the shipped v1
+shape (`{ v, rev, scene, webview, safeArea, keyboard:Number, regions }`) is still
+accepted and normalised onto the same canonical form, so an older native binary
+keeps working.
 
 ```jsonc
 {
-  "v": 1,                       // contract version; other versions are dropped
-  "rev": 42,                    // strictly increasing; stale/replayed are dropped
+  "version": 2,                 // 2 or the legacy 1; other versions are dropped
+  "revision": 42,               // strictly increasing within a session
+  "sessionId": "…",             // per-attachment; a new id resets revision ordering
+  "sceneId": "…",               // scene owner (scene session persistent id)
+  "source": "native",           // native | browser-segments | responsive
   "coordinateSpace": "scene",
-  "scene":   { "w": 1000, "h": 760 },              // points
-  "webview": { "x": 0, "y": 0, "w": 1000, "h": 760 }, // webview frame in scene points
-  "safeArea":{ "top": 47, "right": 0, "bottom": 34, "left": 0 }, // points
-  "keyboard": 0,                // points of the webview covered by the keyboard
-  "regions": [                  // active reserved regions in scene points
-    { "x": 489, "y": 0, "w": 22, "h": 760, "kind": "hinge" }
+  "units": "points",
+  "capabilities": { "regions": false }, // a real region provider vs an unimplemented one
+  "webviewBounds": { "x": 0, "y": 0, "w": 1000, "h": 760 }, // webview frame in scene points
+  "visibleBounds": { "x": 0, "y": 0, "w": 1000, "h": 760 },
+  "safeArea":     { "top": 47, "right": 0, "bottom": 34, "left": 0 },
+  "layoutMargins":{ "top": 0, "right": 16, "bottom": 0, "left": 16 },
+  "traits": { "horizontalSizeClass": "regular", "verticalSizeClass": "compact" },
+  "keyboard": { "docked": false, "floating": false, "overlap": 0 },
+  "regions": [                  // reserved regions in scene points
+    { "id": "r1", "kind": "division", "active": true, "rect": { "x": 489, "y": 0, "w": 22, "h": 760 } }
   ]
 }
 ```
 
-Conversion rules enforced by the web layer:
+Acceptance and conversion, enforced by the web layer (`LidhraAdaptive`):
 
-- **Points → CSS px uses a measured ratio**, `scale = innerWidth / webview.w`,
-  never an assumed 1:1. A region is mapped with
-  `(x - webview.x) * scale`, so a webview inset within the scene is handled.
+- **`normalizeSnapshot`** collapses v1 and v2 onto one canonical shape and
+  rejects any malformed, negative-size, or unknown-version payload.
+- **`acceptSnapshot`** is session-aware: a new `sessionId` returns `reset` (take
+  it and restart ordering); within a session only a strictly newer `revision` is
+  accepted, so stale, replayed, and wrong-session events drop and an old high
+  revision can never contaminate a new attachment.
+- **Points → CSS px uses a measured transform** (`deriveTransform`,
+  `scale = innerWidth / webviewBounds.w`), never an assumed 1:1, and is recomputed
+  from the retained raw snapshot on every visual-viewport change.
 - **Safe-area insets are not applied here.** The CSS already uses
-  `env(safe-area-inset-*)`; applying the payload's insets too would pad twice.
-  They are in the payload for completeness / debugging only.
+  `env(safe-area-inset-*)`; the payload's insets are for completeness / debugging.
+- **A docked keyboard becomes a single bottom inset; a floating one does not**,
+  so the keyboard is never subtracted twice.
 - **Regions that no longer overlap the viewport are dropped**, so a fold that
-  goes away clears its inset rather than leaving a stale gap.
-- **A stale, replayed, or wrong-version payload is dropped** (`acceptRevision`).
+  goes away clears its inset; a zero-thickness division is preserved.
+- **A provider reporting no active regions** (`capabilities.regions:true`,
+  empty `regions`) is distinct from an unimplemented provider (`false`): the
+  former is a valid empty result, the latter falls back to responsive layout.
 
 ## Layout algorithm (`LidhraAdaptive.chooseLayout`)
 
@@ -113,72 +147,99 @@ a two-pane layout collapses to one pane the selection is preserved and no modal
 is forced open; growing back restores the same inline detail. A progress poll
 never re-fetches or resets an open detail pane.
 
-## The isolated iPhone Duo integration
+## The iPhone Duo integration (implemented, gated behind `LIDHRA_DUO`)
 
 Two native pieces are gated behind `LIDHRA_DUO` (a Swift active compilation
-condition, **off** in every current build). An `if #available` check is not
-enough on its own: it cannot make a symbol that is absent from the iOS 26 SDK
-compile, so the whole region-query body is compiled out until the flag is set in
-an Xcode 27.1 build.
+condition, **off** in a default build). They are now implemented against the real
+iOS 27.1 SDK API, not a placeholder. The gate is still required because those
+symbols are absent from the iOS 26 / 27.0 SDK, so a default build compiles them
+out and stays buildable on the older toolchain; a Duo build sets the flag from
+the environment through the plugin's `Package.swift`.
 
-### 1. Reserved-region emitter — `DuoRegions.active(in:)`
+The API names were taken from the installed SDK, not from a doc: UIKit
+`UIView.reservedRegions(kind:options:)` returning `UIView.ReservedRegion`
+(`id`, `kind` = `.division` / `.occlusion`, `frame`, `margins`, `isActive`), and
+`UIArrangementViewController` with `setViewController(_:for:)`
+(`.primary` / `.secondary`) and `UISplitArrangement().axes(_:)`.
 
-Today it returns `[]` and the web UI falls back to an ordinary responsive
-layout. Under `LIDHRA_DUO` there is a marked INTEGRATION POINT and a `#warning`:
-query the scene's active division / reserved regions from the confirmed Duo
-geometry API, map each rectangle into the scene coordinate space, and return
-`{"x","y","w","h","kind"}` per region. Do not fabricate the symbol; wire the
-confirmed one.
+### 1. Reserved-region emitter, `DuoRegions.active(in:)`
 
-### 2. Native player arrangement (`ArrangementView` / `UIArrangementViewController`)
+Under `LIDHRA_DUO` it queries `view.reservedRegions(kind:options:)` for both
+`.division` and `.occlusion` with `.includeInactive`, converts each `frame` from
+the view's space into the window (scene) space that GeometryBridge reports the
+webview frame in, and returns `{"id","kind","active","x","y","w","h"}` per
+region (the bridge wraps the rect into the payload's `rect`). Inactive regions
+travel with `active:false`; the web layer keeps the distinction but drops them
+from the layout so an inactive division never opens a permanent gap.
+`DuoRegions.supported` reports whether a real provider is compiled in, so the web
+side can tell "no active regions" apart from "no provider".
 
-The full-screen `AVPlayerViewController` is unchanged for current builds. The
-Duo enhancement — a primary playback area with a secondary information/actions
-area for the selected file, in a `UIArrangementViewController` (split for two
-visible areas; overlay only for a real foreground/background relationship),
-reusing the single `AVPlayer` session across presentation changes — is likewise
-Xcode-27.1-only and must be proven in a minimal working slice before it is
-wired into `play(_:)`.
+### 2. Native player arrangement, `UIArrangementViewController`
+
+Under `LIDHRA_DUO`, when a division is active `play(_:)` hosts the same
+`AVPlayerViewController` as the `.primary` pane of a `UISplitArrangement` (axis
+vertical) with a small `DuoPlaybackInfoController` (file title, close) as
+`.secondary`; otherwise it presents full screen as before. Split, not overlay:
+the two areas are simultaneously useful with no foreground/background
+relationship, and primary/secondary are semantic roles the system places for the
+pose. The `AVPlayer` / `AVPlayerViewController` instance is reused, never rebuilt,
+so media identity and position are preserved.
+
+Verification of the gated code against the iOS 27.1 SDK is recorded in
+`docs/verification/iphone-duo/` (SDK type-check of the API usage at deployment
+target 15.0, and full-file parse in both configs). Runtime pose validation on the
+iPhone Duo simulator / device is tracked there too.
 
 ### Enabling the Duo build (Xcode 27.1)
 
 1. Install Xcode 27.1 and confirm the iPhone Duo SDK and simulator (DeviceHub).
-2. Add `LIDHRA_DUO` to `SWIFT_ACTIVE_COMPILATION_CONDITIONS` for the iOS target.
-   `gen/apple` is regenerated by `cargo tauri ios init`, so set it at the source
-   in `app/src-tauri/gen/apple/project.yml` (target `settings.base`), e.g.
-   `SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) LIDHRA_DUO`, so the flag
-   survives regeneration.
+2. Build with `LIDHRA_DUO=1` in the environment, e.g.
+   `LIDHRA_DUO=1 cargo tauri ios build …`. The `#if LIDHRA_DUO` guard lives on
+   the **plugin** static target (`NativePlugin.swift`), not the generated app
+   target, so a flag set only on the app (as an earlier draft of this note said)
+   would never compile the Duo path in. The switch is therefore driven from the
+   environment in the checked-in `app/src-tauri/plugins/native/ios/Package.swift`
+   (`swiftSettings: [.define("LIDHRA_DUO")]` when the variable is set), which
+   survives `cargo tauri ios init` regeneration because `Package.swift` is not
+   generated. No `gen/apple` edit is required. Confirm from the build log that the
+   plugin target compiled with the define and that the `#warning` fired.
 3. Implement `DuoRegions.active(in:)` and the player arrangement against the
    confirmed API; keep the iOS 15 deployment target and both non-Duo builds
    compiling.
-4. Run the acceptance matrix (below) on the official Duo runtime before calling
-   1.3.0 Duo-supported.
+4. Run the acceptance matrix (`docs/verification/iphone-duo/`) on the official
+   Duo runtime before calling 1.3.0 Duo-supported.
 
 ## Verification matrix
 
-Environment: macOS 26 (Darwin 25.6.0), Xcode 26.6 (iOS SDK 26.5), Rust 1.98.1,
-Node for the unit tests. iPhone Duo needs Xcode 27.1 (not yet released).
+Environment: macOS (Darwin 27.0.0), Xcode 27.0 build 27A266a (iOS SDK 27.0),
+Node 24 for the unit tests. iPhone Duo needs Xcode 27.1 (Apple lists it as
+coming later this month; not installed here).
 
 | Check | Result |
 | --- | --- |
-| `node --test test/adaptive.test.mjs` (region conversion, layout selection, thresholds, fold handling, revision ordering) | **pass** — 15/15 |
+| `node --test test/adaptive.test.mjs` (conversion + inverse, transform derivation, v1/v2 normalisation, session reset/ordering, keyboard inset, hysteresis, segment folds, layout selection, thresholds, fold handling) | **pass** — 23/23 |
 | App crate `cargo check --lib` (default and `appstore,p2p` feature sets) | **pass** |
-| `crates` workspace `cargo test` and `cargo clippy --all-targets -- -D warnings` (CI gate; unchanged by this work) | **pass** |
-| `NativePlugin.swift` `swiftc -parse` against the iOS 26 simulator SDK (syntax only; Tauri/UIKit types not resolved) | **pass** |
-| Browser: compact / regular / split by width; tap-to-select fills the inline detail; selection + list position preserved shrinking to compact and growing back; compact tap opens the modal sheet | **pass** (in-app browser, 390 / 834 / 1000 / 1280 px) |
-| Browser: synthetic central vertical fold → `split`, sidebar collapses to the tab bar, gutter aligns to the fold | **pass** (synthetic geometry, clearly a simulation) |
-| Swift `NativePlugin.swift` compiles / runs | **unavailable in this environment** — needs a full iOS build; reviewed for iOS 26 SDK correctness |
-| iPhone Duo poses (open-flat, book, tabletop), reserved-region-driven layout, native player arrangement | **unavailable** — needs Xcode 27.1 + Duo runtime |
+| `crates` workspace `cargo build` / `cargo test` / `cargo clippy --all-targets -- -D warnings` (CI gate; unchanged by this work) | **pass** |
+| `NativePlugin.swift` and `Package.swift` `swiftc -parse` against the iOS SDK (syntax only; Tauri/UIKit types not resolved) | **pass** |
+| Browser (in-app): compact / regular / split by width; a synthetic v2 central vertical fold → `split` with the gutter aligned to the fold and the list basis on it; a stale revision is ignored; `LidhraAdaptive` exposes the full v2 API | **pass** (390 / 1200 px, synthetic geometry, clearly a simulation) |
+| Swift `NativePlugin.swift` compiles / links; native geometry, handshake, keyboard classification on device | **not run** — needs a full iOS build (`cargo tauri ios build`); reviewed for SDK correctness |
+| iPhone Duo poses (open-flat, book, tabletop), reserved-region-driven layout, native player arrangement | **blocked** — needs Xcode 27.1 + Duo runtime (not installed) |
 
 Synthetic browser geometry exercises the layout algorithm and is labelled a
-simulation; it is not evidence of on-device Duo support.
+simulation; it is not evidence of on-device Duo support. The full acceptance
+matrix and evidence index live under `docs/verification/iphone-duo/`.
 
 ## Files
 
 - `ui/index.html` — `LidhraAdaptive` (marked `ADAPTIVE:START`/`END`), the
-  geometry wiring, the dual-host detail surface, layout CSS, the viewport fix.
-- `app/src-tauri/plugins/native/ios/Sources/NativePlugin.swift` — `GeometryBridge`,
-  `DuoRegions` seam, anchor-aware share / Open In.
+  geometry wiring (v2 acceptance, session state, visual-viewport recompute,
+  browser segments), the dual-host detail surface with presentation intent and
+  scroll continuity, layout CSS, overlay inset mirroring, the viewport fix.
+- `app/src-tauri/plugins/native/ios/Sources/NativePlugin.swift` — `GeometryBridge`
+  (v2 payload, session token, traits, structured keyboard, `requestSnapshot`),
+  `DuoRegions` seam (`supported` + gated query), anchor-aware share / Open In.
+- `app/src-tauri/plugins/native/ios/Package.swift` — env-driven `LIDHRA_DUO`
+  define so the flag reaches the plugin compilation target durably.
 - `app/src-tauri/plugins/native/src/lib.rs`, `app/src-tauri/src/lib.rs` — anchor
-  plumbed through the Rust bridge.
+  and the `geometry_sync` handshake command plumbed through the Rust bridge.
 - `test/adaptive.test.mjs` — unit tests that load the shipped `ADAPTIVE` block.

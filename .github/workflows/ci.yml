@@ -26,3 +26,16 @@ jobs:
         run: cargo test --workspace --verbose
       - name: Clippy (deny warnings)
         run: cargo clippy --workspace --all-targets -- -D warnings
+
+  web:
+    name: adaptive layout tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # Pure geometry / layout logic extracted from ui/index.html. No upload,
+      # no native build; just the shared adaptive math the foldable UI depends on.
+      - name: Adaptive layout unit tests
+        run: node --test test/adaptive.test.mjs

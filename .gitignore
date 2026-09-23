@@ -12,3 +12,6 @@
 
 # Tauri generated
 app/src-tauri/gen/
+
+# iPhone Duo build marker (written by scripts/ios-postgen.sh when LIDHRA_DUO is set)
+app/src-tauri/plugins/native/ios/.lidhra_duo
