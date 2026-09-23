@@ -53,9 +53,15 @@ echo "ios-postgen: iOS deployment target set to $MIN"
 # the generated Info.plist has it too, in case the init-time merge drops the key.
 PLIST="$GEN/lidhra-desktop_iOS/Info.plist"
 if [ -f "$PLIST" ] && ! /usr/libexec/PlistBuddy -c "Print :UIApplicationSceneManifest" "$PLIST" >/dev/null 2>&1; then
+  # tao returns a scene configuration named "TaoScene" and sets its delegate
+  # class programmatically, so the config is named here without a delegate class.
   /usr/libexec/PlistBuddy \
     -c "Add :UIApplicationSceneManifest dict" \
     -c "Add :UIApplicationSceneManifest:UIApplicationSupportsMultipleScenes bool false" \
+    -c "Add :UIApplicationSceneManifest:UISceneConfigurations dict" \
+    -c "Add :UIApplicationSceneManifest:UISceneConfigurations:UIWindowSceneSessionRoleApplication array" \
+    -c "Add :UIApplicationSceneManifest:UISceneConfigurations:UIWindowSceneSessionRoleApplication:0 dict" \
+    -c "Add :UIApplicationSceneManifest:UISceneConfigurations:UIWindowSceneSessionRoleApplication:0:UISceneConfigurationName string TaoScene" \
     "$PLIST" >/dev/null
-  echo "ios-postgen: added UIApplicationSceneManifest (single scene)"
+  echo "ios-postgen: added UIApplicationSceneManifest (TaoScene)"
 fi
