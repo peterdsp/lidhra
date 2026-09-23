@@ -14,33 +14,41 @@ Duo support.
 | App version / build | 1.3.0 / iOS bundle build 9 (`tauri.conf.json`) |
 | Duo toolchain | Xcode 27.1 (27A9269) present at `~/Downloads/Xcode_27.1.app`, iOS SDK + simulator SDK 27.1 |
 | Simulator runtimes | iOS 26.5, 27.0, and **27.1** (downloaded); iPhone Duo device type present |
-| Active toolchain (`xcode-select`) | **Xcode 27.0** at `/Applications/Xcode.app`, whose macOS SDK modules are broken (see blocker) |
+| Active toolchain (`xcode-select`) | **Xcode 27.1** (switched via `sudo xcode-select -s`); Xcode 27.0's host macOS SDK modules are broken, so it cannot be used either |
 | Web runtimes | Node 24 (unit tests); in-app Chromium browser (synthetic geometry) |
 
 ## Native build status (2026-09-23)
 
 The iPhone Duo native code is **implemented against the real iOS 27.1 SDK** and
-**type-checked against it**, but a full app link and an on-simulator run are
-**blocked** by the host environment:
+**type-checked against it**. A full local app link and an on-simulator run are
+**blocked by a Tauri/swift-rs toolchain bug, not by Lidhra code**:
 
 - The Duo API usage (`UIView.reservedRegions`, `UIArrangementViewController`,
   `UISplitArrangement`) **type-checks** against SDK 27.1 at deployment target
   15.0 (isolation harness, `import UIKit`/`AVKit`), and `NativePlugin.swift`
   parses in both the default and `-D LIDHRA_DUO` configs against SDK 27.1.
-- **Blocker:** `tauri ios build` selects Xcode via `xcode-select` (currently
-  `/Applications/Xcode.app`, Xcode 27.0) and ignores `DEVELOPER_DIR`, so every
-  build ran on 27.0. That 27.0 install's macOS SDK fails to build the AppKit /
-  WebKit modules the tauri/cargo host build graph pulls in (missing-header /
-  module errors), so even the ordinary app does not build on this machine right
-  now. A pure-27.0 build fails identically, so it is the 27.0 toolchain, not the
-  mix.
-- **Unblock:** point the active toolchain at the healthy 27.1 install, which
-  needs a password:
-  `sudo xcode-select -s /Users/peterdsp/Downloads/Xcode_27.1.app/Contents/Developer`
-  (ideally move `Xcode_27.1.app` to `/Applications` first). Then a Duo build is
-  `LIDHRA_DUO=1 cargo tauri ios build --debug --target aarch64-sim`, run on the
-  `iPhone Duo` simulator (iOS 27.1). The deployment-target reconcile
-  (`scripts/ios-postgen.sh`) must run after `cargo tauri ios init`.
+- The deployment-target reconcile (`scripts/ios-postgen.sh`, iOS 14.0 -> 15.0)
+  and the CocoaPods install were resolved; `xcode-select` is now Xcode 27.1; the
+  iOS 27.1 simulator runtime is installed and an `iPhone Duo` simulator is
+  created. So the environment is otherwise ready.
+- **Root blocker:** the build fails inside **`tauri v2.11.5`'s `build.rs`**,
+  where **swift-rs** compiles the Tauri Swift runtime. Under Xcode 27.1 it builds
+  the macOS `AppKit` / `WebKit` framework modules with an iOS target context
+  (`TARGET_OS_IPHONE`), so the macOS SDK 27.0 headers take the iOS branch and
+  fail: `CoreImage` -> `OpenGLES/EAGL.h`, `WebKit` -> `UIKit/NSAttributedString.h`,
+  plus the macOS-SDK-27.0 `CoreServices/CSIdentityBase.h` module bug. A plain
+  `swiftc import AppKit; import WebKit` for the host succeeds, so the SDK is fine
+  in a correct host context; only swift-rs's mixed target/SDK build trips it.
+  This is independent of `LIDHRA_DUO` (that flag only affects the plugin's own
+  `Package.swift`), so it blocks the ordinary app too. Xcode 27.0 cannot be used
+  either: its host macOS SDK modules are broken outright. This matches the known
+  swift-rs / Xcode incompatibilities in tauri-apps/tauri#7339 and #6545, whose
+  only documented workaround is a different Xcode version.
+- **To run on device/simulator:** a toolchain where tauri's swift-rs step builds
+  under the 27.1 SDK (a fixed swift-rs / tauri-cli, or an Apple macOS-SDK fix),
+  then `LIDHRA_DUO=1 cargo tauri ios build --debug --target aarch64-sim` on the
+  `iPhone Duo` simulator (iOS 27.1). The App Store CI would need a macOS-27 +
+  Xcode 27.1 runner once that combination builds cleanly.
 
 ## Automated evidence (reproducible now)
 
