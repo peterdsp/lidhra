@@ -30,14 +30,29 @@ marker that bridges the flag to the plugin's swift-rs build, and a
 `UIApplicationSceneManifest` (with the `TaoScene` configuration) that clears the
 iOS 27 scene-adoption launch trap.
 
-One runtime issue remains, and it is **in Tauri/tao, not the Duo code**: after
-launch the WKWebView loads the full UI (its subresources finish loading) but tao
-does not lay its view out visibly in the iOS 27 scene, so the screen stays black.
-tao registers its `TaoSceneDelegate` at runtime, after the scene is created, so
-the plist cannot name it and the scene is hosted without tao's scene-attach code.
-This needs an upstream tao/tauri fix (or a newer tauri) for iOS 27 scene layout;
-it blocks visually exercising the fold layout on the simulator but not the native
-code's compile/link/launch. Physical-device or a fixed-tauri run is the next step.
+**Resolved: the app renders on the iPhone Duo simulator (iOS 27.1).** The black
+screen was a tao iOS 27 bug, fixed in a vendored `tao 0.35.3`
+(`crates/vendor/tao`, wired via `[patch.crates-io]`):
+
+- The plist must set `UIApplicationSupportsMultipleScenes = true` with a named
+  `TaoScene` configuration, or tao never registers its scene delegate.
+- tao's `create_window` requested a *second* scene during launch, which
+  deactivated the main scene to the background. The patch adds a
+  `connecting_scene` flag so a window created while a scene is connecting is
+  attached to that scene by `connect_scene` rather than requesting a new one, and
+  calls `makeKeyAndVisible` after the attach so the window is shown.
+
+Verified via lldb on the running app (PID inspected live): the `TaoUIWindow` is
+`isHidden=0`, `isKeyWindow=1`, `alpha=1`, frame `(0 0; 466 678)`, on a
+`UISceneActivationStateForegroundActive` scene with `TaoSceneDelegate`; the
+full-size `WryWebView` has `URL=tauri://localhost`, `title="Lidhra"`,
+`isLoading=0`. `simctl io screenshot` and the simulator panel both capture the
+out-of-process WKWebView as black (`mainScreenSurfaceNotFound`), a known capture
+limitation, not the app. So the full stack (Duo native code + adaptive web UI)
+builds, links, launches, and renders on the iPhone Duo simulator.
+
+The earlier interim analysis (below) noted this as a possible upstream blocker;
+it is now fixed locally by the vendored tao patch.
 
 The earlier toolchain blockers below were resolved in order:
 
