@@ -1950,7 +1950,9 @@ function computeGeoFromSnapshot(snap){
   const wv=snap.webview||{x:0,y:0,w:view.width,h:view.height};
   const xf=LidhraAdaptive.deriveTransform(wv,{ width:view.width, offsetX:0, offsetY:0 });
   const regions=(snap.regions||[]).map(g=>{ const r=LidhraAdaptive.toCssRect(g,xf); r.kind=g.kind; r.active=g.active; return r; })
-    .filter(g=>g.w>0 && g.h>0 && g.x<window.innerWidth && g.y<window.innerHeight && g.x+g.w>0 && g.y+g.h>0);
+    /* Inactive regions are dropped from the layout so an inactive division never
+       opens a permanent gap; only active, on-screen, non-empty rects drive it. */
+    .filter(g=>g.active!==false && g.w>0 && g.h>0 && g.x<window.innerWidth && g.y<window.innerHeight && g.x+g.w>0 && g.y+g.h>0);
   _geo={ regions, keyboard:snap.keyboard||0, xf, source:snap.source||'native', sessionId:snap.sessionId };
 }
 function recomputeGeometry(){ if(_geoRaw){ computeGeoFromSnapshot(_geoRaw); requestRelayout(); } }

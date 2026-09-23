@@ -38,16 +38,16 @@ the hand-off for the one part that cannot be finished on today's toolchain.
 
 ## What does NOT ship as "supported" yet
 
-The iPhone Duo native adaptive APIs (`ArrangementView` /
-`UIArrangementViewController` and the reserved-region geometry) require **Xcode
-27.1**, which Apple lists as *coming later this month* on
-<https://developer.apple.com/iphone-duo/>. This project builds against the
-**iOS 26 SDK (Xcode 26)**, where those symbols do not exist. The reserved-region
-emitter is therefore isolated behind the `LIDHRA_DUO` compilation condition and
-returns no regions on every currently shippable build. Until it is wired to the
-confirmed API and the acceptance matrix passes on the official Duo runtime,
-1.3.0 is **not** an iPhone-Duo-supported release; it is a release whose layout is
-Duo-*ready*.
+The iPhone Duo native adaptive APIs (`UIArrangementViewController` and the
+`UIView.reservedRegions` geometry) exist only in the **iOS 27.1 SDK (Xcode
+27.1)**. The default App Store build still targets the iOS 26 / 27.0 SDK, where
+those symbols are absent, so the Duo code is isolated behind the `LIDHRA_DUO`
+compilation condition and a default build reports no regions and presents the
+player full screen. The gated code is implemented and type-checked against the
+real 27.1 SDK, but a Duo build is not shipped and the acceptance matrix has not
+passed on an official Duo runtime, so 1.3.0 is **not** an iPhone-Duo-supported
+release; its layout is Duo-*ready* and the native path is Duo-*implemented but
+unverified on device*.
 
 ## Architecture
 
@@ -147,35 +147,48 @@ a two-pane layout collapses to one pane the selection is preserved and no modal
 is forced open; growing back restores the same inline detail. A progress poll
 never re-fetches or resets an open detail pane.
 
-## The isolated iPhone Duo integration
+## The iPhone Duo integration (implemented, gated behind `LIDHRA_DUO`)
 
 Two native pieces are gated behind `LIDHRA_DUO` (a Swift active compilation
-condition, **off** in every current build). An `if #available` check is not
-enough on its own: it cannot make a symbol that is absent from the iOS 26 SDK
-compile, so the whole region-query body is compiled out until the flag is set in
-an Xcode 27.1 build.
+condition, **off** in a default build). They are now implemented against the real
+iOS 27.1 SDK API, not a placeholder. The gate is still required because those
+symbols are absent from the iOS 26 / 27.0 SDK, so a default build compiles them
+out and stays buildable on the older toolchain; a Duo build sets the flag from
+the environment through the plugin's `Package.swift`.
 
-### 1. Reserved-region emitter — `DuoRegions.active(in:)`
+The API names were taken from the installed SDK, not from a doc: UIKit
+`UIView.reservedRegions(kind:options:)` returning `UIView.ReservedRegion`
+(`id`, `kind` = `.division` / `.occlusion`, `frame`, `margins`, `isActive`), and
+`UIArrangementViewController` with `setViewController(_:for:)`
+(`.primary` / `.secondary`) and `UISplitArrangement().axes(_:)`.
 
-Today it returns `[]` and the web UI falls back to an ordinary responsive
-layout; `DuoRegions.supported` reports `false` so the web side can tell this
-apart from a real provider that currently has no active regions. Under
-`LIDHRA_DUO` there is a marked INTEGRATION POINT and a `#warning`: query the
-scene's reserved regions (division and occlusion, including inactive ones) from
-the confirmed Duo geometry API, map each rectangle into the scene coordinate
-space, and return `{"id","kind","active","x","y","w","h"}` per region (the
-bridge wraps the rect into the payload's `rect` field). Do not fabricate the
-symbol; wire the confirmed one.
+### 1. Reserved-region emitter, `DuoRegions.active(in:)`
 
-### 2. Native player arrangement (`ArrangementView` / `UIArrangementViewController`)
+Under `LIDHRA_DUO` it queries `view.reservedRegions(kind:options:)` for both
+`.division` and `.occlusion` with `.includeInactive`, converts each `frame` from
+the view's space into the window (scene) space that GeometryBridge reports the
+webview frame in, and returns `{"id","kind","active","x","y","w","h"}` per
+region (the bridge wraps the rect into the payload's `rect`). Inactive regions
+travel with `active:false`; the web layer keeps the distinction but drops them
+from the layout so an inactive division never opens a permanent gap.
+`DuoRegions.supported` reports whether a real provider is compiled in, so the web
+side can tell "no active regions" apart from "no provider".
 
-The full-screen `AVPlayerViewController` is unchanged for current builds. The
-Duo enhancement — a primary playback area with a secondary information/actions
-area for the selected file, in a `UIArrangementViewController` (split for two
-visible areas; overlay only for a real foreground/background relationship),
-reusing the single `AVPlayer` session across presentation changes — is likewise
-Xcode-27.1-only and must be proven in a minimal working slice before it is
-wired into `play(_:)`.
+### 2. Native player arrangement, `UIArrangementViewController`
+
+Under `LIDHRA_DUO`, when a division is active `play(_:)` hosts the same
+`AVPlayerViewController` as the `.primary` pane of a `UISplitArrangement` (axis
+vertical) with a small `DuoPlaybackInfoController` (file title, close) as
+`.secondary`; otherwise it presents full screen as before. Split, not overlay:
+the two areas are simultaneously useful with no foreground/background
+relationship, and primary/secondary are semantic roles the system places for the
+pose. The `AVPlayer` / `AVPlayerViewController` instance is reused, never rebuilt,
+so media identity and position are preserved.
+
+Verification of the gated code against the iOS 27.1 SDK is recorded in
+`docs/verification/iphone-duo/` (SDK type-check of the API usage at deployment
+target 15.0, and full-file parse in both configs). Runtime pose validation on the
+iPhone Duo simulator / device is tracked there too.
 
 ### Enabling the Duo build (Xcode 27.1)
 

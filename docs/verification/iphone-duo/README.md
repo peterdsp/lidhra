@@ -10,16 +10,37 @@ Duo support.
 
 | Field | Value |
 | --- | --- |
-| Branch / base | `duo-adaptive-layout`, base `be70ac8` + the 1.3.0 geometry-v2 change |
+| Branch / base | `duo-adaptive-layout`, base `be70ac8` + the 1.3.0 geometry-v2 + Duo change |
 | App version / build | 1.3.0 / iOS bundle build 9 (`tauri.conf.json`) |
-| Toolchain | Xcode 27.0 (27A266a), iOS SDK 27.0 |
-| Duo toolchain | Xcode 27.1 **not installed** (Apple: coming later this month) |
-| Runtime inventory | CoreSimulator inventory not queried in this pass; no Duo runtime present |
+| Duo toolchain | Xcode 27.1 (27A9269) present at `~/Downloads/Xcode_27.1.app`, iOS SDK + simulator SDK 27.1 |
+| Simulator runtimes | iOS 26.5, 27.0, and **27.1** (downloaded); iPhone Duo device type present |
+| Active toolchain (`xcode-select`) | **Xcode 27.0** at `/Applications/Xcode.app`, whose macOS SDK modules are broken (see blocker) |
 | Web runtimes | Node 24 (unit tests); in-app Chromium browser (synthetic geometry) |
-| Geometry sources exercised | unit fixtures (v1 + v2), in-app browser synthetic v2, browser segments (unit) |
 
-No native Duo build or on-device runtime validation was performed. The Swift
-plugin was syntax-parsed only; it was not compiled or linked.
+## Native build status (2026-09-23)
+
+The iPhone Duo native code is **implemented against the real iOS 27.1 SDK** and
+**type-checked against it**, but a full app link and an on-simulator run are
+**blocked** by the host environment:
+
+- The Duo API usage (`UIView.reservedRegions`, `UIArrangementViewController`,
+  `UISplitArrangement`) **type-checks** against SDK 27.1 at deployment target
+  15.0 (isolation harness, `import UIKit`/`AVKit`), and `NativePlugin.swift`
+  parses in both the default and `-D LIDHRA_DUO` configs against SDK 27.1.
+- **Blocker:** `tauri ios build` selects Xcode via `xcode-select` (currently
+  `/Applications/Xcode.app`, Xcode 27.0) and ignores `DEVELOPER_DIR`, so every
+  build ran on 27.0. That 27.0 install's macOS SDK fails to build the AppKit /
+  WebKit modules the tauri/cargo host build graph pulls in (missing-header /
+  module errors), so even the ordinary app does not build on this machine right
+  now. A pure-27.0 build fails identically, so it is the 27.0 toolchain, not the
+  mix.
+- **Unblock:** point the active toolchain at the healthy 27.1 install, which
+  needs a password:
+  `sudo xcode-select -s /Users/peterdsp/Downloads/Xcode_27.1.app/Contents/Developer`
+  (ideally move `Xcode_27.1.app` to `/Applications` first). Then a Duo build is
+  `LIDHRA_DUO=1 cargo tauri ios build --debug --target aarch64-sim`, run on the
+  `iPhone Duo` simulator (iOS 27.1). The deployment-target reconcile
+  (`scripts/ios-postgen.sh`) must run after `cargo tauri ios init`.
 
 ## Automated evidence (reproducible now)
 
@@ -30,6 +51,12 @@ cargo check --manifest-path app/src-tauri/Cargo.toml --lib --no-default-features
 cargo build --manifest-path crates/Cargo.toml --workspace
 cargo test  --manifest-path crates/Cargo.toml --workspace
 cargo clippy --manifest-path crates/Cargo.toml --workspace --all-targets -- -D warnings
+
+# Duo-gated Swift, type-checked against the real iOS 27.1 SDK (deployment 15.0):
+DD=/Users/peterdsp/Downloads/Xcode_27.1.app/Contents/Developer
+SDK=$(DEVELOPER_DIR="$DD" xcrun --sdk iphoneos --show-sdk-path)
+DEVELOPER_DIR="$DD" xcrun swiftc -parse -D LIDHRA_DUO -sdk "$SDK" \
+  -target arm64-apple-ios15.0 app/src-tauri/plugins/native/ios/Sources/NativePlugin.swift
 ```
 
 The 23 unit tests cover: native-points ↔ CSS conversion and its inverse,

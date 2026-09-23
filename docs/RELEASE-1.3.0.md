@@ -54,10 +54,14 @@ A layout that follows the space you give it.
   a presentation stays clear of a fold or occlusion; threshold hysteresis avoids
   mode oscillation while a fold still reacts immediately.
 - iPhone Duo reserved-region emission and the native player arrangement are
-  isolated behind the `LIDHRA_DUO` compile flag (off in every current build). The
-  flag is now driven from the plugin's `Package.swift` from the environment, so
-  it reaches the plugin compilation target and survives regeneration. See
-  `docs/adaptive-layout.md`.
+  implemented against the real iOS 27.1 SDK (`UIView.reservedRegions`,
+  `UIArrangementViewController` / `UISplitArrangement`) and isolated behind the
+  `LIDHRA_DUO` compile flag (off in a default build). The flag is driven from the
+  plugin's `Package.swift` from the environment, so it reaches the plugin
+  compilation target and survives regeneration. See `docs/adaptive-layout.md`.
+- Durable iOS deployment-target fix (`scripts/ios-postgen.sh`, wired into the App
+  Store workflow after `cargo tauri ios init`): tauri-cli hardcodes iOS 14.0,
+  which the 27.1 SDK rejects; this reconciles it to the configured 15.0.
 
 ## Readiness
 
@@ -65,10 +69,16 @@ Using the brief's labels:
 
 - **Adaptive groundwork: done.** The shared resizing, continuity, and browser
   fold handling work and are unit-tested.
-- **Native integration validated: not yet.** The Swift plugin was syntax-parsed
-  and the Rust bridge compiles, but no iOS compile/link or on-device native flow
-  has run.
-- **iPhone Duo support verified: no.** Blocked on Xcode 27.1 and the Duo runtime.
+- **Native integration validated: partial.** The Duo API usage type-checks
+  against the real iOS 27.1 SDK (deployment 15.0) and the plugin parses in both
+  configs; the Rust bridge compiles. A full app link and an on-simulator run are
+  blocked because `tauri ios build` uses the `xcode-select` toolchain (Xcode
+  27.0, whose macOS SDK modules are broken on this machine) and ignores
+  `DEVELOPER_DIR`. Unblock with
+  `sudo xcode-select -s /path/to/Xcode_27.1.app/Contents/Developer`, then build
+  with `LIDHRA_DUO=1`. Details in `docs/verification/iphone-duo/`.
+- **iPhone Duo support verified: no.** Implemented and SDK-type-checked, but not
+  run on the iPhone Duo simulator or device yet (blocked as above).
 - **Release ready: no.** See below.
 
 ## Verified

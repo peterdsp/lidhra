@@ -124,6 +124,11 @@ jobs:
           #    pick a profile, so xcodebuild fails with "requires a provisioning
           #    profile" until we set the specifier on the generated project.
           ( cd app && cargo tauri ios init --ci --skip-targets-install )
+          # `cargo tauri ios init` hardcodes an iOS 14.0 deployment target in the
+          # generated project, ignoring bundle.iOS.minimumSystemVersion (15.0).
+          # The iOS 27.1 SDK rejects anything below 15.0, so reconcile it before
+          # building. Must run before the signing patch below (both edit pbxproj).
+          bash scripts/ios-postgen.sh
           # `cargo tauri ios init` writes a PLACEHOLDER AppIcon (it does not read
           # icons/ios/), so CI builds shipped the wrong icon. Overwrite the generated
           # AppIcon set with our real cloud icons before building.

@@ -166,23 +166,84 @@ enum DuoRegions {
   /// side to interpret; nothing is collapsed or relabelled here.
   static func active(in view: UIView) -> [[String: Any]] {
     #if LIDHRA_DUO
-    // INTEGRATION POINT (Xcode 27.1 + iPhone Duo SDK):
-    // Query the scene's reserved regions (division and occlusion), map each
-    // rectangle into `view.window` (scene) coordinates, and return one
-    // dictionary per region, e.g.
-    //   ["id": r.identifier, "kind": "division"|"occlusion",
-    //    "active": r.isActive, "x": f.minX, "y": f.minY, "w": f.width, "h": f.height]
-    // Preserve inactive regions with "active": false (they may inform a layout
-    // preference but must not open a permanent gap). Use the confirmed API only;
-    // do not fabricate a symbol here.
-    #warning("LIDHRA_DUO: implement the reserved-region query against the confirmed iPhone Duo SDK before shipping Duo support.")
-    return []
+    // iPhone Duo reserved regions (Xcode 27.1 / iOS 27.1 SDK). `reservedRegions`
+    // returns rects in the view's own coordinate space; we convert each into the
+    // window (scene) space, matching how GeometryBridge reports the webview
+    // frame, so the web side converts both with one transform. Inactive regions
+    // are included and tagged `active:false`; the web layer keeps the
+    // distinction but never opens a permanent gap for an inactive division.
+    guard #available(iOS 27.1, *), let window = view.window else { return [] }
+    let kinds: [(UIView.ReservedRegion.Kind, String)] = [(.division, "division"), (.occlusion, "occlusion")]
+    var out: [[String: Any]] = []
+    for (kind, label) in kinds {
+      for r in view.reservedRegions(kind: kind, options: [.includeInactive]) {
+        let f = view.convert(r.frame, to: window)
+        out.append([
+          "id": String(describing: r.id),
+          "kind": label,
+          "active": r.isActive,
+          "x": f.minX, "y": f.minY, "w": f.width, "h": f.height,
+        ])
+      }
+    }
+    return out
     #else
     _ = view
     return []
     #endif
   }
 }
+
+#if LIDHRA_DUO
+// MARK: - Duo playback arrangement secondary content
+
+/// The secondary pane of the Duo playback arrangement: the file title and a
+/// clear exit, shown beside or below the video when the display is divided. The
+/// video (an AVPlayerViewController) is the primary pane. Kept intentionally
+/// small; this is the "selected-file information / actions" area the split
+/// arrangement pairs with playback, not a new player surface.
+@available(iOS 27.1, *)
+final class DuoPlaybackInfoController: UIViewController {
+  private let titleText: String?
+  private let onClose: () -> Void
+
+  init(title: String?, onClose: @escaping () -> Void) {
+    self.titleText = title
+    self.onClose = onClose
+    super.init(nibName: nil, bundle: nil)
+  }
+  required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    view.backgroundColor = .secondarySystemBackground
+
+    let title = UILabel()
+    title.text = titleText
+    title.numberOfLines = 0
+    title.font = .preferredFont(forTextStyle: .headline)
+    title.adjustsFontForContentSizeCategory = true
+    title.translatesAutoresizingMaskIntoConstraints = false
+
+    var closeConfig = UIButton.Configuration.gray()
+    closeConfig.image = UIImage(systemName: "xmark")
+    let close = UIButton(configuration: closeConfig, primaryAction: UIAction { [weak self] _ in self?.onClose() })
+    close.accessibilityLabel = NSLocalizedString("Close", comment: "Close the player")
+    close.translatesAutoresizingMaskIntoConstraints = false
+
+    view.addSubview(title)
+    view.addSubview(close)
+    let g = view.safeAreaLayoutGuide
+    NSLayoutConstraint.activate([
+      close.topAnchor.constraint(equalTo: g.topAnchor, constant: 16),
+      close.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -16),
+      title.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 20),
+      title.trailingAnchor.constraint(lessThanOrEqualTo: close.leadingAnchor, constant: -12),
+      title.centerYAnchor.constraint(equalTo: close.centerYAnchor),
+    ])
+  }
+}
+#endif
 
 // MARK: - Geometry bridge (Swift -> web)
 
@@ -452,12 +513,51 @@ class NativePlugin: Plugin {
       controller.player = player
       controller.allowsPictureInPicturePlayback = true
       controller.modalPresentationStyle = .fullScreen
+      #if LIDHRA_DUO
+      // On iPhone Duo with an active division, host the same player as the
+      // primary pane of a split arrangement with the file info as secondary.
+      // The AVPlayer / AVPlayerViewController instance is reused, never rebuilt,
+      // so media identity and position are preserved. Falls back to full screen
+      // when there is no division.
+      if #available(iOS 27.1, *), self.hasActiveDivision(in: vc.view) {
+        self.presentDuoPlayer(controller, title: args.title, from: vc)
+        invoke.resolve()
+        return
+      }
+      #endif
       vc.present(controller, animated: true) {
         player.play()
       }
       invoke.resolve()
     }
   }
+
+  #if LIDHRA_DUO
+  /// Whether the current scene has an active division (an open iPhone Duo fold).
+  @available(iOS 27.1, *)
+  private func hasActiveDivision(in view: UIView) -> Bool {
+    return !view.reservedRegions(kind: .division).isEmpty
+  }
+
+  /// Present the player as the primary pane of a split arrangement, with the
+  /// selected-file info as the secondary pane. Split (not overlay) because the
+  /// two areas are simultaneously useful with no foreground/background
+  /// relationship; primary/secondary are semantic roles the system places for
+  /// the current pose, not fixed left/right positions.
+  @available(iOS 27.1, *)
+  private func presentDuoPlayer(_ playerVC: AVPlayerViewController, title: String?, from presenter: UIViewController) {
+    let arrangement = UIArrangementViewController()
+    arrangement.modalPresentationStyle = .fullScreen
+    arrangement.setViewController(playerVC, for: .primary)
+    arrangement.setViewController(
+      DuoPlaybackInfoController(title: title) { [weak arrangement] in
+        arrangement?.dismiss(animated: true)
+      }, for: .secondary)
+    let split = UISplitArrangement().axes(.vertical)
+    arrangement.updateArrangement(split, animated: false)
+    presenter.present(arrangement, animated: true) { playerVC.player?.play() }
+  }
+  #endif
 
   /// Page-ready handshake: the web UI calls this once loaded to pull a fresh
   /// geometry snapshot, closing the race where the attach-time emit fires before
