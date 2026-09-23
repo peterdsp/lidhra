@@ -19,9 +19,27 @@ Duo support.
 
 ## Native build status (2026-09-23)
 
-The iPhone Duo native code is **implemented against the real iOS 27.1 SDK** and
-**type-checked against it**. A full local app link and an on-simulator run are
-**blocked by a Tauri/swift-rs toolchain bug, not by Lidhra code**:
+**Update: the app now builds, installs, and launches on the iPhone Duo simulator
+(iOS 27.1) with the Duo code linked in.** The reserved-region query and the
+split-arrangement player are compiled and present in the app binary (verified:
+`DuoPlaybackInfoController`, `reservedRegions`, `occlusion`/`division` in the
+built `Lidhra.debug.dylib`). Getting there took, all now durable in the repo:
+swift-rs 1.0.8 (fixes the Xcode 27 SDK targeting), the deployment-target
+reconcile (`scripts/ios-postgen.sh`, 14.0 -> 15.0), CocoaPods, the `LIDHRA_DUO`
+marker that bridges the flag to the plugin's swift-rs build, and a
+`UIApplicationSceneManifest` (with the `TaoScene` configuration) that clears the
+iOS 27 scene-adoption launch trap.
+
+One runtime issue remains, and it is **in Tauri/tao, not the Duo code**: after
+launch the WKWebView loads the full UI (its subresources finish loading) but tao
+does not lay its view out visibly in the iOS 27 scene, so the screen stays black.
+tao registers its `TaoSceneDelegate` at runtime, after the scene is created, so
+the plist cannot name it and the scene is hosted without tao's scene-attach code.
+This needs an upstream tao/tauri fix (or a newer tauri) for iOS 27 scene layout;
+it blocks visually exercising the fold layout on the simulator but not the native
+code's compile/link/launch. Physical-device or a fixed-tauri run is the next step.
+
+The earlier toolchain blockers below were resolved in order:
 
 - The Duo API usage (`UIView.reservedRegions`, `UIArrangementViewController`,
   `UISplitArrangement`) **type-checks** against SDK 27.1 at deployment target
