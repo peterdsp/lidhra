@@ -1,15 +1,24 @@
 //! Build a provider from an id + credential - what the settings UI / CLI use to
 //! turn "the user picked Real-Debrid and pasted this key" into a live adapter.
 
-use crate::error::{DebridError, Result};
+use crate::error::Result;
 use crate::model::{Credential, ProviderId};
 use crate::provider::DebridProvider;
-use crate::providers::{AllDebrid, Premiumize, RealDebrid, TorBox};
+use crate::providers::{AllDebrid, DebridLink, Deepbrid, HighWay, MegaDebrid, Offcloud, Premiumize, RealDebrid, TorBox};
 
 impl ProviderId {
     /// Providers with a working adapter today (drives the settings UI list).
-    pub const IMPLEMENTED: &'static [ProviderId] =
-        &[ProviderId::RealDebrid, ProviderId::AllDebrid, ProviderId::TorBox, ProviderId::Premiumize];
+    pub const IMPLEMENTED: &'static [ProviderId] = &[
+        ProviderId::RealDebrid,
+        ProviderId::AllDebrid,
+        ProviderId::TorBox,
+        ProviderId::Premiumize,
+        ProviderId::DebridLink,
+        ProviderId::Offcloud,
+        ProviderId::MegaDebrid,
+        ProviderId::Deepbrid,
+        ProviderId::HighWay,
+    ];
 
     /// Parse a user-typed provider name/alias, case- and separator-insensitive.
     pub fn from_key(s: &str) -> Option<ProviderId> {
@@ -30,7 +39,10 @@ impl ProviderId {
 }
 
 /// Instantiate a provider adapter (does not authenticate - call
-/// [`DebridProvider::authenticate`] next). Errors for ids without an adapter yet.
+/// [`DebridProvider::authenticate`] next).
+///
+/// Every [`ProviderId`] has an adapter today; the `Result` stays so callers
+/// keep working when a provider is added to the enum before its adapter lands.
 pub fn build_provider(id: ProviderId, cred: Credential) -> Result<Box<dyn DebridProvider>> {
     let key = match cred {
         Credential::ApiKey(k) => k,
@@ -41,9 +53,11 @@ pub fn build_provider(id: ProviderId, cred: Credential) -> Result<Box<dyn Debrid
         ProviderId::AllDebrid => Box::new(AllDebrid::new(key)),
         ProviderId::TorBox => Box::new(TorBox::new(key)),
         ProviderId::Premiumize => Box::new(Premiumize::new(key)),
-        other => {
-            return Err(DebridError::Provider(format!("{}: adapter not implemented yet", other.label())))
-        }
+        ProviderId::DebridLink => Box::new(DebridLink::new(key)),
+        ProviderId::Offcloud => Box::new(Offcloud::new(key)),
+        ProviderId::MegaDebrid => Box::new(MegaDebrid::new(key)),
+        ProviderId::Deepbrid => Box::new(Deepbrid::new(key)),
+        ProviderId::HighWay => Box::new(HighWay::new(key)),
     })
 }
 
@@ -57,7 +71,18 @@ mod tests {
         assert_eq!(ProviderId::from_key("rd"), Some(ProviderId::RealDebrid));
         assert_eq!(ProviderId::from_key("TORBOX"), Some(ProviderId::TorBox));
         assert_eq!(ProviderId::from_key("all debrid"), Some(ProviderId::AllDebrid));
+        assert_eq!(ProviderId::from_key("Debrid-Link"), Some(ProviderId::DebridLink));
+        assert_eq!(ProviderId::from_key("Mega-Debrid"), Some(ProviderId::MegaDebrid));
+        assert_eq!(ProviderId::from_key("High-Way"), Some(ProviderId::HighWay));
         assert_eq!(ProviderId::from_key("nope"), None);
+    }
+
+    #[test]
+    fn every_provider_id_has_an_adapter_and_round_trips_its_label() {
+        for &id in ProviderId::IMPLEMENTED {
+            // The settings UI sends `label()` back as the key.
+            assert_eq!(ProviderId::from_key(id.label()), Some(id), "{}", id.label());
+        }
     }
 
     #[test]
@@ -66,10 +91,5 @@ mod tests {
             let p = build_provider(id, Credential::ApiKey("x".into())).unwrap();
             assert_eq!(p.id(), id);
         }
-    }
-
-    #[test]
-    fn unimplemented_provider_errors_cleanly() {
-        assert!(build_provider(ProviderId::Offcloud, Credential::ApiKey("x".into())).is_err());
     }
 }

@@ -1,7 +1,8 @@
 //! # lidhra-debrid
 //!
 //! A unified, async interface over debrid / multi-hoster services
-//! (Real-Debrid, AllDebrid, TorBox, Premiumize, Debrid-Link, Offcloud, …).
+//! (Real-Debrid, AllDebrid, TorBox, Premiumize, Debrid-Link, Offcloud,
+//! Mega-Debrid, Deepbrid, High-Way).
 //!
 //! The whole point: the rest of Lidhra talks to [`DebridProvider`] and never
 //! knows which service is behind it. Adding a provider = writing one adapter.

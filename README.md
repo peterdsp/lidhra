@@ -106,7 +106,7 @@ On a TV, Lidhra is a **library + player** (stream your cloud), not a downloader.
 - [ ] Desktop polish - tray / menu-bar surfaces, live download progress events
 - [ ] `tv-mode` web UI (D-pad focus) → Tizen / webOS / HarmonyOS / browser TVs
 - [ ] Native TV shells (Apple TV / Android TV) + `lidhra-cast`
-- [ ] More provider adapters: Debrid-Link, Offcloud, Mega-Debrid, Deepbrid, High-Way
+- [x] More provider adapters: Debrid-Link, Offcloud, Mega-Debrid, Deepbrid, High-Way
 
 ## License
 
