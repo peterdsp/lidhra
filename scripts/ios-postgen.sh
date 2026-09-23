@@ -24,6 +24,17 @@ PBX="$GEN/lidhra-desktop.xcodeproj/project.pbxproj"
 MIN="$(grep -oE '"minimumSystemVersion"[[:space:]]*:[[:space:]]*"[0-9.]+"' "$CONF" | grep -oE '[0-9]+\.[0-9]+' | head -1)"
 MIN="${MIN:-15.0}"
 
+# Bridge LIDHRA_DUO from this outer shell (where it is set) to the plugin's
+# swift-rs build (where the env does not reach the Package.swift manifest): write
+# a marker file the manifest checks. Present only for a Duo build; gitignored.
+DUO_MARKER="$ROOT/app/src-tauri/plugins/native/ios/.lidhra_duo"
+if [ -n "${LIDHRA_DUO:-}" ]; then
+  touch "$DUO_MARKER"
+  echo "ios-postgen: LIDHRA_DUO enabled (marker written)"
+else
+  rm -f "$DUO_MARKER"
+fi
+
 # 1) Keep the xcodegen spec consistent (in case the project is regenerated).
 perl -0777 -i -pe "s/(deploymentTarget:\s*\n\s*iOS:\s*)[0-9.]+/\${1}$MIN/s" "$PROJ"
 grep -qE "iOS:[[:space:]]*$MIN" "$PROJ" || { echo "::error::ios-postgen: project.yml not updated to $MIN"; exit 1; }
@@ -36,3 +47,15 @@ if [ -f "$PBX" ]; then
   fi
 fi
 echo "ios-postgen: iOS deployment target set to $MIN"
+
+# 3) UIScene lifecycle adoption. The iOS 27 SDK traps at launch for an app with
+# no scene manifest. Info.ios.plist carries it as the durable source, but ensure
+# the generated Info.plist has it too, in case the init-time merge drops the key.
+PLIST="$GEN/lidhra-desktop_iOS/Info.plist"
+if [ -f "$PLIST" ] && ! /usr/libexec/PlistBuddy -c "Print :UIApplicationSceneManifest" "$PLIST" >/dev/null 2>&1; then
+  /usr/libexec/PlistBuddy \
+    -c "Add :UIApplicationSceneManifest dict" \
+    -c "Add :UIApplicationSceneManifest:UIApplicationSupportsMultipleScenes bool false" \
+    "$PLIST" >/dev/null
+  echo "ios-postgen: added UIApplicationSceneManifest (single scene)"
+fi

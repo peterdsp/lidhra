@@ -15,5 +15,16 @@
 		<string>vlc-x-callback</string>
 		<string>vlc</string>
 	</array>
+	<!-- The iOS 27 SDK hard-requires UIScene lifecycle adoption: an app with no
+	     scene manifest traps at launch (UIApplicationEvaluateRuntimeIssueForNoScene
+	     LifecycleAdoption). Tauri's generated app owns its window through the app
+	     delegate, so a single-scene manifest with no scene delegate is enough to
+	     adopt the lifecycle while keeping that window. The reserved-region layout
+	     lives inside the one full-scene webview, so multiple scenes are not needed. -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
 </dict>
 </plist>
