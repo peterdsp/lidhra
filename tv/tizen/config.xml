@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Samsung Tizen TV widget for Lidhra (library + player). Packaged by scripts/tv/build.sh tizen.
+     The package id must be exactly 10 alphanumeric characters; the application id is <package>.<name>.
+     @VERSION@ is filled in from app/src-tauri/tauri.conf.json at build time. -->
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets"
+        id="https://peterdsp.dev/lidhra" version="@VERSION@" viewmodes="maximized">
+  <tizen:application id="LidhraTV01.Lidhra" package="LidhraTV01" required_version="5.5"/>
+  <tizen:profile name="tv-samsung"/>
+  <name>Lidhra</name>
+  <icon src="icon.png"/>
+  <content src="index.html"/>
+  <feature name="http://tizen.org/feature/screen.size.all"/>
+  <!-- The bridge calls debrid provider APIs directly; declared origins are exempt from CORS in the Tizen web runtime. -->
+  <access origin="*" subdomains="true"/>
+  <tizen:privilege name="http://tizen.org/privilege/internet"/>
+  <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+  <tizen:setting screen-orientation="landscape" context-menu="disable" background-support="disable"
+                 encryption="disable" install-location="auto" hwkey-event="enable"/>
+  <!-- wasm needs 'wasm-unsafe-eval' (older engines only honour 'unsafe-eval'); the UI uses inline script/style and data: images. -->
+  <tizen:content-security-policy>default-src 'self' 'unsafe-inline' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; connect-src *; media-src * blob: data:; img-src * data: blob:; style-src 'self' 'unsafe-inline'</tizen:content-security-policy>
+</widget>

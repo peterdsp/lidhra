@@ -94,7 +94,7 @@ Lidhra targets ~every screen, in three tiers:
 - **Same web UI, re-packaged** - Samsung **Tizen**, LG **webOS**, **HarmonyOS** (web/ArkUI), and a **PWA** everywhere.
 - **Cast-only** (no third-party app path) - **Vizio SmartCast, Roku, older Panasonic** → reached by casting a stream to them.
 
-On a TV, Lidhra is a **library + player** (stream your cloud), not a downloader.
+On a TV, Lidhra is a **library + player** (stream your cloud), not a downloader. Builds, status and what each store still needs: [`docs/tv/`](docs/tv/README.md).
 
 ## Roadmap
 
@@ -103,9 +103,9 @@ On a TV, Lidhra is a **library + player** (stream your cloud), not a downloader.
 - [x] `lidhra-cli` - end-to-end pipeline
 - [x] `lidhra-server` + `ui/` - runnable app (web UI + JSON API over the engine)
 - [x] `app/` - Tauri desktop shell (compiles; wraps the shared UI)
-- [ ] Desktop polish - tray / menu-bar surfaces, live download progress events
-- [ ] `tv-mode` web UI (D-pad focus) → Tizen / webOS / HarmonyOS / browser TVs
-- [ ] Native TV shells (Apple TV / Android TV) + `lidhra-cast`
+- [x] Desktop polish - tray / menu-bar surfaces, live download progress events
+- [x] `tv-mode` web UI (D-pad focus) → Tizen / webOS / HarmonyOS / browser TVs
+- [x] Native TV shells (Apple TV / Android TV) + `lidhra-cast`
 - [x] More provider adapters: Debrid-Link, Offcloud, Mega-Debrid, Deepbrid, High-Way
 
 ## License

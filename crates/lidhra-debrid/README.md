@@ -48,7 +48,7 @@ flow to record for the App Review evidence pack.
 - ✅ Adapters: **Real-Debrid** (fully wired + tested), **AllDebrid**, **TorBox**, **Premiumize**, **Debrid-Link**, **Offcloud**, **Mega-Debrid**, **Deepbrid**, **High-Way** (implemented against their public APIs or reference clients - verify field paths against a live account).
 - ✅ Registry: `build_provider(id, credential)` + `ProviderId::from_key("torbox")` + `ProviderId::IMPLEMENTED` - pick any provider by name (used by the CLI's `--provider` and the future settings UI).
 - ✅ Wired to `lidhra-transfer` via the `lidhra` CLI (`../lidhra-cli`): `lidhra add "<magnet>" --provider <name>` → debrid → resumable HTTPS download → file.
-- ⬜ OAuth device-code flow helper (Real-Debrid / Premiumize).
+- ✅ Device login for TVs (`device_auth`): Real-Debrid OAuth device code (with token refresh) and AllDebrid PIN. Premiumize needs a registered client id, so it stays on pasted keys.
 - ⬜ Wire into `lidhra-core` (Tauri).
 
 Notes: Real-Debrid deprecated `/torrents/instantAvailability` in 2024, so `check_cache` may report

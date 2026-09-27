@@ -29,6 +29,7 @@
 //! # Ok(()) }
 //! ```
 
+pub mod device_auth;
 mod error;
 mod model;
 mod provider;

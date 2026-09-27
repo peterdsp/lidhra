@@ -1,0 +1,4 @@
+module LidhraBridge {
+    header "lidhra_bridge.h"
+    export *
+}

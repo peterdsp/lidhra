@@ -6,6 +6,7 @@
 //! with the `p2p` feature, the on-device `lidhra-torrent` engine for magnets
 //! added without a debrid account.
 
+use lidhra_debrid::device_auth::{self, OAuthRefresh, PollOutcome};
 use lidhra_debrid::prelude::*;
 use lidhra_transfer::{download as fetch_file, DownloadConfig, Progress};
 use serde::{Deserialize, Serialize};
@@ -13,13 +14,24 @@ use std::path::{Path, PathBuf};
 use std::result::Result; // shadow the prelude's `Result` alias back to std's
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use tauri::Emitter;
 use tauri_plugin_lidhra_native::NativeExt;
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::Mutex;
 
 #[cfg(feature = "p2p")]
 use lidhra_torrent::{Engine as TorrentEngine, EngineConfig as TorrentConfig, State as TorrentState, Torrent};
+
+#[cfg(desktop)]
+mod tray;
+
+/// Live download events pushed to the web UI (Tauri only; the browser build
+/// keeps polling `downloads`). Payload is the same `DlDto` the poll returns.
+const EV_DOWNLOAD_PROGRESS: &str = "download-progress";
+const EV_DOWNLOAD_DONE: &str = "download-done";
+/// Progress events are rate-limited per download so a fast link doesn't flood the webview.
+const PROGRESS_INTERVAL_MS: u128 = 250;
 
 fn now_unix() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
@@ -61,6 +73,9 @@ struct AppState(Mutex<Inner>);
 struct Session {
     provider: String,
     token: String,
+    /// Real-Debrid device logins (TV): refresh material, since access tokens expire.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    oauth: Option<OAuthRefresh>,
 }
 
 fn load_session(path: Option<&Path>) -> Option<Session> {
@@ -88,6 +103,8 @@ fn save_session(path: Option<&Path>, s: &Session) {
 struct Prov {
     id: String,
     label: String,
+    /// The provider supports a TV-style device login (`login_start` / `login_poll`).
+    device_login: bool,
 }
 #[derive(Serialize)]
 struct Acct {
@@ -172,7 +189,7 @@ fn torrent_tx(t: &Torrent) -> Tx {
         magnet: Some(t.magnet.clone()),
     }
 }
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 struct DlDto {
     id: String,
     name: String,
@@ -211,7 +228,8 @@ fn name_from_url(url: &str) -> String {
 }
 
 /// Register a download and spawn its background task. Caller holds the state lock.
-fn start_download(inner: &mut Inner, url: String, name: String) -> Arc<Dl> {
+/// Progress and completion are pushed to the UI as events (see `EV_DOWNLOAD_*`).
+fn start_download(app: &tauri::AppHandle, inner: &mut Inner, url: String, name: String) -> Arc<Dl> {
     let out = inner.out_dir.clone().unwrap_or_else(|| PathBuf::from("."));
     let dl = Arc::new(Dl {
         id: format!("d{}", inner.next_id),
@@ -226,14 +244,23 @@ fn start_download(inner: &mut Inner, url: String, name: String) -> Arc<Dl> {
     inner.next_id += 1;
     inner.downloads.push(dl.clone());
     let handle = dl.clone();
+    let app = app.clone();
     tauri::async_runtime::spawn(async move {
         let dest = handle.path.clone();
         std::fs::create_dir_all(&out).ok();
         let cb = handle.clone();
+        let emitter = app.clone();
+        let last_emit = std::sync::Mutex::new(None::<Instant>);
         let on_progress = move |p: Progress| {
             cb.downloaded.store(p.downloaded, Ordering::Relaxed);
             if let Some(t) = p.total {
                 cb.total.store(t, Ordering::Relaxed);
+            }
+            let mut last = last_emit.lock().unwrap();
+            let due = last.map(|t| t.elapsed().as_millis() >= PROGRESS_INTERVAL_MS).unwrap_or(true);
+            if due {
+                *last = Some(Instant::now());
+                let _ = emitter.emit(EV_DOWNLOAD_PROGRESS, to_dl(&cb));
             }
         };
         match fetch_file(&url, &dest, &DownloadConfig::default(), on_progress).await {
@@ -241,15 +268,52 @@ fn start_download(inner: &mut Inner, url: String, name: String) -> Arc<Dl> {
             Err(e) => *handle.error.lock().unwrap() = Some(e.to_string()),
         }
         handle.done.store(true, Ordering::Relaxed);
+        let _ = app.emit(EV_DOWNLOAD_DONE, to_dl(&handle));
     });
     dl
+}
+
+/// Roll every local download up into what the tray shows. Progress is the
+/// mean of the active downloads' progress; one whose size is still unknown
+/// counts as 0% until the server reports a length.
+#[cfg(desktop)]
+fn tray_summary(inner: &Inner) -> tray::Summary {
+    let mut s = tray::Summary::default();
+    let mut sum = 0.0f32;
+    for d in &inner.downloads {
+        if d.error.lock().unwrap().is_some() {
+            s.failed += 1;
+        } else if d.done.load(Ordering::Relaxed) {
+            s.done += 1;
+        } else {
+            s.active += 1;
+            sum += to_dl(d).progress;
+        }
+    }
+    s.progress = if s.active > 0 { (sum / s.active as f32).clamp(0.0, 1.0) } else { 0.0 };
+    s
+}
+
+/// Once a second, roll the download list up for the tray. The tray itself only
+/// touches the OS when the summary changes, so an idle app costs nothing visible.
+#[cfg(desktop)]
+fn start_tray_refresher(app: tauri::AppHandle) {
+    use tauri::Manager;
+    tauri::async_runtime::spawn(async move {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            let Some(state) = app.try_state::<AppState>() else { continue };
+            let summary = tray_summary(&*state.0.lock().await);
+            tray::refresh(&app, summary);
+        }
+    });
 }
 
 #[tauri::command]
 fn providers() -> Vec<Prov> {
     ProviderId::IMPLEMENTED
         .iter()
-        .map(|p| Prov { id: p.label().to_string(), label: p.label().to_string() })
+        .map(|&p| Prov { id: p.label().to_string(), label: p.label().to_string(), device_login: device_auth::supports(p) })
         .collect()
 }
 
@@ -268,8 +332,33 @@ async fn connect(state: tauri::State<'_, AppState>, provider: String, token: Str
     let (p, acct) = sign_in(&provider, &token).await?;
     let mut g = state.0.lock().await;
     g.provider = Some(p);
-    save_session(g.session_path.as_deref(), &Session { provider, token });
+    save_session(g.session_path.as_deref(), &Session { provider, token, oauth: None });
     Ok(acct)
+}
+
+/// Start a device login (TV): returns a short code + URL to approve on a phone.
+#[tauri::command]
+async fn login_start(provider: String) -> Result<device_auth::DeviceLogin, String> {
+    let id = ProviderId::from_key(&provider).ok_or("unknown provider")?;
+    device_auth::start(id).await.map_err(|e| e.to_string())
+}
+
+/// Poll a device login. `{pending: true}` until approved, then signs in,
+/// remembers the login like `connect`, and returns the account with `pending: false`.
+#[tauri::command]
+async fn login_poll(state: tauri::State<'_, AppState>, provider: String, handle: String) -> Result<serde_json::Value, String> {
+    let id = ProviderId::from_key(&provider).ok_or("unknown provider")?;
+    let cred = match device_auth::poll(id, &handle).await.map_err(|e| e.to_string())? {
+        PollOutcome::Pending => return Ok(serde_json::json!({ "pending": true })),
+        PollOutcome::Done(c) => c,
+    };
+    let (p, acct) = sign_in(&provider, &cred.token).await?;
+    let mut g = state.0.lock().await;
+    g.provider = Some(p);
+    save_session(g.session_path.as_deref(), &Session { provider, token: cred.token, oauth: cred.oauth });
+    let mut v = serde_json::to_value(&acct).map_err(|e| e.to_string())?;
+    v["pending"] = serde_json::json!(false);
+    Ok(v)
 }
 
 /// Sign back in with the remembered login, if any. `Ok(None)` when nothing is
@@ -278,7 +367,16 @@ async fn connect(state: tauri::State<'_, AppState>, provider: String, token: Str
 #[tauri::command]
 async fn restore(state: tauri::State<'_, AppState>) -> Result<Option<Acct>, String> {
     let path = state.0.lock().await.session_path.clone();
-    let Some(s) = load_session(path.as_deref()) else { return Ok(None) };
+    let Some(mut s) = load_session(path.as_deref()) else { return Ok(None) };
+    // Device logins hold an expiring OAuth token: swap it for a fresh one first.
+    if let Some(r) = s.oauth.clone() {
+        let c = device_auth::refresh(&r).await.map_err(|e| e.to_string())?;
+        s.token = c.token;
+        if let Some(new) = c.oauth.filter(|n| !n.refresh_token.is_empty()) {
+            s.oauth = Some(new);
+        }
+        save_session(path.as_deref(), &s);
+    }
     let (p, acct) = sign_in(&s.provider, &s.token).await?;
     state.0.lock().await.provider = Some(p);
     Ok(Some(acct))
@@ -323,13 +421,13 @@ async fn add(state: tauri::State<'_, AppState>, magnet: String, direct: Option<b
 }
 
 #[tauri::command]
-async fn fetch(state: tauri::State<'_, AppState>, url: String) -> Result<DlDto, String> {
+async fn fetch(app: tauri::AppHandle, state: tauri::State<'_, AppState>, url: String) -> Result<DlDto, String> {
     if !(url.starts_with("http://") || url.starts_with("https://")) {
         return Err("not an http(s) URL".into());
     }
     let name = name_from_url(&url);
     let mut g = state.0.lock().await;
-    let dl = start_download(&mut g, url, name);
+    let dl = start_download(&app, &mut g, url, name);
     Ok(to_dl(&dl))
 }
 
@@ -356,7 +454,7 @@ async fn transfers(state: tauri::State<'_, AppState>) -> Result<Vec<Tx>, String>
 }
 
 #[tauri::command]
-async fn download(state: tauri::State<'_, AppState>, id: String) -> Result<usize, String> {
+async fn download(app: tauri::AppHandle, state: tauri::State<'_, AppState>, id: String) -> Result<usize, String> {
     let mut g = state.0.lock().await;
     let links = {
         let p = g.provider.as_ref().ok_or("connect a provider first")?;
@@ -372,7 +470,7 @@ async fn download(state: tauri::State<'_, AppState>, id: String) -> Result<usize
     let n = links.len();
     for d in links {
         let name = sanitize(&d.filename);
-        start_download(&mut g, d.url, name);
+        start_download(&app, &mut g, d.url, name);
     }
     Ok(n)
 }
@@ -410,13 +508,13 @@ async fn links(state: tauri::State<'_, AppState>, id: String) -> Result<Vec<File
 /// Download a single already-unrestricted file (as opposed to `download`,
 /// which fetches every file of a transfer).
 #[tauri::command]
-async fn download_link(state: tauri::State<'_, AppState>, url: String, filename: String) -> Result<DlDto, String> {
+async fn download_link(app: tauri::AppHandle, state: tauri::State<'_, AppState>, url: String, filename: String) -> Result<DlDto, String> {
     if !(url.starts_with("http://") || url.starts_with("https://")) {
         return Err("not an http(s) URL".into());
     }
     let name = sanitize(&filename);
     let mut g = state.0.lock().await;
-    let dl = start_download(&mut g, url, name);
+    let dl = start_download(&app, &mut g, url, name);
     Ok(to_dl(&dl))
 }
 
@@ -678,6 +776,46 @@ async fn file_play(app: tauri::AppHandle, url: String, title: Option<String>) ->
     app.native().play(&url, title.as_deref())
 }
 
+// ---- cast to a TV on the LAN (desktop): DLNA renderers and Roku ------------------
+
+#[cfg(desktop)]
+#[tauri::command]
+async fn cast_devices() -> Result<Vec<lidhra_cast::Device>, String> {
+    lidhra_cast::discover(std::time::Duration::from_secs(3)).await.map_err(|e| e.to_string())
+}
+
+#[cfg(desktop)]
+#[tauri::command]
+async fn cast_play(device: lidhra_cast::Device, url: String, title: String) -> Result<(), String> {
+    if !is_http(&url) {
+        return Err("only http(s) links can be cast".into());
+    }
+    lidhra_cast::play(&device, &lidhra_cast::Media::new(url, title)).await.map_err(|e| e.to_string())
+}
+
+#[cfg(desktop)]
+#[tauri::command]
+async fn cast_stop(device: lidhra_cast::Device) -> Result<(), String> {
+    lidhra_cast::stop(&device).await.map_err(|e| e.to_string())
+}
+
+// Mobile builds keep the command names so the UI needs no feature detection.
+#[cfg(mobile)]
+#[tauri::command]
+async fn cast_devices() -> Result<Vec<serde_json::Value>, String> {
+    Err("casting is available in the desktop app".into())
+}
+#[cfg(mobile)]
+#[tauri::command]
+async fn cast_play(_device: serde_json::Value, _url: String, _title: String) -> Result<(), String> {
+    Err("casting is available in the desktop app".into())
+}
+#[cfg(mobile)]
+#[tauri::command]
+async fn cast_stop(_device: serde_json::Value) -> Result<(), String> {
+    Err("casting is available in the desktop app".into())
+}
+
 /// Whether an app handles this URL scheme on this device (iOS only; false elsewhere).
 #[tauri::command]
 async fn native_can_open(app: tauri::AppHandle, url: String) -> Result<bool, String> {
@@ -822,6 +960,13 @@ pub fn run() {
 
             start_native_event_loop(app.handle().clone());
 
+            // Desktop: menu-bar / tray surface with live download totals.
+            #[cfg(desktop)]
+            {
+                tray::install(app.handle())?;
+                start_tray_refresher(app.handle().clone());
+            }
+
             #[cfg(feature = "p2p")]
             {
                 let out = app.state::<AppState>().0.blocking_lock().out_dir.clone();
@@ -850,13 +995,33 @@ pub fn run() {
         builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
     }
 
-    builder
+    // Desktop: closing the window parks Lidhra in the tray so downloads keep
+    // going; the tray menu (or Cmd+Q / the app menu) quits for real.
+    #[cfg(desktop)]
+    {
+        builder = builder.on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        });
+    }
+
+    let app = builder
         .invoke_handler(tauri::generate_handler![
-            providers, connect, restore, disconnect, add, fetch, transfers, download, downloads, links, download_link, open_with,
-            reveal, file_share, file_open_in, file_play, native_can_open, geometry_sync, license, license_activate,
+            providers, connect, login_start, login_poll, restore, disconnect, add, fetch, transfers, download, downloads, links, download_link, open_with,
+            reveal, file_share, file_open_in, file_play, native_can_open, cast_devices, cast_play, cast_stop, geometry_sync, license, license_activate,
             license_activate_email, torrent_files, torrent_pause, torrent_resume, torrent_remove, p2p_settings,
             p2p_set_settings
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running Lidhra");
+        .build(tauri::generate_context!())
+        .expect("error while building Lidhra");
+
+    app.run(|_app, _event| {
+        // macOS: clicking the Dock icon with the window hidden brings it back.
+        #[cfg(target_os = "macos")]
+        if let tauri::RunEvent::Reopen { .. } = _event {
+            tray::show_main(_app);
+        }
+    });
 }

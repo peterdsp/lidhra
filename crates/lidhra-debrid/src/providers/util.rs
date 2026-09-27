@@ -101,12 +101,17 @@ pub(crate) fn parse_ymd(s: &str) -> Option<i64> {
     Some(days * 86_400)
 }
 
-/// Current Unix time in seconds.
+/// Current Unix time in seconds. On wasm32 `SystemTime::now` panics, so read the JS clock.
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn now_unix() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs() as i64)
         .unwrap_or(0)
+}
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn now_unix() -> i64 {
+    (js_sys::Date::now() / 1000.0) as i64
 }
 
 fn parse_human_size(s: &str) -> u64 {

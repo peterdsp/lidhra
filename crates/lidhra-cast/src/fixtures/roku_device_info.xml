@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<device-info>
+	<udn>28001240-0000-1000-8000-d83134a1b2c3</udn>
+	<serial-number>X00400AB1234</serial-number>
+	<device-id>S0A12345ABCD</device-id>
+	<advertising-id>00000000-0000-0000-0000-000000000000</advertising-id>
+	<vendor-name>Roku</vendor-name>
+	<model-name>Roku Ultra</model-name>
+	<model-number>4800X</model-number>
+	<model-region>US</model-region>
+	<is-tv>false</is-tv>
+	<is-stick>false</is-stick>
+	<supports-ethernet>true</supports-ethernet>
+	<wifi-mac>d8:31:34:a1:b2:c3</wifi-mac>
+	<network-type>wifi</network-type>
+	<network-name>Home</network-name>
+	<friendly-device-name>Roku Ultra - X00400AB1234</friendly-device-name>
+	<friendly-model-name>Roku Ultra</friendly-model-name>
+	<default-device-name>Roku Ultra - X00400AB1234</default-device-name>
+	<user-device-name>Living Room &amp; Den</user-device-name>
+	<user-device-location>Living Room</user-device-location>
+	<software-version>12.5.0</software-version>
+	<software-build>4178</software-build>
+	<power-mode>PowerOn</power-mode>
+	<supports-find-remote>true</supports-find-remote>
+	<developer-enabled>false</developer-enabled>
+	<search-enabled>true</search-enabled>
+	<voice-search-enabled>true</voice-search-enabled>
+	<supports-ecs-textedit>true</supports-ecs-textedit>
+	<supports-ecs-microphone>true</supports-ecs-microphone>
+</device-info>

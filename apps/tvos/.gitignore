@@ -1,0 +1,8 @@
+# Built by scripts/tv/build-apple-tv-core.sh; never commit build products.
+LidhraCore.xcframework/
+
+# Xcode
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate

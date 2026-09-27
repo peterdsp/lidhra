@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0" xmlns:dlna="urn:schemas-dlna-org:device-1-0">
+<specVersion>
+<major>1</major>
+<minor>0</minor>
+</specVersion>
+<URLBase>http://192.168.1.31:1162/</URLBase>
+<device>
+<deviceType>urn:schemas-upnp-org:device:MediaRenderer:1</deviceType>
+<friendlyName>[LG] webOS TV OLED55C1PUB</friendlyName>
+<manufacturer>LG Electronics</manufacturer>
+<manufacturerURL>http://www.lge.com</manufacturerURL>
+<modelDescription>webOS TV Media Renderer</modelDescription>
+<modelName>OLED55C1PUB</modelName>
+<modelNumber>1.0</modelNumber>
+<UDN>uuid:9ab0d5e4-3c21-4f8b-b6e2-7d1f4a2c9e10</UDN>
+<dlna:X_DLNADOC xmlns:dlna="urn:schemas-dlna-org:device-1-0">DMR-1.50</dlna:X_DLNADOC>
+<serviceList>
+<service>
+<serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType>
+<serviceId>urn:upnp-org:serviceId:AVTransport</serviceId>
+<SCPDURL>AVTransport/9ab0d5e4-3c21-4f8b-b6e2-7d1f4a2c9e10/scpd.xml</SCPDURL>
+<controlURL>AVTransport/9ab0d5e4-3c21-4f8b-b6e2-7d1f4a2c9e10/control.xml</controlURL>
+<eventSubURL>AVTransport/9ab0d5e4-3c21-4f8b-b6e2-7d1f4a2c9e10/event.xml</eventSubURL>
+</service>
+<service>
+<serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+<serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+<SCPDURL>ConnectionManager/9ab0d5e4-3c21-4f8b-b6e2-7d1f4a2c9e10/scpd.xml</SCPDURL>
+<controlURL>ConnectionManager/9ab0d5e4-3c21-4f8b-b6e2-7d1f4a2c9e10/control.xml</controlURL>
+<eventSubURL>ConnectionManager/9ab0d5e4-3c21-4f8b-b6e2-7d1f4a2c9e10/event.xml</eventSubURL>
+</service>
+</serviceList>
+</device>
+</root>

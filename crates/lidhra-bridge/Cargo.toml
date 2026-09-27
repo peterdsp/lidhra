@@ -1,0 +1,28 @@
+[package]
+name = "lidhra-bridge"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "One JSON command surface over lidhra-debrid for TV clients: wasm for web TVs (Tizen, webOS, HarmonyOS), a C ABI for Apple TV."
+
+[lib]
+# rlib: tests + Rust users. cdylib: the wasm module. staticlib: the Apple TV xcframework.
+crate-type = ["rlib", "cdylib", "staticlib"]
+
+[dependencies]
+lidhra-debrid = { path = "../lidhra-debrid" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Web TVs: exported as a JS class through wasm-bindgen.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+
+# Apple TV (and any native host): C ABI over a small tokio runtime.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1", features = ["rt-multi-thread"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

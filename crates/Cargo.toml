@@ -8,6 +8,8 @@ members = [
     "lidhra-server",   # local HTTP server + web UI (headless / Web-UI mode)
     "lidhra-license",  # trial timer + offline license-key verification
     "lidhra-torrent",  # on-device BitTorrent engine (magnets without a debrid account)
+    "lidhra-bridge",   # JSON command bridge for TV clients (wasm for web TVs, C ABI for Apple TV)
+    "lidhra-cast",     # cast a stream to TVs without an app (DLNA / UPnP AVTransport, Roku ECP)
 ]
 
 # See vendor/README.md: one cfg fix so librqbit builds for iOS.

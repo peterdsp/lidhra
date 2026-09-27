@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<root xmlns='urn:schemas-upnp-org:device-1-0' xmlns:sec='http://www.sec.co.kr/dlna' xmlns:dlna='urn:schemas-dlna-org:device-1-0' xmlns:pnpx="http://schemas.microsoft.com/windows/pnpx/2005/11" xmlns:df="http://schemas.microsoft.com/windows/2008/09/devicefoundation">
+ <specVersion>
+  <major>1</major>
+  <minor>0</minor>
+ </specVersion>
+ <device>
+  <deviceType>urn:schemas-upnp-org:device:MediaRenderer:1</deviceType>
+  <pnpx:X_compatibleId>MS_DigitalMediaDeviceClass_DMR_V001</pnpx:X_compatibleId>
+  <pnpx:X_deviceCategory>Display.TV.LCD Multimedia.DMR</pnpx:X_deviceCategory>
+  <pnpx:X_hardwareId>VEN_0105&amp;DEV_VD0001</pnpx:X_hardwareId>
+  <df:X_deviceCategory>Display.TV.LCD</df:X_deviceCategory>
+  <dlna:X_DLNADOC>DMR-1.50</dlna:X_DLNADOC>
+  <friendlyName>[TV] Samsung Q60 Series (55)</friendlyName>
+  <manufacturer>Samsung Electronics</manufacturer>
+  <manufacturerURL>http://www.samsung.com/sec</manufacturerURL>
+  <modelDescription>Samsung TV DMR</modelDescription>
+  <modelName>QE55Q60RATXXU</modelName>
+  <modelNumber>AllShare1.0</modelNumber>
+  <modelURL>http://www.samsung.com/sec</modelURL>
+  <serialNumber>0B7X3HDM700123L</serialNumber>
+  <UDN>uuid:08f0d180-0096-1000-a8ec-f47b5e6b2c12</UDN>
+  <sec:deviceID>BDCHCU5UYQA5Y</sec:deviceID>
+  <sec:ProductCap>Tizen,Y2019,WebURIPlayable,NavigateInPause,ScreenMirroringP2PMAC=f6:7b:5e:6b:2c:12,UHD_SCREEN,SerialImageDisplay</sec:ProductCap>
+  <iconList>
+   <icon>
+    <mimetype>image/jpeg</mimetype>
+    <width>48</width>
+    <height>48</height>
+    <depth>24</depth>
+    <url>/dmr/icon_SML.jpg</url>
+   </icon>
+  </iconList>
+  <serviceList>
+   <service>
+    <serviceType>urn:schemas-upnp-org:service:RenderingControl:1</serviceType>
+    <serviceId>urn:upnp-org:serviceId:RenderingControl</serviceId>
+    <controlURL>/upnp/control/RenderingControl1</controlURL>
+    <eventSubURL>/upnp/event/RenderingControl1</eventSubURL>
+    <SCPDURL>/dmr/RenderingControl1.xml</SCPDURL>
+   </service>
+   <service>
+    <serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+    <serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+    <controlURL>/upnp/control/ConnectionManager1</controlURL>
+    <eventSubURL>/upnp/event/ConnectionManager1</eventSubURL>
+    <SCPDURL>/dmr/ConnectionManager1.xml</SCPDURL>
+   </service>
+   <service>
+    <serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType>
+    <serviceId>urn:upnp-org:serviceId:AVTransport</serviceId>
+    <controlURL>/upnp/control/AVTransport1</controlURL>
+    <eventSubURL>/upnp/event/AVTransport1</eventSubURL>
+    <SCPDURL>/dmr/AVTransport1.xml</SCPDURL>
+   </service>
+  </serviceList>
+  <sec:Capabilities>
+   <sec:Capability name='ScreenMirroring' port='7236' location='/screenmirroring/info'></sec:Capability>
+  </sec:Capabilities>
+ </device>
+</root>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AV receiver style: the root device is the network player, the renderer is embedded. -->
+<root xmlns="urn:schemas-upnp-org:device-1-0" xmlns:yamaha="urn:schemas-yamaha-com:device-1-0">
+  <specVersion><major>1</major><minor>0</minor></specVersion>
+  <device>
+    <deviceType>urn:schemas-upnp-org:device:MediaRenderer:1</deviceType>
+    <friendlyName>Living Room AVR</friendlyName>
+    <manufacturer>Yamaha Corporation</manufacturer>
+    <modelName>RX-V685</modelName>
+    <UDN>uuid:9ab0d5e4-1111-4f8b-b6e2-00a0dea1b2c3</UDN>
+    <serviceList>
+      <service>
+        <serviceType>urn:schemas-upnp-org:service:RenderingControl:1</serviceType>
+        <serviceId>urn:upnp-org:serviceId:RenderingControl</serviceId>
+        <SCPDURL>RenderingControl/desc.xml</SCPDURL>
+        <controlURL>RenderingControl/ctrl</controlURL>
+        <eventSubURL>RenderingControl/evt</eventSubURL>
+      </service>
+      <service>
+        <serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+        <serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+        <SCPDURL>ConnectionManager/desc.xml</SCPDURL>
+        <controlURL>ConnectionManager/ctrl</controlURL>
+        <eventSubURL>ConnectionManager/evt</eventSubURL>
+      </service>
+    </serviceList>
+    <deviceList>
+      <device>
+        <deviceType>urn:schemas-upnp-org:device:MediaRenderer:1</deviceType>
+        <friendlyName>Living Room AVR (Zone 2)</friendlyName>
+        <manufacturer>Embedded Manufacturer</manufacturer>
+        <modelName>Zone Renderer</modelName>
+        <UDN>uuid:9ab0d5e4-2222-4f8b-b6e2-00a0dea1b2c3</UDN>
+        <serviceList>
+          <service>
+            <serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+            <serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+            <SCPDURL>Zone2/ConnectionManager/desc.xml</SCPDURL>
+            <controlURL>Zone2/ConnectionManager/ctrl</controlURL>
+            <eventSubURL>Zone2/ConnectionManager/evt</eventSubURL>
+          </service>
+          <service>
+            <serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType>
+            <serviceId>urn:upnp-org:serviceId:AVTransport</serviceId>
+            <SCPDURL>AVTransport/desc.xml</SCPDURL>
+            <controlURL>AVTransport/ctrl</controlURL>
+            <eventSubURL>AVTransport/evt</eventSubURL>
+          </service>
+        </serviceList>
+      </device>
+    </deviceList>
+    <presentationURL>http://192.168.1.40/</presentationURL>
+  </device>
+</root>

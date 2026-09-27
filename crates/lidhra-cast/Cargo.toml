@@ -1,0 +1,20 @@
+[package]
+name = "lidhra-cast"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Cast a direct HTTPS stream to TVs that cannot run Lidhra (DLNA / UPnP AVTransport renderers, Roku ECP)."
+repository = "https://github.com/peterdsp/lidhra"
+keywords = ["dlna", "upnp", "roku", "cast", "ssdp"]
+categories = ["network-programming", "multimedia::video"]
+
+[dependencies]
+# TVs are plain HTTP on the LAN; rustls only so the shared client matches the workspace.
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+thiserror = "1"
+tokio = { version = "1", features = ["net", "rt", "time"] }
+
+[dev-dependencies]
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

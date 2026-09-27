@@ -146,7 +146,8 @@ fn single_file_url(s: &Value) -> Option<String> {
     Some(format!("https://{server}.offcloud.com/cloud/download/{id}/{name}"))
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl DebridProvider for Offcloud {
     fn id(&self) -> ProviderId {
         ProviderId::Offcloud

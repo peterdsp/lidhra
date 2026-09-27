@@ -7,6 +7,12 @@
 <meta name="theme-color" content="#edf8f3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#07110e" media="(prefers-color-scheme: dark)">
 <title>Lidhra</title>
+<script>/* TV mode is decided before first paint so a TV never flashes the desktop layout.
+   On: ?tv=1, a TV user agent, or window.LIDHRA_TV set by a packaged TV build. Off: ?tv=0. */
+(function(){ var on=false; try{ var q=new URLSearchParams(location.search).get('tv');
+  if(q==='1')on=true; else if(q==='0')on=false;
+  else on=window.LIDHRA_TV===true||/Tizen|Web0S|webOS|SMART-TV|SmartTV|HbbTV|NetCast|AFT[A-Z]|BRAVIA|Android TV|GoogleTV|VIDAA/i.test(navigator.userAgent||''); }catch(e){}
+  window.LIDHRA_TV_MODE=on; if(on)document.documentElement.classList.add('tv'); })();</script>
 <link rel="icon" type="image/png" href="data:image/png;base64,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">
 <style>
   /* ================= Semantic tokens ================= */
@@ -621,6 +627,64 @@
   .p2p[hidden]{display:none}
   .card .nm .badge{display:inline-block;vertical-align:1px;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--seed-ink);background:color-mix(in srgb,var(--seed) 18%,transparent)}
   .card .nm .badge[hidden]{display:none}
+  /* ================= TV mode: 10-foot library + player, remote only =================
+     Plain rgba colours and no color-mix / backdrop-filter / inset: TV engines are old
+     (target: Tizen 5.5+, webOS 5+, Android TV WebView). Sizes scale with the viewport
+     width so 1280, 1920 and 960 dp wide TVs all read the same from the sofa. */
+  #tv{display:none}
+  html.tv,html.tv body{background:#07110e;color:#e8f5ef;overflow:hidden;height:100%}
+  html.tv .app,html.tv .tabbar,html.tv .scrim,html.tv .sheet,html.tv #welcome{display:none!important}
+  html.tv #tv{display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;box-sizing:border-box;
+    font-size:1.55vw;padding:4.5vh 5vw;background:radial-gradient(120% 90% at 10% 0%,#0d2a20 0%,#07110e 60%)}
+  html.tv #tv[hidden]{display:none!important}
+  .tv-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1em}
+  .tv-brand{display:flex;align-items:center;font-weight:700;font-size:1.3em}
+  .tv-logo{width:1.6em;height:1.6em;border-radius:.4em;margin-right:.55em;background:var(--applogo) center/cover no-repeat}
+  .tv-who{color:#9fb8ad;font-size:.9em}
+  .tv-screen{flex:1;min-height:0;display:flex;flex-direction:column}
+  .tv-screen[hidden]{display:none}
+  .tv-screen h1{font-size:2em;margin:0 0 .3em;font-weight:700;line-height:1.15}
+  .tv-hint{color:#9fb8ad;margin:0 0 1em;max-width:42em;line-height:1.4}
+  .tv-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8em}
+  .tv-bar h1{margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:1em}
+  .tv-row{display:flex;flex-wrap:wrap}
+  .tv-row>*{margin-right:.8em}
+  .tv-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-gap:1em;overflow-y:auto;padding:.5em;margin:-.5em;flex:1;min-height:0;align-content:start}
+  .tv-providers{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tv-list{display:flex;flex-direction:column;overflow-y:auto;padding:.5em;margin:-.5em;flex:1;min-height:0}
+  .tv-list>*{margin-bottom:.6em}
+  .tv-btn,.tv-card,.tv-file{font:inherit;color:inherit;border:.12em solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);border-radius:.7em;
+    cursor:pointer;text-align:left;outline:none;transition:transform .12s ease,background-color .12s ease,border-color .12s ease,box-shadow .12s ease}
+  .tv-btn{padding:.55em 1.3em;font-weight:650;background:#18d88f;color:#062a1e;border-color:#18d88f}
+  .tv-btn.sec{background:rgba(255,255,255,.08);color:#e8f5ef;border-color:rgba(255,255,255,.14)}
+  .tv-card{padding:1em 1.1em;display:flex;flex-direction:column;min-height:6.4em}
+  .tv-card .n{font-weight:650;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+  .tv-card .bar{height:.3em;border-radius:.2em;background:rgba(255,255,255,.1);overflow:hidden;margin-top:.6em}
+  .tv-card .bar i{display:block;height:100%;background:#18d88f}
+  .tv-card .s{color:#9fb8ad;font-size:.8em;margin-top:auto;padding-top:.5em}
+  .tv-card.ready .s{color:#5ee8b0}
+  .tv-card.prov{min-height:4.4em;justify-content:center;font-size:1.1em}
+  .tv-card.prov .s{margin-top:.3em;padding-top:0}
+  .tv-file{padding:.8em 1.1em;display:flex;align-items:center}
+  .tv-file .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:1em}
+  .tv-file .z{color:#9fb8ad;font-family:var(--mono);font-size:.85em}
+  .tv-btn:focus,.tv-card:focus,.tv-file:focus{transform:scale(1.045);border-color:#18d88f;background:rgba(24,216,143,.16);
+    box-shadow:0 0 0 .18em rgba(24,216,143,.45),0 .6em 1.6em rgba(0,0,0,.45)}
+  .tv-btn:focus{background:#3df0a8;color:#062a1e}
+  .tv-btn.sec:focus{background:rgba(24,216,143,.24);color:#fff}
+  .tv-code{font-family:var(--mono);font-size:4em;font-weight:800;letter-spacing:.18em;color:#fff;margin:.15em 0}
+  .tv-url{font-size:1.35em;color:#5ee8b0;font-weight:650;margin:0 0 .6em}
+  #tv-token-in{font:inherit;font-family:var(--mono);width:32em;max-width:100%;box-sizing:border-box;padding:.6em .8em;border-radius:.6em;
+    border:.12em solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#fff;margin-bottom:.6em;outline:none}
+  #tv-token-in:focus{border-color:#18d88f;box-shadow:0 0 0 .18em rgba(24,216,143,.45)}
+  .tv-msg{color:#ffb4b4;min-height:1.3em;margin:0 0 .6em}
+  .tv-empty{color:#9fb8ad;font-size:1.1em;max-width:36em;line-height:1.4}
+  .tv-toast{position:fixed;left:50%;bottom:6vh;transform:translateX(-50%);background:rgba(10,30,24,.96);border:.1em solid rgba(24,216,143,.4);
+    padding:.6em 1.2em;border-radius:.7em;font-size:1.55vw;opacity:0;transition:opacity .2s;pointer-events:none;z-index:400;color:#e8f5ef}
+  .tv-toast.on{opacity:1}
+  html.tv #player .pbar{font-size:1.5vw;padding:3vh 5vw}
+  html.tv #player .ptitle{font-size:1em}
+  @media (prefers-reduced-motion:reduce){ .tv-btn,.tv-card,.tv-file{transition:none} .tv-btn:focus,.tv-card:focus,.tv-file:focus{transform:none} }
 </style>
 </head>
 <body>
@@ -791,6 +855,42 @@
   <div class="pbar"><span class="ptitle" id="player-title"></span><button class="pclose" id="player-close" aria-label="Close">&#x2715;</button></div>
   <video id="player-video" controls playsinline></video>
 </div>
+
+<!-- ============ TV MODE (10-foot, remote only; see TV:START in the script) ============ -->
+<section id="tv" hidden aria-label="Lidhra">
+  <header class="tv-top"><div class="tv-brand"><span class="tv-logo" aria-hidden="true"></span><span>Lidhra</span></div><div class="tv-who" id="tv-who"></div></header>
+  <div class="tv-screen" id="tv-connect" hidden>
+    <h1 data-i18n="tv_connect_title">Connect a provider</h1>
+    <p class="tv-hint" data-i18n="tv_connect_hint"></p>
+    <div class="tv-grid tv-providers" id="tv-providers"></div>
+  </div>
+  <div class="tv-screen" id="tv-login" hidden>
+    <h1 data-i18n="tv_login_title">Sign in on your phone</h1>
+    <p class="tv-hint" id="tv-login-step"></p>
+    <p class="tv-url" id="tv-url"></p>
+    <div class="tv-code" id="tv-code" aria-live="polite"></div>
+    <p class="tv-hint" id="tv-login-msg" aria-live="polite"></p>
+    <div class="tv-row"><button class="tv-btn" id="tv-login-retry" data-i18n="tv_try_again" hidden></button><button class="tv-btn sec" id="tv-login-cancel" data-i18n="cancel"></button></div>
+  </div>
+  <div class="tv-screen" id="tv-token" hidden>
+    <h1 id="tv-token-title"></h1>
+    <p class="tv-hint" data-i18n="tv_token_hint"></p>
+    <input id="tv-token-in" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+    <p class="tv-msg" id="tv-token-msg" aria-live="polite"></p>
+    <div class="tv-row"><button class="tv-btn" id="tv-token-go" data-i18n="btn_connect_account"></button><button class="tv-btn sec" id="tv-token-cancel" data-i18n="cancel"></button></div>
+  </div>
+  <div class="tv-screen" id="tv-library" hidden>
+    <div class="tv-bar"><h1 data-i18n="library">Library</h1><div class="tv-row"><button class="tv-btn sec" id="tv-refresh" data-i18n="tv_refresh"></button><button class="tv-btn sec" id="tv-signout" data-i18n="tv_sign_out"></button></div></div>
+    <div class="tv-grid" id="tv-items"></div>
+    <p class="tv-empty" id="tv-empty" data-i18n="tv_empty" hidden></p>
+  </div>
+  <div class="tv-screen" id="tv-files" hidden>
+    <div class="tv-bar"><h1 id="tv-files-title"></h1><button class="tv-btn sec" id="tv-files-back" data-i18n="tv_back"></button></div>
+    <div class="tv-list" id="tv-file-list" role="list"></div>
+    <p class="tv-empty" id="tv-files-msg" aria-live="polite"></p>
+  </div>
+  <div class="tv-toast" id="tv-toast" role="status" aria-live="polite"></div>
+</section>
 
 <script>
 /* ================= i18n: en, el, sq, it, es, zh-Hans, ru ================= */
@@ -1044,7 +1144,13 @@ const ROUTES = { providers:['GET','/api/providers'], connect:['POST','/api/conne
   torrent_files:['POST','/api/torrent/files'], torrent_pause:['POST','/api/torrent/pause'], torrent_resume:['POST','/api/torrent/resume'], torrent_remove:['POST','/api/torrent/remove'],
   p2p_settings:['GET','/api/p2p'], p2p_set_settings:['POST','/api/p2p'] };
 async function api(name,args){
+  /* Packaged web TVs (Tizen, webOS, HarmonyOS, hosted TV page): the wasm bridge
+     (crates/lidhra-bridge) talks to the provider directly; results are JSON strings. */
+  if(window.LIDHRA_WEB_BRIDGE){ const b=await window.LIDHRA_WEB_BRIDGE; let r;
+    try{ r=await b.call(name,JSON.stringify(args||{})); }catch(e){ throw new Error(String(e&&e.message||e)); }
+    return JSON.parse(r); }
   if(TAURI) return window.__TAURI__.core.invoke(name,args||{});
+  if(!ROUTES[name]) throw new Error('not available in this mode: '+name);
   const [m,u]=ROUTES[name];
   const opt=m==='GET'?{}:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(args||{})};
   const r=await fetch(u,opt); const d=await r.json().catch(()=>({error:r.statusText})); if(!r.ok) throw new Error(d.error||r.statusText); return d;
@@ -1580,7 +1686,29 @@ const IC={
   folder:'<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
   link:'<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>',
   pause:'<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>',
-  trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>' };
+  trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  cast:'<svg viewBox="0 0 24 24"><path d="M3 8V6a1 1 0 011-1h16a1 1 0 011 1v12a1 1 0 01-1 1h-6M3 12a7 7 0 017 7M3 16a3 3 0 013 3"/></svg>',
+  x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>' };
+/* Casting (desktop): what a TV's DLNA renderer or Roku can usually decode, a wider set than the in-app player. */
+const CAST_RE=/\.(mp4|m4v|mkv|mov|avi|webm|ts|m2ts|mpe?g|wmv|mp3|m4a|aac|flac|wav|ogg)$/i;
+const I18N_CAST={
+  en:{ act_cast:"Cast to TV", cast_searching:"Looking for TVs on this network…", cast_pick:"Pick a TV", cast_none:"No TVs found. Check that the TV is on and on the same network.", cast_playing:"Playing on {0}", cast_stop:"Stop casting" },
+  el:{ act_cast:"Προβολή στην TV", cast_searching:"Αναζήτηση τηλεοράσεων σε αυτό το δίκτυο…", cast_pick:"Επιλέξτε τηλεόραση", cast_none:"Δεν βρέθηκαν τηλεοράσεις. Βεβαιωθείτε ότι η τηλεόραση είναι αναμμένη και στο ίδιο δίκτυο.", cast_playing:"Αναπαραγωγή σε {0}", cast_stop:"Διακοπή προβολής" },
+  sq:{ act_cast:"Luaj në TV", cast_searching:"Po kërkoj televizorë në këtë rrjet…", cast_pick:"Zgjidh një televizor", cast_none:"Nuk u gjet asnjë televizor. Sigurohu që televizori është i ndezur dhe në të njëjtin rrjet.", cast_playing:"Po luhet në {0}", cast_stop:"Ndalo luajtjen në TV" },
+  it:{ act_cast:"Trasmetti alla TV", cast_searching:"Ricerca di TV su questa rete…", cast_pick:"Scegli una TV", cast_none:"Nessuna TV trovata. Controlla che la TV sia accesa e sulla stessa rete.", cast_playing:"In riproduzione su {0}", cast_stop:"Interrompi trasmissione" },
+  es:{ act_cast:"Enviar a la TV", cast_searching:"Buscando televisores en esta red…", cast_pick:"Elige un televisor", cast_none:"No se encontraron televisores. Comprueba que el televisor esté encendido y en la misma red.", cast_playing:"Reproduciendo en {0}", cast_stop:"Dejar de enviar" },
+  'zh-Hans':{ act_cast:"投屏到电视", cast_searching:"正在此网络中查找电视…", cast_pick:"选择一台电视", cast_none:"未找到电视。请确认电视已开机并连接到同一网络。", cast_playing:"正在 {0} 上播放", cast_stop:"停止投屏" },
+  ru:{ act_cast:"Показать на ТВ", cast_searching:"Поиск телевизоров в этой сети…", cast_pick:"Выберите телевизор", cast_none:"Телевизоры не найдены. Убедитесь, что телевизор включён и подключён к той же сети.", cast_playing:"Воспроизводится на {0}", cast_stop:"Остановить трансляцию" }
+};
+Object.keys(I18N_CAST).forEach(function(k){ if(I18N[k]) Object.assign(I18N[k], I18N_CAST[k]); });
+/* Find TVs, then the sheet's actions become the device list (renderFileSheet). */
+async function castPick(f){
+  FS.cast={file:f}; renderFileSheet(); fileMsg(t('cast_searching'));
+  try{ const ds=await api('cast_devices'); if(!FS.cast||FS.cast.file!==f) return 'stay';
+    FS.cast={file:f, devices:ds||[]}; renderFileSheet(); fileMsg(ds&&ds.length?t('cast_pick'):t('cast_none'), ds&&ds.length?'':'err');
+  }catch(e){ FS.cast=null; renderFileSheet(); fileMsg(t('act_fail',(e&&e.message)||String(e)),'err'); }
+  return 'stay';
+}
 /* The selected-file detail can live in the modal sheet (compact / regular
    single-pane layouts) or inline in the detail pane (split / stack). One
    surface, one set of handlers: every helper below queries its active root by
@@ -1597,7 +1725,7 @@ function selectCard(id){
   });
 }
 function openFile(it,opener){
-  FS.item=it; FS.files=[]; FS.sel=0; FS.confirmDelete=false; FS.active=true; FS.loaded=false; FS.hint=''; FS.scroll=0;
+  FS.item=it; FS.files=[]; FS.sel=0; FS.confirmDelete=false; FS.cast=null; FS.active=true; FS.loaded=false; FS.hint=''; FS.scroll=0;
   if(detailInline()){
     const pane=$('#detail-pane'); pane.classList.remove('is-empty');
     selectCard(it.id); fileMsg('');
@@ -1682,7 +1810,14 @@ function renderFileSheet(){
   } else list.hidden=true;
   const f=FS.files[FS.sel], A=[];
   const add=(key,icon,fn,label)=>A.push({ label:label||t(key), icon, fn });
-  if(f){
+  if(f&&FS.cast&&FS.cast.file===f){
+    /* Cast picker: one button per TV found, then Stop while something plays. */
+    const c=FS.cast;
+    (c.devices||[]).forEach(d=>add(null,IC.cast,()=>api('cast_play',{device:d,url:f.url,title:f.name}).then(()=>{
+      FS.cast={file:f, playing:d}; renderFileSheet(); fileMsg(t('cast_playing',d.name),'ok'); return 'stay'; }),d.name));
+    if(c.playing) add('cast_stop',IC.pause,()=>api('cast_stop',{device:c.playing}).then(()=>{ FS.cast=null; renderFileSheet(); return 'stay'; }));
+    add('cancel',IC.x,()=>{ FS.cast=null; renderFileSheet(); return Promise.resolve('stay'); });
+  } else if(f){
     const src=f.local?f.path:f.url;
     if(src&&MEDIA_RE.test(f.name)) add('act_play',IC.play,()=>playFile(f));
     if(IOS){
@@ -1694,6 +1829,7 @@ function renderFileSheet(){
       if(src) add('act_vlc',IC.vlc,()=>api('open_with',{target:src,with:'VLC'}));
       if(f.local) add('act_open',IC.open,()=>api('open_with',{target:f.path}));
     }
+    if(TAURI&&!IOS&&!/Android/i.test(navigator.userAgent||'')&&f.url&&!f.local&&CAST_RE.test(f.name)) add('act_cast',IC.cast,()=>castPick(f));
     if(TAURI&&f.url&&!f.local&&!f.busy) add('act_download',IC.down,()=>api('download_link',{url:f.url,filename:f.name}).then(refreshDownloads));
     if(it.kind==='t'&&FS.files.length>1) add('act_download_all',IC.down,()=>api('download',{id:it.key}).then(refreshDownloads),t('act_download_all',FS.files.length));
     if(IOS&&f.local) add('act_share',IC.share,(anchor)=>api('file_share',{path:f.path,anchor}));
@@ -1775,10 +1911,27 @@ async function saveP2p(){
   const body={ seed:$('#p2p-seed').checked, wifi_only:$('#p2p-wifi').checked, max_connections:+$('#p2p-conn').value||50 };
   try{ const p=await api('p2p_set_settings',body); S.p2p=Object.assign(S.p2p,p); }catch(e){}
 }
+/* Speed = bytes since the previous sample of the same download; both the poll and
+   the live events feed it. Samples closer than 400ms are ignored (too noisy). */
+function noteDownload(d,now){ const prev=S.last[d.id];
+  if(prev&&now-prev.t>=400){ const db=d.downloaded-prev.b, dt=(now-prev.t)/1000; S.speeds[d.id]=d.done?0:Math.max(0,db/dt); S.last[d.id]={b:d.downloaded,t:now}; }
+  else if(!prev) S.last[d.id]={b:d.downloaded,t:now};
+  if(d.done||d.error) S.speeds[d.id]=0; }
 async function refreshDownloads(){ try{ const arr=await api('downloads'); const now=Date.now();
-  arr.forEach(d=>{ const prev=S.last[d.id]; if(prev&&now>prev.t){ const db=d.downloaded-prev.b, dt=(now-prev.t)/1000; if(dt>0) S.speeds[d.id]=d.done?0:Math.max(0,db/dt); }
-    S.last[d.id]={b:d.downloaded,t:now}; if(d.done||d.error) S.speeds[d.id]=0; });
+  arr.forEach(d=>noteDownload(d,now));
   S.dl=arr; render(); }catch(e){} }
+/* Tauri pushes `download-progress` / `download-done` (same shape as one `downloads`
+   row) as the engine reports bytes, so the list moves live between polls. Renders
+   are coalesced to one per frame. The poll stays on, slower, as a safety net. */
+let liveRender=false;
+function liveDownload(d){ noteDownload(d,Date.now());
+  const i=S.dl.findIndex(x=>x.id===d.id); if(i>=0) S.dl[i]=d; else S.dl.push(d);
+  if(!liveRender){ liveRender=true; requestAnimationFrame(()=>{ liveRender=false; render(); }); } }
+function startDownloadEvents(){
+  const ev=TAURI&&window.__TAURI__.event; if(!ev||typeof ev.listen!=='function') return false;
+  ev.listen('download-progress',e=>liveDownload(e.payload)).catch(()=>{});
+  ev.listen('download-done',e=>liveDownload(e.payload)).catch(()=>{});
+  return true; }
 
 /* ================= license (direct build only) ================= */
 /* KOFI:START */
@@ -2074,7 +2227,281 @@ function initWelcome(){
   setTimeout(()=>{ const b=$('#wl-begin'); if(b)b.focus(); }, reduceMotion()?60:420);
 }
 
+/* TV:START : 10-foot library + player for TVs (Samsung Tizen, LG webOS, HarmonyOS,
+   Android / Google / Fire TV, TV browsers). Remote only: the arrows move focus to the
+   nearest control in that direction, Enter activates, Back goes back (and exits the
+   app from the first screen). On a TV Lidhra streams from the debrid cloud; nothing
+   is downloaded to the TV. The backend is whatever api() talks to: Tauri commands on
+   Android TV, the wasm bridge in packaged web TVs, lidhra-server in a browser.
+   Written for old TV engines: no optional chaining, no nullish coalescing. */
+const TV = !!window.LIDHRA_TV_MODE;
+const TV_WEB = !!window.LIDHRA_WEB_BRIDGE;
+const TV_SESSION_KEY = 'lidhra_tv_session';
+const I18N_TV = {
+  en:{ tv_connect_title:"Connect a provider", tv_connect_hint:"Lidhra plays straight from your debrid cloud. Nothing is downloaded to this TV.",
+    tv_code_login:"Sign in with a code", tv_key_login:"Use an API key", tv_login_title:"Sign in on your phone",
+    tv_login_step:"On your phone or computer, open this address and enter the code to connect {0}:", tv_login_wait:"Waiting for approval…",
+    tv_login_expired:"The code expired. Get a new one to try again.", tv_try_again:"Get a new code", tv_token_title:"Enter your {0} API key",
+    tv_token_hint:"You can find it in your provider's account settings.", tv_refresh:"Refresh", tv_sign_out:"Sign out",
+    tv_empty:"Nothing in your cloud yet. Add a magnet with Lidhra on your phone or computer, then refresh.",
+    tv_no_files:"No files in this transfer yet.", tv_back:"Back", tv_loading:"Loading…",
+    tv_not_ready:"Still processing in the cloud. Try again when it is ready." },
+  el:{ tv_connect_title:"Σύνδεση παρόχου", tv_connect_hint:"Το Lidhra αναπαράγει απευθείας από το debrid cloud σας. Τίποτα δεν κατεβαίνει σε αυτή την τηλεόραση.",
+    tv_code_login:"Σύνδεση με κωδικό", tv_key_login:"Χρήση κλειδιού API", tv_login_title:"Συνδεθείτε από το κινητό σας",
+    tv_login_step:"Στο κινητό ή τον υπολογιστή σας, ανοίξτε αυτή τη διεύθυνση και εισαγάγετε τον κωδικό για σύνδεση με {0}:", tv_login_wait:"Αναμονή για έγκριση…",
+    tv_login_expired:"Ο κωδικός έληξε. Ζητήστε νέο για να δοκιμάσετε ξανά.", tv_try_again:"Νέος κωδικός", tv_token_title:"Εισαγάγετε το κλειδί API του {0}",
+    tv_token_hint:"Θα το βρείτε στις ρυθμίσεις λογαριασμού του παρόχου σας.", tv_refresh:"Ανανέωση", tv_sign_out:"Αποσύνδεση",
+    tv_empty:"Δεν υπάρχει τίποτα ακόμη στο cloud σας. Προσθέστε ένα magnet με το Lidhra στο κινητό ή τον υπολογιστή σας και ανανεώστε.",
+    tv_no_files:"Δεν υπάρχουν ακόμη αρχεία σε αυτή τη μεταφορά.", tv_back:"Πίσω", tv_loading:"Φόρτωση…",
+    tv_not_ready:"Ακόμη σε επεξεργασία στο cloud. Δοκιμάστε ξανά όταν είναι έτοιμο." },
+  sq:{ tv_connect_title:"Lidh një ofrues", tv_connect_hint:"Lidhra luan drejtpërdrejt nga cloud-i yt debrid. Asgjë nuk shkarkohet në këtë televizor.",
+    tv_code_login:"Hyr me një kod", tv_key_login:"Përdor një çelës API", tv_login_title:"Hyr nga telefoni",
+    tv_login_step:"Në telefon ose kompjuter, hap këtë adresë dhe fut kodin për të lidhur {0}:", tv_login_wait:"Në pritje të miratimit…",
+    tv_login_expired:"Kodi skadoi. Merr një kod të ri për të provuar sërish.", tv_try_again:"Merr kod të ri", tv_token_title:"Fut çelësin API të {0}",
+    tv_token_hint:"E gjen te cilësimet e llogarisë së ofruesit tënd.", tv_refresh:"Rifresko", tv_sign_out:"Dil",
+    tv_empty:"Ende s'ka asgjë në cloud-in tënd. Shto një magnet me Lidhra në telefon ose kompjuter, pastaj rifresko.",
+    tv_no_files:"Ende s'ka skedarë në këtë transferim.", tv_back:"Prapa", tv_loading:"Po ngarkohet…",
+    tv_not_ready:"Ende po përpunohet në cloud. Provo sërish kur të jetë gati." },
+  it:{ tv_connect_title:"Connetti un provider", tv_connect_hint:"Lidhra riproduce direttamente dal tuo cloud debrid. Niente viene scaricato su questa TV.",
+    tv_code_login:"Accedi con un codice", tv_key_login:"Usa una chiave API", tv_login_title:"Accedi dal telefono",
+    tv_login_step:"Sul telefono o sul computer apri questo indirizzo e inserisci il codice per collegare {0}:", tv_login_wait:"In attesa di approvazione…",
+    tv_login_expired:"Il codice è scaduto. Richiedine uno nuovo per riprovare.", tv_try_again:"Nuovo codice", tv_token_title:"Inserisci la chiave API di {0}",
+    tv_token_hint:"La trovi nelle impostazioni dell'account del tuo provider.", tv_refresh:"Aggiorna", tv_sign_out:"Esci",
+    tv_empty:"Il tuo cloud è ancora vuoto. Aggiungi un magnet con Lidhra sul telefono o sul computer, poi aggiorna.",
+    tv_no_files:"Ancora nessun file in questo trasferimento.", tv_back:"Indietro", tv_loading:"Caricamento…",
+    tv_not_ready:"Ancora in elaborazione nel cloud. Riprova quando è pronto." },
+  es:{ tv_connect_title:"Conecta un proveedor", tv_connect_hint:"Lidhra reproduce directamente desde tu nube debrid. No se descarga nada en este televisor.",
+    tv_code_login:"Inicia sesión con un código", tv_key_login:"Usa una clave API", tv_login_title:"Inicia sesión desde tu teléfono",
+    tv_login_step:"En tu teléfono u ordenador, abre esta dirección e introduce el código para conectar {0}:", tv_login_wait:"Esperando aprobación…",
+    tv_login_expired:"El código ha caducado. Pide uno nuevo para volver a intentarlo.", tv_try_again:"Nuevo código", tv_token_title:"Introduce tu clave API de {0}",
+    tv_token_hint:"La encontrarás en los ajustes de la cuenta de tu proveedor.", tv_refresh:"Actualizar", tv_sign_out:"Cerrar sesión",
+    tv_empty:"Todavía no hay nada en tu nube. Añade un magnet con Lidhra en tu teléfono u ordenador y actualiza.",
+    tv_no_files:"Todavía no hay archivos en esta transferencia.", tv_back:"Atrás", tv_loading:"Cargando…",
+    tv_not_ready:"Aún se está procesando en la nube. Inténtalo de nuevo cuando esté listo." },
+  'zh-Hans':{ tv_connect_title:"连接服务商", tv_connect_hint:"Lidhra 直接从你的 debrid 云端播放，不会在这台电视上下载任何内容。",
+    tv_code_login:"使用验证码登录", tv_key_login:"使用 API 密钥", tv_login_title:"在手机上登录",
+    tv_login_step:"在手机或电脑上打开此地址并输入验证码以连接 {0}：", tv_login_wait:"等待授权…",
+    tv_login_expired:"验证码已过期。获取新的验证码后重试。", tv_try_again:"获取新验证码", tv_token_title:"输入你的 {0} API 密钥",
+    tv_token_hint:"可在服务商的账户设置中找到。", tv_refresh:"刷新", tv_sign_out:"退出登录",
+    tv_empty:"你的云端还没有内容。在手机或电脑上用 Lidhra 添加磁力链接后刷新。",
+    tv_no_files:"此传输中还没有文件。", tv_back:"返回", tv_loading:"加载中…",
+    tv_not_ready:"仍在云端处理中，准备好后再试。" },
+  ru:{ tv_connect_title:"Подключите провайдера", tv_connect_hint:"Lidhra воспроизводит видео прямо из вашего debrid-облака. На этот телевизор ничего не загружается.",
+    tv_code_login:"Вход по коду", tv_key_login:"Использовать API-ключ", tv_login_title:"Войдите с телефона",
+    tv_login_step:"На телефоне или компьютере откройте этот адрес и введите код, чтобы подключить {0}:", tv_login_wait:"Ожидание подтверждения…",
+    tv_login_expired:"Срок действия кода истёк. Получите новый код и попробуйте снова.", tv_try_again:"Новый код", tv_token_title:"Введите API-ключ {0}",
+    tv_token_hint:"Его можно найти в настройках аккаунта у провайдера.", tv_refresh:"Обновить", tv_sign_out:"Выйти",
+    tv_empty:"В вашем облаке пока ничего нет. Добавьте magnet-ссылку в Lidhra на телефоне или компьютере и обновите.",
+    tv_no_files:"В этой передаче пока нет файлов.", tv_back:"Назад", tv_loading:"Загрузка…",
+    tv_not_ready:"Ещё обрабатывается в облаке. Попробуйте снова, когда будет готово." }
+};
+Object.keys(I18N_TV).forEach(function(k){ if(I18N[k]) Object.assign(I18N[k], I18N_TV[k]); });
+
+const TVS = { screen:null, stack:[], providers:[], provider:null, login:null, loginTimer:null,
+  items:[], sig:'', files:[], item:null, poll:null, lastFocus:{} };
+const tvErr = e => String((e && e.message) || e || '');
+
+/* Session persistence for the wasm bridge (Tauri and the server remember the login themselves). */
+function tvSessionGet(){ try{ return localStorage.getItem(TV_SESSION_KEY) || ''; }catch(e){ return ''; } }
+function tvSessionSet(v){ try{ if(v) localStorage.setItem(TV_SESSION_KEY, JSON.stringify(v)); else localStorage.removeItem(TV_SESSION_KEY); }catch(e){} }
+
+function tvToast(msg){ const el=$('#tv-toast'); el.textContent=msg; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),2800); }
+
+function tvShow(id, opts){ const push=!opts || opts.push!==false;
+  if(TVS.screen && TVS.screen!==id){ TVS.lastFocus[TVS.screen]=document.activeElement; if(push) TVS.stack.push(TVS.screen); }
+  $$('#tv .tv-screen').forEach(el=>{ el.hidden = el.id!=='tv-'+id; });
+  TVS.screen=id;
+  tvFocusFirst(); /* synchronously: a frame callback can be throttled and leave focus on <body> */
+}
+function tvRoot(){ return $('#player').hidden ? $('#tv-'+TVS.screen) : $('#player'); }
+function tvFocusables(){ const root=tvRoot(); if(!root) return [];
+  return [].slice.call(root.querySelectorAll('button,input,[data-tv-focus]')).filter(el=>!el.disabled && !el.hidden && el.offsetParent!==null); }
+/* Where focus lands on a screen: where it was when we left, else the first card, else the first control. */
+function tvFocusFirst(){ const prev=TVS.lastFocus[TVS.screen];
+  if(prev && document.body.contains(prev) && prev.offsetParent!==null){ prev.focus(); return; }
+  const list=tvFocusables(); const root=tvRoot();
+  const pick=(root && root.querySelector('.tv-card:not([hidden]),.tv-file,input')) || list[0];
+  if(pick) pick.focus(); }
+
+/* Spatial navigation: nearest focusable whose box lies in the pressed direction,
+   scored by distance along the axis plus twice the sideways offset. */
+function tvMove(dir){ const list=tvFocusables(); if(!list.length) return; const cur=document.activeElement;
+  if(!cur || list.indexOf(cur)<0){ list[0].focus(); return; }
+  const r=cur.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2; let best=null, bs=Infinity;
+  list.forEach(el=>{ if(el===cur) return; const q=el.getBoundingClientRect(), dx=q.left+q.width/2-cx, dy=q.top+q.height/2-cy; let main, cross;
+    if(dir==='left'){ if(q.right>r.left+2) return; main=-dx; cross=Math.abs(dy); }
+    else if(dir==='right'){ if(q.left<r.right-2) return; main=dx; cross=Math.abs(dy); }
+    else if(dir==='up'){ if(q.bottom>r.top+2) return; main=-dy; cross=Math.abs(dx); }
+    else { if(q.top<r.bottom-2) return; main=dy; cross=Math.abs(dx); }
+    const score=main+cross*2; if(score<bs){ bs=score; best=el; } });
+  if(best){ best.focus(); try{ best.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(e){ best.scrollIntoView(false); } } }
+
+function tvExit(){
+  try{ if(window.tizen && tizen.application){ tizen.application.getCurrentApplication().exit(); return; } }catch(e){}
+  try{ if(window.webOS && webOS.platformBack){ webOS.platformBack(); return; } }catch(e){}
+  try{ if(window.LidhraHarmony && LidhraHarmony.exit){ LidhraHarmony.exit(); return; } }catch(e){} /* tv/harmonyos Index.ets */
+}
+function tvBack(){
+  if(!$('#player').hidden){ closePlayer(); const f=TVS.lastFocus.player; if(f && document.body.contains(f)) f.focus(); else tvFocusFirst(); return; }
+  if(TVS.screen==='login') tvLoginStop();
+  const prev=TVS.stack.pop();
+  if(prev){ tvShow(prev,{push:false}); if(prev==='library') tvLoadLibrary(true); return; }
+  tvExit();
+}
+
+/* Remote keys: DOM key names first, then the keyCodes Tizen (10009 back, 10252 play/pause)
+   and webOS (461 back) send. Backspace only means Back outside a text field. */
+const TV_KEYNAMES={ ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down', Enter:'enter', Escape:'back', GoBack:'back',
+  BrowserBack:'back', MediaPlayPause:'playpause', MediaPlay:'play', MediaPause:'pause', MediaStop:'stop', MediaFastForward:'ff', MediaRewind:'rw' };
+const TV_KEYCODES={ 37:'left', 38:'up', 39:'right', 40:'down', 13:'enter', 27:'back', 10009:'back', 461:'back',
+  415:'play', 19:'pause', 10252:'playpause', 179:'playpause', 413:'stop', 417:'ff', 412:'rw' };
+function tvKey(e){
+  const a=document.activeElement, inInput=!!(a && a.tagName==='INPUT');
+  let k=TV_KEYNAMES[e.key] || TV_KEYCODES[e.keyCode];
+  if(!k && e.keyCode===8 && !inInput) k='back';
+  if(!k) return;
+  if(!$('#player').hidden){ const v=$('#player-video'); e.preventDefault();
+    if(k==='back' || k==='stop') return tvBack();
+    try{
+      if(k==='left' || k==='rw') v.currentTime=Math.max(0, v.currentTime-10);
+      else if(k==='right' || k==='ff') v.currentTime=Math.min(v.duration||v.currentTime+30, v.currentTime+30);
+      else if(k==='enter' || k==='playpause'){ if(v.paused){ const p=v.play(); if(p && p.catch) p.catch(()=>{}); } else v.pause(); }
+      else if(k==='play'){ const p=v.play(); if(p && p.catch) p.catch(()=>{}); }
+      else if(k==='pause') v.pause();
+    }catch(x){}
+    return;
+  }
+  if(k==='back'){ e.preventDefault(); return tvBack(); }
+  if(inInput && (k==='left' || k==='right')) return;
+  if(inInput && k==='enter'){ e.preventDefault(); const go=tvRoot().querySelector('.tv-btn:not([hidden])'); if(go) go.click(); return; }
+  if(k==='left' || k==='right' || k==='up' || k==='down'){ e.preventDefault(); return tvMove(k); }
+  if(k==='enter' && a && a.tagName==='BUTTON'){ e.preventDefault(); a.click(); }
+}
+
+/* ---- connect ---- */
+async function tvLoadProviders(){
+  try{ TVS.providers=await api('providers') || []; }catch(e){ TVS.providers=[]; }
+  $('#tv-providers').innerHTML=TVS.providers.map((p,i)=>'<button class="tv-card prov" data-i="'+i+'"><span class="n">'+esc(p.label)+'</span><span class="s">'
+    +esc(p.device_login?t('tv_code_login'):t('tv_key_login'))+'</span></button>').join('');
+  $$('#tv-providers .tv-card').forEach(b=>{ b.onclick=()=>tvPickProvider(TVS.providers[+b.dataset.i]); });
+}
+function tvPickProvider(p){ if(!p) return; TVS.provider=p;
+  if(p.device_login) return tvLoginStart();
+  $('#tv-token-title').textContent=t('tv_token_title',p.label); $('#tv-token-in').value=''; $('#tv-token-msg').textContent='';
+  tvShow('token');
+}
+function tvLoginStop(){ clearTimeout(TVS.loginTimer); TVS.loginTimer=null; TVS.login=null; }
+async function tvLoginStart(){
+  tvLoginStop(); const p=TVS.provider; if(TVS.screen!=='login') tvShow('login');
+  $('#tv-code').textContent='····'; $('#tv-url').textContent=''; $('#tv-login-step').textContent=t('tv_loading');
+  $('#tv-login-msg').textContent=''; $('#tv-login-retry').hidden=true;
+  let l; try{ l=await api('login_start',{provider:p.id}); }
+  catch(e){ $('#tv-login-step').textContent=tvErr(e); $('#tv-login-retry').hidden=false; $('#tv-login-retry').focus(); return; }
+  if(TVS.screen!=='login') return;
+  TVS.login=l;
+  $('#tv-code').textContent=l.user_code; $('#tv-url').textContent=String(l.verify_url||'').replace(/^https?:\/\//,'');
+  $('#tv-login-step').textContent=t('tv_login_step',p.label); $('#tv-login-msg').textContent=t('tv_login_wait');
+  const deadline=Date.now()+(l.expires_in||600)*1000, every=Math.max(2,l.interval||5)*1000;
+  const tick=async()=>{
+    if(TVS.login!==l) return;
+    if(Date.now()>deadline){ $('#tv-login-msg').textContent=t('tv_login_expired'); $('#tv-login-retry').hidden=false; $('#tv-login-retry').focus(); return; }
+    try{ const r=await api('login_poll',{provider:p.id,handle:l.handle}); if(TVS.login!==l) return;
+      if(r && r.pending===false) return tvSignedIn(r);
+      $('#tv-login-msg').textContent=t('tv_login_wait');
+    }catch(e){ if(TVS.login===l) $('#tv-login-msg').textContent=tvErr(e); }
+    TVS.loginTimer=setTimeout(tick,every);
+  };
+  TVS.loginTimer=setTimeout(tick,every);
+}
+async function tvTokenGo(){
+  const tok=$('#tv-token-in').value.trim(), m=$('#tv-token-msg');
+  if(!tok){ m.textContent=t('m_enter_token'); return; }
+  m.textContent=t('m_connecting');
+  try{ tvSignedIn(await api('connect',{provider:TVS.provider.id,token:tok})); }catch(e){ m.textContent=tvErr(e); }
+}
+function tvSignedIn(a){
+  if(TV_WEB && a && a.session) tvSessionSet(a.session);
+  tvLoginStop(); S.connected=true;
+  $('#tv-who').textContent=(a && (a.username || a.provider)) || '';
+  TVS.stack=[]; TVS.lastFocus={}; TVS.sig=''; TVS.libFocus=true;
+  tvShow('library',{push:false}); tvLoadLibrary();
+  if(!TVS.poll) TVS.poll=setInterval(()=>{ if(TVS.screen==='library' && $('#player').hidden) tvLoadLibrary(true); },30000);
+}
+async function tvSignOut(){
+  try{ await api('disconnect'); }catch(e){}
+  if(TV_WEB) tvSessionSet(null);
+  S.connected=false; $('#tv-who').textContent=''; TVS.stack=[]; TVS.sig=''; TVS.lastFocus={};
+  if(TVS.poll){ clearInterval(TVS.poll); TVS.poll=null; }
+  tvShow('connect',{push:false});
+}
+
+/* ---- library ---- */
+const TV_ORDER={ Ready:0, Done:0, Seeding:0, Downloading:1, Queued:2, Paused:3, Error:4 };
+const tvIsReady = x => x.status==='Ready' || x.status==='Done' || x.status==='Seeding';
+function tvStatus(x){
+  const k={ Ready:'st_ready', Downloading:'st_downloading', Queued:'st_queued', Error:'st_error', Seeding:'st_seeding', Done:'st_done', Paused:'st_paused' }[x.status];
+  let s=k ? t(k) : String(x.status||''); s=s.charAt(0).toUpperCase()+s.slice(1);
+  if(tvIsReady(x) && x.links) return s+' · '+(x.links===1 ? t('meta_file') : t('meta_files',x.links));
+  if(x.status==='Downloading') return s+' · '+pctS(Math.round((x.progress||0)*100));
+  return s;
+}
+async function tvLoadLibrary(quiet){
+  let list; try{ list=await api('transfers') || []; }catch(e){ if(!quiet) tvToast(tvErr(e)); return; }
+  const rank=x=>(x.status in TV_ORDER) ? TV_ORDER[x.status] : 5;
+  list.sort((a,b)=>rank(a)-rank(b));
+  const sig=JSON.stringify(list.map(x=>[x.id,x.status,Math.round((x.progress||0)*100),x.links]));
+  TVS.items=list; $('#tv-empty').hidden=list.length>0;
+  if(sig===TVS.sig) return; TVS.sig=sig;
+  const a=document.activeElement, focusedId=(a && a.classList && a.classList.contains('tv-card') && a.dataset) ? a.dataset.id : null;
+  $('#tv-items').innerHTML=list.map(x=>{ const ready=tvIsReady(x), pct=Math.round((x.progress||0)*100);
+    return '<button class="tv-card'+(ready?' ready':'')+'" data-id="'+esc(x.id)+'"><span class="n">'+esc(x.name||x.id)+'</span>'
+      +(ready?'':'<span class="bar"><i style="width:'+pct+'%"></i></span>')+'<span class="s">'+esc(tvStatus(x))+'</span></button>'; }).join('');
+  $$('#tv-items .tv-card').forEach(b=>{ b.onclick=()=>tvOpenItem(TVS.items.filter(x=>String(x.id)===b.dataset.id)[0]); });
+  if(TVS.screen!=='library' || !$('#player').hidden) return;
+  /* First render after sign-in: the grid was empty when the screen appeared, so move to the first title. */
+  if(TVS.libFocus){ TVS.libFocus=false; const c=$('#tv-items .tv-card'); if(c){ c.focus(); return; } }
+  const again=focusedId && [].slice.call($$('#tv-items .tv-card')).filter(b=>b.dataset.id===focusedId)[0];
+  if(again) again.focus(); else if(!a || a===document.body || !document.body.contains(a)) tvFocusFirst();
+}
+
+/* ---- files + player ---- */
+async function tvOpenItem(x){
+  if(!x) return;
+  if(!tvIsReady(x)){ tvToast(t('tv_not_ready')); return; }
+  TVS.item=x; TVS.files=[]; delete TVS.lastFocus.files;
+  $('#tv-files-title').textContent=x.name||x.id; $('#tv-file-list').innerHTML=''; $('#tv-files-msg').textContent=t('tv_loading');
+  tvShow('files');
+  try{ const files=await api('links',{id:x.id}); if(TVS.item!==x) return; TVS.files=files||[];
+    $('#tv-files-msg').textContent=TVS.files.length ? '' : t('tv_no_files');
+    $('#tv-file-list').innerHTML=TVS.files.map((f,i)=>'<button class="tv-file" role="listitem" data-i="'+i+'"><span class="n">'+esc(f.filename)+'</span><span class="z">'
+      +esc(f.size?human(f.size):'')+'</span></button>').join('');
+    $$('#tv-file-list .tv-file').forEach(b=>{ b.onclick=()=>tvPlay(TVS.files[+b.dataset.i]); });
+    if(TVS.screen==='files') tvFocusFirst();
+  }catch(e){ if(TVS.item===x) $('#tv-files-msg').textContent=tvErr(e); }
+}
+function tvPlay(f){
+  if(!f) return; TVS.lastFocus.player=document.activeElement;
+  playFile({url:f.url, name:f.filename, local:false}).then(()=>{ const v=$('#player-video'); v.setAttribute('tabindex','-1'); try{ v.focus(); }catch(e){} });
+}
+
+async function tvInit(){
+  document.documentElement.classList.add('tv'); $('#tv').hidden=false; $('#welcome').hidden=true;
+  /* Tizen only delivers media keys to apps that register them. */
+  try{ if(window.tizen && tizen.tvinputdevice) tizen.tvinputdevice.registerKeyBatch(['MediaPlayPause','MediaPlay','MediaPause','MediaStop','MediaFastForward','MediaRewind']); }catch(e){}
+  document.addEventListener('keydown',tvKey,true);
+  $('#tv-login-cancel').onclick=tvBack; $('#tv-login-retry').onclick=tvLoginStart;
+  $('#tv-token-go').onclick=tvTokenGo; $('#tv-token-cancel').onclick=tvBack;
+  $('#tv-refresh').onclick=()=>{ TVS.sig=''; tvLoadLibrary(); }; $('#tv-signout').onclick=tvSignOut;
+  $('#tv-files-back').onclick=tvBack; $('#player-close').onclick=tvBack;
+  applyI18n();
+  await tvLoadProviders();
+  let a=null; try{ a=await api('restore', TV_WEB ? {session:tvSessionGet()} : {}); }catch(e){}
+  if(a) tvSignedIn(a); else tvShow('connect',{push:false});
+}
+/* TV:END */
+
 async function init(){
+  if(TV){ fillLangSelects(); return tvInit(); }
   /* Build the inline detail pane's shared surface once (same classes as the
      file sheet). Done before applyI18n so its empty-state string is filled. */
   $('#detail-pane').innerHTML =
@@ -2138,7 +2565,7 @@ async function init(){
   requestGeometrySnapshot(); // page-ready handshake: pull the first native snapshot
   render();
   loadP2p();
-  refreshDownloads(); setInterval(refreshDownloads,1500);
+  refreshDownloads(); setInterval(refreshDownloads, startDownloadEvents()?6000:1500);
   if(typeof refreshLicense==='function'){ refreshLicense(); setInterval(refreshLicense,30000); }
 }
 init();

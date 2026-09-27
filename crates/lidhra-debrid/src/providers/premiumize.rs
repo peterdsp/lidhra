@@ -100,7 +100,8 @@ fn pm_status(s: &str) -> TransferStatus {
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl DebridProvider for Premiumize {
     fn id(&self) -> ProviderId {
         ProviderId::Premiumize

@@ -1,0 +1,7 @@
+{
+  "string": [
+    { "name": "module_desc", "value": "Lidhra: stream your debrid cloud" },
+    { "name": "ability_desc", "value": "Lidhra library and player" },
+    { "name": "ability_label", "value": "Lidhra" }
+  ]
+}

@@ -150,7 +150,8 @@ fn md_transfer(hash: &str, t: &Value) -> RemoteTransfer {
     RemoteTransfer { id: TransferId(hash.to_string()), name: jstr(t.get("name")), status, progress, links }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl DebridProvider for MegaDebrid {
     fn id(&self) -> ProviderId {
         ProviderId::MegaDebrid

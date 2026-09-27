@@ -19,6 +19,25 @@ commands (no HTTP) - the UI auto-detects the Tauri window and uses `invoke`.
 - Wi-Fi only is on by default; Local Service Discovery is off so the Local Network prompt never appears.
 - Session file, settings and the DHT table live under the app's data directory (`torrents/`), next to the remembered provider login.
 
+## Desktop polish (tray, live progress)
+
+- **Tray / menu bar** (`src/tray.rs`, desktop only): a status item with the brand
+  mark (a monochrome template on macOS, the coloured app icon on Windows and
+  Linux). Tooltip and the first menu line show the live totals ("2 downloads · 46%",
+  "3 done · 1 failed", "Idle"); on macOS the percentage also sits beside the icon
+  while something is downloading. Menu: Show Lidhra, Open Downloads Folder, Quit.
+  Left-click brings the window back.
+- **Close to tray**: closing the window hides it and downloads keep running.
+  Quit from the tray menu, the app menu or Cmd+Q. On macOS clicking the Dock
+  icon reopens the window.
+- **Live download events**: the download engine's progress callback emits
+  `download-progress` (rate-limited to 4/s per download) and `download-done`
+  Tauri events whose payload is one `downloads` row. The web UI listens when it
+  runs inside Tauri and moves the list live, keeping the `downloads` poll as a
+  slow safety net (6s instead of 1.5s). The browser build still polls.
+- The tray summary is refreshed by a 1s task that only touches the OS when the
+  numbers change.
+
 ## Run
 
 ```sh

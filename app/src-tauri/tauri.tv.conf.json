@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Lidhra",
+  "identifier": "dev.peterdsp.lidhra",
+  "app": {
+    "windows": [
+      {
+        "title": "Lidhra",
+        "label": "main",
+        "url": "index.html?tv=1",
+        "fullscreen": true
+      }
+    ]
+  },
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "android": {
+      "minSdkVersion": 24
+    }
+  }
+}

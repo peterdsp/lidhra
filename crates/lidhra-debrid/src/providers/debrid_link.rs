@@ -111,7 +111,8 @@ fn first_object(v: Value) -> Value {
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl DebridProvider for DebridLink {
     fn id(&self) -> ProviderId {
         ProviderId::DebridLink

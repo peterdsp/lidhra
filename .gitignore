@@ -15,3 +15,6 @@ app/src-tauri/gen/
 
 # iPhone Duo build marker (written by scripts/ios-postgen.sh when LIDHRA_DUO is set)
 app/src-tauri/plugins/native/ios/.lidhra_duo
+
+# TV packages (scripts/tv/*): generated bundles, .wgt, .ipk, APKs
+/build/
