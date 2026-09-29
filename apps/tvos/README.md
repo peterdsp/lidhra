@@ -105,7 +105,7 @@ python3 apps/tvos/tools/generate_brand_assets.py
 
 The bundle id is `dev.peterdsp.lidhra`, the same as the iOS app. That makes the tvOS app a new
 platform of the same App Store Connect record (Universal Purchase): one purchase covers iPhone,
-iPad and Apple TV. The marketing version tracks the iOS app (1.3.0); the build number
+iPad and Apple TV. The marketing version tracks the iOS app (`app/src-tauri/tauri.conf.json`); the build number
 (`CURRENT_PROJECT_VERSION`) is counted separately for the tvOS platform.
 
 ## Not done yet

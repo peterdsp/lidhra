@@ -9,7 +9,7 @@ uses a short code approved on a phone (Real-Debrid, AllDebrid) or a pasted API k
 | Platform | How | Build | Status (2026-09-27) |
 | --- | --- | --- | --- |
 | Samsung Tizen TV | Shared web UI in TV mode + wasm bridge, `.wgt` widget | `scripts/tv/build.sh tizen` | Builds an **unsigned** `.wgt`. Signing needs Tizen Studio and a Samsung certificate profile (`TIZEN_PROFILE=...`). Not run on a TV. |
-| LG webOS TV | Same bundle, `.ipk` | `scripts/tv/build.sh webos` | Builds `dev.peterdsp.lidhra_1.3.0_all.ipk` with LG's `ares-package` (via npx). Not run on a TV. |
+| LG webOS TV | Same bundle, `.ipk` | `scripts/tv/build.sh webos` | Builds `dev.peterdsp.lidhra_<version>_all.ipk` with LG's `ares-package` (via npx). Not run on a TV. |
 | HarmonyOS (Huawei Vision, tablets) | ArkWeb shell (`tv/harmonyos`) over the same bundle | `scripts/tv/build.sh harmonyos`, then DevEco Studio | Project + bundle ready; not built (DevEco / hvigor not installed here). |
 | TV browsers (any) | The same bundle served as a static page | `scripts/tv/build.sh web`, host `build/tv/web/` | Verified in a 1920x1080 browser: providers from wasm, Real-Debrid device code, D-pad focus, library, files, playback, Back. |
 | Android TV, Google TV, Fire TV | Tauri app with `tauri.tv.conf.json` (opens `?tv=1`), leanback manifest | `scripts/tv/android-tv.sh build` | APK built and run on the Android TV emulator, launcher banner verified. See [android-tv.md](android-tv.md). |
