@@ -29,7 +29,8 @@ More services, and a better desktop companion.
 
 | Package | Notes |
 | --- | --- |
-| macOS, Windows, Linux installers + `latest.json` | Built and signed by `release.yml`; the in-app updater reads `latest.json`. |
+| Windows, Linux installers + `latest.json` | Built and signed by `release.yml`; the in-app updater reads `latest.json`. |
+| macOS | Not attached: the `APPLE_CERTIFICATE` secret holds an Apple Development certificate, which does not match the signing identity; a Developer ID Application `.p12` is needed (same gap as 1.3.0). |
 | iOS | Uploaded to App Store Connect by `ios-appstore.yml`. |
 | `Lidhra-1.4.0-android-tv-arm64.apk` | Android / Google / Fire TV. Signed with a debug key for sideloading; a store build needs the release keystore (`docs/tv/android-tv.md`). |
 | `dev.peterdsp.lidhra_1.4.0_all.ipk` | LG webOS, for TVs in Developer Mode. |
